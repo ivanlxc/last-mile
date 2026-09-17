@@ -5,6 +5,10 @@ import {
 } from "node:http";
 import { randomUUID } from "node:crypto";
 import type { HttpConfig } from "./config.js";
+import {
+  isPublicDocumentNavigation,
+  requestContextVary,
+} from "./request-context.js";
 
 const waitingPage = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="2"><title>LAST MILE · Preparing the next deployment</title>
@@ -30,6 +34,7 @@ export async function listenForHandoff(
     (req, res) => {
       res.setHeader("Connection", "close");
       res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Vary", requestContextVary);
       res.setHeader("X-Content-Type-Options", "nosniff");
       res.setHeader("Referrer-Policy", "no-referrer");
       res.setHeader(
@@ -45,7 +50,13 @@ export async function listenForHandoff(
         !config.allowedHosts.has(host) ||
         (origin !== undefined &&
           (typeof origin !== "string" || !config.allowedOrigins.has(origin))) ||
-        req.headers["sec-fetch-site"] === "cross-site"
+        (req.headers["sec-fetch-site"] === "cross-site" &&
+          !isPublicDocumentNavigation(
+            config.mode,
+            req.method ?? "",
+            req.url ?? "/",
+            req.headers,
+          ))
       ) {
         return problem(req, res, 403);
       }

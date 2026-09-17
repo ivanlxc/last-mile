@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
 import { createHttpApp } from "../../server/http/app.js";
 import { loadHttpConfig } from "../../server/http/config.js";
@@ -55,7 +57,11 @@ function fakeService(): GameService {
     startScheduler: () => () => {},
   };
 }
-async function setup(store?: Store, service = fakeService()) {
+async function setup(
+  store?: Store,
+  service = fakeService(),
+  clientDir = config.clientDir,
+) {
   if (!store) {
     store = await createStore({ dbPath: ":memory:" });
     stores.push(store);
@@ -63,7 +69,7 @@ async function setup(store?: Store, service = fakeService()) {
   const app = await createHttpApp({
     service,
     store,
-    config,
+    config: { ...config, clientDir },
     launchToken: "shared-local-token-is-forbidden",
   });
   apps.push(app);
@@ -81,6 +87,73 @@ async function enter(app: FastifyInstance, extra: Record<string, string> = {}) {
 }
 
 describe("cloud configuration and persistent invitation access", () => {
+  it("allows external top-level links to the public shell while keeping API, embed and origin restrictions", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "last-mile-navigation-"));
+    writeFileSync(
+      join(dir, "index.html"),
+      "<!doctype html><title>LAST MILE</title>",
+    );
+    try {
+      const { app, store, service } = await setup(undefined, undefined, dir);
+      const navigation = {
+        host: headers.host,
+        accept: "text/html",
+        "sec-fetch-site": "cross-site",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-dest": "document",
+        referer: "https://dashboard.render.com/",
+      };
+      for (const [method, url] of [
+        ["GET", "/"],
+        ["GET", "/?session=" + randomUUID()],
+        ["GET", "/index.html"],
+        ["HEAD", "/"],
+      ] as const) {
+        const response = await app.inject({ method, url, headers: navigation });
+        expect(response.statusCode, response.body).toBe(200);
+        expect(response.headers["content-type"]).toContain("text/html");
+        if (method === "GET") expect(response.body).toContain("LAST MILE");
+        expect(response.headers["set-cookie"]).toBeUndefined();
+        expect(response.headers.vary).toContain("Sec-Fetch-Site");
+        expect(response.headers.vary).toContain("Sec-Fetch-Mode");
+        expect(response.headers.vary).toContain("Sec-Fetch-Dest");
+        expect(response.headers["content-security-policy"]).toContain(
+          "frame-ancestors 'none'",
+        );
+      }
+      for (const [method, url, extra] of [
+        ["GET", "/api/v1/health", {}],
+        ["GET", "/api/v1/access", {}],
+        ["GET", "/api/v1/my-sessions", {}],
+        ["POST", "/api/v1/access", { origin }],
+        ["POST", "/", {}],
+        ["GET", "/", { "sec-fetch-dest": "iframe" }],
+        ["GET", "/", { "sec-fetch-dest": "object" }],
+        ["GET", "/", { "sec-fetch-mode": "cors" }],
+        ["GET", "/", { origin: "https://evil.example" }],
+        [
+          "GET",
+          "/",
+          { host: "evil.example", "x-forwarded-host": headers.host },
+        ],
+        ["GET", "/assets/app.js", { "sec-fetch-dest": "script" }],
+      ] as Array<["GET" | "POST", string, Record<string, string>]>) {
+        const response = await app.inject({
+          method,
+          url,
+          headers: { ...navigation, ...extra },
+        });
+        expect(response.statusCode, `${method} ${url}`).toBe(403);
+        expect(response.json().code).toBe("CAPABILITY_DENIED");
+        expect(response.headers["set-cookie"]).toBeUndefined();
+      }
+      expect(await store.all("SELECT * FROM cloud_players")).toHaveLength(0);
+      expect(service.read).not.toHaveBeenCalled();
+      expect(service.executeWithMeta).not.toHaveBeenCalled();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
   it("fails closed for absent cloud settings and permits only an exact HTTPS origin", () => {
     for (const key of [
       "DATABASE_URL",

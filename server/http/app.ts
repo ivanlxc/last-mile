@@ -20,6 +20,10 @@ import { loadHttpConfig, type HttpConfig } from "./config.js";
 import type { Store } from "../core/store.js";
 import { AccessLimiter, CloudAuth, type PlayerIdentity } from "./cloud-auth.js";
 import { validAccessRequest, validSessionList } from "./cloud-contracts.js";
+import {
+  isPublicDocumentNavigation,
+  requestContextVary,
+} from "./request-context.js";
 
 export interface HttpAppOptions {
   service: GameService;
@@ -133,6 +137,7 @@ export async function createHttpApp(
     reply
       .header("X-Request-Id", request.id)
       .header("X-Content-Type-Options", "nosniff")
+      .header("Vary", requestContextVary)
       .header("Referrer-Policy", "no-referrer");
     reply.header(
       "Content-Security-Policy",
@@ -150,7 +155,13 @@ export async function createHttpApp(
     const origin = requestHeader(request, "origin");
     if (
       (origin !== undefined && !config.allowedOrigins.has(origin)) ||
-      requestHeader(request, "sec-fetch-site") === "cross-site"
+      (requestHeader(request, "sec-fetch-site") === "cross-site" &&
+        !isPublicDocumentNavigation(
+          config.mode,
+          request.method,
+          request.url,
+          request.headers,
+        ))
     ) {
       throw new HttpFailure("CAPABILITY_DENIED", 403);
     }

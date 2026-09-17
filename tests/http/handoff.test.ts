@@ -75,6 +75,28 @@ async function fixture() {
   return { port, listener, send };
 }
 describe("bounded Render handoff listener", () => {
+  it("shows the wait page for external homepage navigation but denies cross-site APIs and embeds", async () => {
+    const f = await fixture();
+    const navigation = {
+      accept: "text/html",
+      "sec-fetch-site": "cross-site",
+      "sec-fetch-mode": "navigate",
+      "sec-fetch-dest": "document",
+    };
+    const response = await f.send("/", "GET", navigation);
+    expect(response.status).toBe(503);
+    expect(response.headers["content-type"]).toContain("text/html");
+    expect(response.body).toContain("Preparing the next deployment");
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect((await f.send("/api/v1/access", "GET", navigation)).status).toBe(
+      403,
+    );
+    expect(
+      (await f.send("/", "GET", { ...navigation, "sec-fetch-dest": "iframe" }))
+        .status,
+    ).toBe(403);
+    expect((await f.send("/", "POST", navigation)).status).toBe(403);
+  });
   it("reports only platform liveness; all game APIs remain unavailable without issuing identities", async () => {
     const f = await fixture();
     const live = await f.send("/_platform/health");
