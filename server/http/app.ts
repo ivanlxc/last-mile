@@ -17,12 +17,16 @@ import type {
 import type * as Public from "../../docs/engineering_v0.5/contracts/public.types.js";
 import { ContractRegistry, type ContractOperation } from "./contracts.js";
 import { loadHttpConfig, type HttpConfig } from "./config.js";
+import type { Store } from "../core/store.js";
+import { AccessLimiter, CloudAuth, type PlayerIdentity } from "./cloud-auth.js";
+import { validAccessRequest, validSessionList } from "./cloud-contracts.js";
 
 export interface HttpAppOptions {
   service: GameService;
   config?: HttpConfig;
   launchToken?: string;
   closeServiceOnClose?: boolean;
+  store?: Store;
 }
 class HttpFailure extends Error {
   constructor(
@@ -103,6 +107,13 @@ export async function createHttpApp(
   const token = options.launchToken ?? randomBytes(32).toString("hex");
   const contracts = new ContractRegistry(config.repoRoot);
   const streams = new Set<() => void>();
+  if (config.mode === "cloud" && !options.store)
+    throw new Error("Cloud HTTP requires the shared Store");
+  const auth =
+    config.mode === "cloud" ? new CloudAuth(options.store!, config) : null;
+  const identities = new WeakMap<FastifyRequest, PlayerIdentity>();
+  const loginLimiter = new AccessLimiter();
+  const playerStreams = new Map<string, number>();
   const app = Fastify({
     bodyLimit: config.bodyLimit,
     trustProxy: false,
@@ -128,7 +139,10 @@ export async function createHttpApp(
       "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
     );
     const remote = request.ip;
-    if (!["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(remote))
+    if (
+      config.mode === "local" &&
+      !["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(remote)
+    )
       throw new HttpFailure("CAPABILITY_DENIED", 403);
     const host = requestHeader(request, "host")?.toLowerCase();
     if (!host || !config.allowedHosts.has(host))
@@ -144,6 +158,31 @@ export async function createHttpApp(
     if (!path?.startsWith("/api/")) return;
     reply.header("Cache-Control", "no-store");
     if (path === "/api/v1/health") return;
+    if (auth) {
+      // Origin is mandatory for cloud state changes. Never trust forwarded host/IP.
+      if (
+        !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
+        (!origin || !config.allowedOrigins.has(origin))
+      )
+        throw new HttpFailure("CAPABILITY_DENIED", 403);
+      if (
+        path === "/api/v1/access" &&
+        request.method === "POST" &&
+        !loginLimiter.take(request.ip)
+      )
+        throw new HttpFailure("RATE_LIMITED", 429, null, true);
+      if (requestHeader(request, "authorization"))
+        throw new HttpFailure("UNAUTHORIZED", 401);
+      const identity = await auth.identify(
+        cookieValue(requestHeader(request, "cookie"), config.cookieName),
+      );
+      if (identity) identities.set(request, identity);
+      if (path === "/api/v1/access" && ["GET", "POST"].includes(request.method))
+        return;
+      if (!identity) throw new HttpFailure("UNAUTHORIZED", 401);
+      return;
+    }
+    if (path === "/api/v1/access" && request.method === "GET") return;
     const authorization = requestHeader(request, "authorization");
     const validBearer =
       authorization?.startsWith("Bearer ") &&
@@ -166,10 +205,17 @@ export async function createHttpApp(
       throw new HttpFailure("UNAUTHORIZED", 401);
   });
 
-  function requestLocale(request: FastifyRequest): Locale {
+  async function requestLocale(request: FastifyRequest): Promise<Locale> {
     const sid = record(request.params).sessionId;
-    if (typeof sid === "string" && service.hasSessionAccess(sid)) {
-      const locale = service.getSessionLocale?.(sid);
+    const identity = identities.get(request);
+    if (
+      typeof sid === "string" &&
+      (auth
+        ? identity &&
+          (await service.hasPlayerSessionAccess(sid, identity.playerId, "read"))
+        : await service.hasSessionAccess(sid))
+    ) {
+      const locale = await service.getSessionLocale?.(sid);
       if (locale) return locale;
     }
     const requested = record(request.body).locale;
@@ -230,7 +276,12 @@ export async function createHttpApp(
             : "RESOURCE_NOT_FOUND";
       retryable = false;
     }
-    const detail = translateFixed(messages[code] ?? "请求无法完成。", locale);
+    const detail =
+      code === "UNAUTHORIZED" && auth
+        ? locale === "zh-CN"
+          ? "请先使用邀请口令进入游戏。"
+          : "Enter your invitation code to access the game."
+        : translateFixed(messages[code] ?? "请求无法完成。", locale);
     return {
       type: `urn:last-mile:problem:${code.toLowerCase().replaceAll("_", "-")}`,
       title: detail,
@@ -243,8 +294,11 @@ export async function createHttpApp(
       violations,
     };
   }
-  app.setErrorHandler((error, request, reply) => {
-    const body = problem(error, request.id, requestLocale(request));
+  app.setErrorHandler(async (error, request, reply) => {
+    const locale = await requestLocale(request).catch(() =>
+      asLocale(requestHeader(request, "accept-language")),
+    );
+    const body = problem(error, request.id, locale);
     if (
       body.status === 503 &&
       !(error instanceof HttpFailure) &&
@@ -260,10 +314,11 @@ export async function createHttpApp(
     reply.code(body.status).type("application/problem+json").send(body);
   });
 
-  function checkAccess(
+  async function checkAccess(
     op: ContractOperation,
     params: Record<string, string>,
-  ): void {
+    request: FastifyRequest,
+  ): Promise<void> {
     const sessionId = params.sessionId;
     if (!sessionId) return;
     const capability =
@@ -274,7 +329,17 @@ export async function createHttpApp(
           : op.method === "POST"
             ? "command"
             : "read";
-    if (!service.hasSessionAccess(sessionId, capability))
+    const identity = identities.get(request);
+    if (
+      !(auth
+        ? identity &&
+          (await service.hasPlayerSessionAccess(
+            sessionId,
+            identity.playerId,
+            capability,
+          ))
+        : await service.hasSessionAccess(sessionId, capability))
+    )
       throw new HttpFailure("RESOURCE_NOT_FOUND", 404);
   }
 
@@ -283,34 +348,97 @@ export async function createHttpApp(
       throw new HttpFailure("SERVICE_UNAVAILABLE", 503);
   }
 
+  // Platform liveness is distinct from the truthful game/storage readiness endpoint.
+  app.get("/_platform/health", async (_request, reply) => {
+    reply.header("Cache-Control", "no-store");
+    return { status: "ready" };
+  });
+
+  app.get("/api/v1/access", async (request) => {
+    if (Object.keys(record(request.query)).length)
+      throw new HttpFailure("INVALID_REQUEST", 400);
+    return {
+      authenticated: auth ? identities.has(request) : true,
+      mode: config.mode,
+    };
+  });
+  app.post("/api/v1/access", async (request, reply) => {
+    if (!auth) throw new HttpFailure("RESOURCE_NOT_FOUND", 404);
+    if (
+      Object.keys(record(request.query)).length ||
+      !validAccessRequest(request.body)
+    )
+      throw new HttpFailure("INVALID_REQUEST", 400);
+    if (!auth.validInvite((request.body as { inviteCode: string }).inviteCode))
+      throw new HttpFailure("UNAUTHORIZED", 401);
+    if (!identities.has(request)) {
+      const issued = await auth.issue();
+      reply.header("Set-Cookie", issued.cookie);
+    }
+    return { authenticated: true, mode: config.mode };
+  });
+  app.get("/api/v1/my-sessions", async (request) => {
+    if (!auth) throw new HttpFailure("RESOURCE_NOT_FOUND", 404);
+    if (Object.keys(record(request.query)).length)
+      throw new HttpFailure("INVALID_REQUEST", 400);
+    const sessions = await service.listPlayerSessions(
+      identities.get(request)!.playerId,
+    );
+    if (!validSessionList(sessions))
+      throw new HttpFailure("SERVICE_UNAVAILABLE", 503);
+    return { sessions };
+  });
+
   async function stream(
     request: FastifyRequest,
     reply: FastifyReply,
     sessionId: string,
     cursor: string | undefined,
   ): Promise<void> {
-    let initial = service.getEventsSince(sessionId, cursor);
-    for (const item of initial) checkResponse("PublicSseEvent", item);
-    reply.hijack();
-    reply.raw.writeHead(200, {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-store",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
-      "X-Request-Id": request.id,
-      "X-Content-Type-Options": "nosniff",
-    });
-    reply.raw.write("retry: 2000\n\n");
+    const identity = identities.get(request);
+    const playerId = identity?.playerId;
+    if (
+      auth &&
+      (streams.size >= 10 || (playerStreams.get(playerId!) ?? 0) >= 2)
+    )
+      throw new HttpFailure("RATE_LIMITED", 429, null, true);
     let closed = false;
+    let started = false;
+    let caughtUp = false;
+    let bufferBytes = 0;
+    let unsubscribe: (() => void) | undefined;
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
+    let expiry: ReturnType<typeof setTimeout> | undefined;
     let currentCursor = cursor;
+    let lastSequence = cursor ? Number(cursor.split(":")[1]) : 0;
     let lastWrite = Date.now();
-    const write = (item: Public.PublicSseEvent) => {
+    const buffered: Public.PublicSseEvent[] = [];
+    function close(): void {
       if (closed) return;
+      closed = true;
+      unsubscribe?.();
+      clearInterval(heartbeat);
+      clearTimeout(expiry);
+      streams.delete(close);
+      if (playerId) {
+        const left = (playerStreams.get(playerId) ?? 1) - 1;
+        if (left) playerStreams.set(playerId, left);
+        else playerStreams.delete(playerId);
+      }
+      if (started) reply.raw.end();
+    }
+    streams.add(close);
+    request.raw.once("aborted", close);
+    reply.raw.once("close", close);
+    if (playerId)
+      playerStreams.set(playerId, (playerStreams.get(playerId) ?? 0) + 1);
+    const write = (item: Public.PublicSseEvent) => {
+      if (closed || item.viewSequence <= lastSequence) return;
       checkResponse("PublicSseEvent", item);
       const next = `${item.runEpoch}:${item.viewSequence}`;
       if (currentCursor === next) return;
-      // A single persistent cursor bounds replay, including clock samples.
       currentCursor = next;
+      lastSequence = item.viewSequence;
       if (reply.raw.writableLength > 1024 * 1024) {
         close();
         return;
@@ -320,32 +448,82 @@ export async function createHttpApp(
       );
       lastWrite = Date.now();
     };
-    const timer = setInterval(() => {
-      if (closed) return;
-      try {
-        for (const item of service.getEventsSince(sessionId, currentCursor))
+    try {
+      // Subscribe before reading the durable backlog; buffer events until its cursor is known.
+      unsubscribe = await service.subscribe(sessionId, (item) => {
+        if (closed) return;
+        if (!caughtUp) {
+          bufferBytes += Buffer.byteLength(JSON.stringify(item));
+          if (buffered.length >= 1000 || bufferBytes > 1024 * 1024) {
+            close();
+            return;
+          }
+          buffered.push(item);
+          return;
+        }
+        try {
           write(item);
-        if (Date.now() - lastWrite >= 15000) {
+        } catch {
+          close();
+        }
+      });
+      if (closed) {
+        unsubscribe();
+        throw new HttpFailure("SERVICE_UNAVAILABLE", 503, null, true);
+      }
+      let initial = await service.getEventsSince(sessionId, cursor);
+      if (closed) throw new HttpFailure("SERVICE_UNAVAILABLE", 503, null, true);
+      for (const item of initial) checkResponse("PublicSseEvent", item);
+      reply.hijack();
+      reply.raw.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-store",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+        "X-Request-Id": request.id,
+        "X-Content-Type-Options": "nosniff",
+      });
+      started = true;
+      reply.raw.write("retry: 2000\n\n");
+      // Durable reads are paginated at 250. Drain every page before publishing live events.
+      let pages = 0;
+      while (!closed) {
+        for (const item of initial) write(item);
+        if (initial.length < 250) break;
+        if (++pages >= 100) {
+          close();
+          return;
+        }
+        initial = await service.getEventsSince(sessionId, currentCursor);
+        for (const item of initial) checkResponse("PublicSseEvent", item);
+      }
+      if (closed) return;
+      for (const item of buffered.sort(
+        (a, b) => a.viewSequence - b.viewSequence,
+      ))
+        write(item);
+      buffered.length = 0;
+      bufferBytes = 0;
+      caughtUp = true;
+      // No per-connection DB polling: only the domain publisher and an in-memory heartbeat.
+      heartbeat = setInterval(() => {
+        if (!closed && Date.now() - lastWrite >= 15000) {
           reply.raw.write(":keepalive\n\n");
           lastWrite = Date.now();
         }
-      } catch {
-        close();
+      }, 15000);
+      heartbeat.unref();
+      if (identity) {
+        expiry = setTimeout(
+          close,
+          Math.max(1, identity.expiresAtMs - Date.now()),
+        );
+        expiry.unref();
       }
-    }, config.ssePollMs);
-    timer.unref();
-    function close(): void {
-      if (closed) return;
-      closed = true;
-      clearInterval(timer);
-      streams.delete(close);
-      reply.raw.end();
+    } catch (error) {
+      close();
+      if (!started) throw error;
     }
-    streams.add(close);
-    request.raw.once("aborted", close);
-    reply.raw.once("close", close);
-    for (const item of initial) write(item);
-    initial = [];
   }
 
   for (const op of contracts.operations) {
@@ -382,7 +560,7 @@ export async function createHttpApp(
           );
         const params = request.params as Record<string, string>;
         const query = request.query as Record<string, string>;
-        checkAccess(op, params);
+        await checkAccess(op, params, request);
         if (op.operationId === "streamEvents")
           return stream(
             request,
@@ -396,22 +574,20 @@ export async function createHttpApp(
             idempotencyKey: requestHeader(request, "idempotency-key")!,
             requestId: request.id,
             launchId: service.launchId,
+            ...(identities.get(request)
+              ? { playerId: identities.get(request)!.playerId }
+              : {}),
           };
           if (params.sessionId) meta.sessionId = params.sessionId;
           const epoch = requestHeader(request, "x-run-epoch");
           if (epoch) meta.runEpoch = epoch;
-          result = service.execute(
+          const execution = await service.executeWithMeta(
             op.operationId as MutationOperation,
             request.body,
             meta,
           );
-          reply.header(
-            "Idempotency-Replayed",
-            String(
-              (service as GameService & { lastExecutionReplayed?: boolean })
-                .lastExecutionReplayed === true,
-            ),
-          );
+          result = execution.result;
+          reply.header("Idempotency-Replayed", String(execution.replayed));
         } else {
           const id =
             params.taskId ??
@@ -419,7 +595,7 @@ export async function createHttpApp(
             params.jobId ??
             params.operationId ??
             params.exportId;
-          result = service.read(
+          result = await service.read(
             op.operationId as ReadOperation,
             params.sessionId,
             id,
@@ -427,6 +603,11 @@ export async function createHttpApp(
           );
         }
         checkResponse(contracts.responseName(op), result);
+        if (
+          op.operationId === "getHealth" &&
+          record(result).storageReady === false
+        )
+          throw new HttpFailure("STORAGE_UNAVAILABLE", 503, null, true);
         const location =
           record(result).operationLocation ?? record(result).location;
         if (
@@ -464,7 +645,7 @@ export async function createHttpApp(
     for (const close of [...streams]) close();
   });
   app.addHook("onClose", async () => {
-    if (options.closeServiceOnClose) service.close();
+    if (options.closeServiceOnClose) await service.close();
   });
   await app.ready();
   return app;

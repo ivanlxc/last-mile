@@ -1,16 +1,17 @@
 # LAST MILE · 最后一程
 
-一款单人、人机协作决策游戏。玩家护送二十名平民穿越虚构的萨赫尔河谷，在有限时间与调查额度内判断情报、选择提供给 AI 的资料并决定路线。三关、两套隐藏剧本、独立行为复盘可完整运行。v0.2 支持完整中文和英文，首次进入默认英文。
+一款单人、人机协作决策游戏。玩家护送二十名平民穿越虚构的萨赫尔河谷，在有限时间与调查额度内判断情报、选择提供给 AI 的资料并决定路线。三关、两套隐藏剧本、独立行为复盘可完整运行。当前版本支持完整中文和英文，首次进入默认英文。
 
 ## 项目入口与最新版本
 
 **项目仓库：[ivanlxc/last-mile](https://github.com/ivanlxc/last-mile)。** 文档中的 `<repository-root>` 指你自己克隆到的项目目录；源码修改、运行和 Git 操作均在该目录进行。远程 `origin` 指向上述仓库。
 
-- 当前游戏：`package.json` 的 **v0.2.0**，源代码直接位于 `client/`、`server/`、`scripts/`、`tests/`。
+- 当前游戏：`package.json` 的 **v0.3.0**，源代码直接位于 `client/`、`server/`、`scripts/`、`tests/`。
 - 当前实现说明：[docs/implementation](docs/implementation/)；[验收结果](docs/implementation/验收结果.md)；[真实模型接入验收](docs/implementation/真实模型接入验收.md)。
 - 工程设计基线：**v0.5**，见 [PRD](docs/engineering_v0.5/01_PRD.md)、[HLD](docs/engineering_v0.5/02_HLD.md)、[分册 LLD 与架构图导航](docs/README.md)。设计版本号与游戏版本号分别管理。
 - [项目目录与版本说明](docs/项目目录与版本.md) · [API key 与 GitHub 操作指南](docs/开发与GitHub.md)。
-- **密钥只填根目录 `.env`**；`.env.example` 是可以提交 Git 的空模板。
+- **本机密钥只填根目录 `.env`；云端密钥填 Render 环境变量**。公开模板不得填写真实密钥。
+- 免费云端试玩部署：[Render + Neon 操作指南](docs/implementation/云端试玩部署.md)；[v0.3 验证记录](docs/implementation/云端改造验收.md)；[技术栈](docs/implementation/部署方案与技术栈.md)。
 
 仓库当前为 **Public**。源码、工程文档与作者数据包含完整剧本和来源关系，任何访问仓库的人都能阅读；游戏内的浏览器信息隔离不等于源码保密。仓库公开也不代表游戏服务已上线。
 
@@ -18,7 +19,7 @@
 
 ## 克隆与启动
 
-需要 **Git、Node.js 24 或更高版本、pnpm 11**。团队可在自己选择的目录执行：
+需要 **Git、Node.js 24、pnpm 11**。团队可在自己选择的目录执行：
 
 ```bash
 git clone https://github.com/ivanlxc/last-mile.git
@@ -101,7 +102,7 @@ ANTHROPIC_MODEL=填写你账户支持的模型ID
 - 终局区分抵达、沿途手续与完整交接。当前在抵达时结束，没有假造人员交接完成时间。
 - 行为复盘给出过度依赖、过度怀疑、过度谨慎、校准信任四个维度；证据不足时不强行分类。它不是心理测量工具。
 
-## 存档与恢复
+## 本机存档与恢复
 
 SQLite 默认保存在 `.last-mile/game.sqlite`，采用 WAL、事务、幂等命令和不可变终局记录。**浏览器刷新不会暂停时钟**；同一次服务启动中能恢复当前页面。
 
@@ -111,7 +112,7 @@ SQLite 默认保存在 `.last-mile/game.sqlite`，采用 WAL、事务、幂等�
 pnpm exec tsx --env-file-if-exists=.env server/index.ts --resume-session 该局UUID
 ```
 
-再打开 `http://127.0.0.1:3111/?session=该局UUID`。当前没有跨启动的历史存档选择列表；最方便的保留方式是在终局点击“导出完整复盘”。
+再打开 `http://127.0.0.1:3111/?session=该局UUID`。本机模式没有跨启动的历史存档选择列表；最方便的保留方式是在终局点击“导出完整复盘”。云端模式使用 PostgreSQL 和独立浏览器身份，提供本人历史记录列表，重启后仍可访问；详情见云端部署指南。
 
 自定义位置：`LAST_MILE_DB`；端口：`PORT`。不要修改 `.env` 后期待正在运行的进程自动换模型。
 
@@ -130,7 +131,7 @@ pnpm verify:model   # 零模型调用：仅列安全配置、密钥是否存在�
 pnpm verify:model --live --role=all --locale=en-US --attempts=1 --output=.local-artifacts/model-smoke-en.json
 ```
 
-最新回归为 13 个测试文件、192 项通过，生产构建通过；具体日期、真实请求记录和边界见[真实模型接入验收](docs/implementation/真实模型接入验收.md)。旧版 158 项记录作为此前里程碑保留。
+v0.3 最新回归为 20 个测试文件、281 项通过，生产构建及 4 项浏览器流程通过，包含真实本机 PostgreSQL 与双进程交接验证；详见[云端改造验收](docs/implementation/云端改造验收.md)。本轮未发送真实模型请求，既有有限真实请求结果见[真实模型接入验收](docs/implementation/真实模型接入验收.md)。旧版 158／192 项记录作为此前里程碑保留。
 
 UI 自动化默认使用 macOS Chrome；其他系统可以设置 `PLAYWRIGHT_CHROME_PATH`，或安装 Playwright Chromium。真实时间流程与注入测试时钟的三幕浏览器流程分别记录，不混称为同一种测试。测试时钟只能在进程内注入，没有 HTTP 调速/跳关接口。
 

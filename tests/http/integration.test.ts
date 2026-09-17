@@ -23,7 +23,7 @@ afterEach(async () => {
 
 async function fixture() {
   let elapsed = 0;
-  const service = createGameService({
+  const service = await createGameService({
     dbPath: ":memory:",
     autoTick: false,
     recoverOnStartup: false,
@@ -55,7 +55,10 @@ async function fixture() {
     const result = await app.inject({ url, headers });
     const diagnostics =
       result.statusCode === 503 && schema === "SessionProjection"
-        ? registry.errors(schema, service.read("getSession", url.split("/")[4]))
+        ? registry.errors(
+            schema,
+            await service.read("getSession", url.split("/")[4]),
+          )
         : [];
     expect(result.statusCode, result.body + JSON.stringify(diagnostics)).toBe(
       200,
@@ -138,7 +141,7 @@ async function fixture() {
   };
   const advance = async (milliseconds: number) => {
     elapsed += milliseconds;
-    service.tick(created.sessionId);
+    await service.tick(created.sessionId);
     await new Promise((resolve) => setTimeout(resolve, 5));
   };
   await command(

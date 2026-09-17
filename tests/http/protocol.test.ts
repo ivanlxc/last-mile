@@ -40,18 +40,25 @@ function example(operationId: string) {
   );
 }
 function fakeService(): GameService {
-  return {
+  const service = {
     launchId: uuid,
     lastExecutionReplayed: false,
-    execute: vi.fn((op) => example(op)),
-    read: vi.fn((op) => example(op)),
-    getEventsSince: vi.fn(() => []),
-    subscribe: vi.fn(() => () => {}),
-    hasSessionAccess: vi.fn(() => true),
+    execute: vi.fn(async (op) => example(op)),
+    executeWithMeta: vi.fn(async (op, body, meta) => ({
+      result: await service.execute(op, body, meta),
+      replayed: false,
+    })),
+    hasPlayerSessionAccess: vi.fn(async () => true),
+    listPlayerSessions: vi.fn(async () => []),
+    read: vi.fn(async (op) => op === "getHealth" ? { ...example(op), storageReady: true } : example(op)),
+    getEventsSince: vi.fn(async () => []),
+    subscribe: vi.fn(async () => () => {}),
+    hasSessionAccess: vi.fn(async () => true),
     startScheduler: vi.fn(() => () => {}),
-    tick: vi.fn(),
-    close: vi.fn(),
+    tick: vi.fn(async () => {}),
+    close: vi.fn(async () => {}),
   } as GameService;
+  return service;
 }
 async function setup(service = fakeService(), override = {}) {
   const app = await createHttpApp({
@@ -230,7 +237,7 @@ describe("frozen HTTP contract and authentication", () => {
 
   it("validates successful responses independently and fails closed on accidental private fields", async () => {
     const service = fakeService();
-    service.read = vi.fn(() => ({
+    service.read = vi.fn(async () => ({
       ...examples.HealthView,
       modelApiKey: "PRIVATE-SECRET",
       caseId: "B",
@@ -243,9 +250,23 @@ describe("frozen HTTP contract and authentication", () => {
     expect(contracts.errors("Problem", result.json())).toEqual([]);
   });
 
+  it("uses cached storage health to return 503 without probing the database", async () => {
+    const service = fakeService();
+    service.read = vi.fn(async () => ({
+      ...examples.HealthView,
+      storageReady: false,
+    }));
+    const { app } = await setup(service);
+    const response = await app.inject({ url: "/api/v1/health", headers });
+    expect(response.statusCode).toBe(503);
+    expect(response.json().code).toBe("STORAGE_UNAVAILABLE");
+    expect(service.read).toHaveBeenCalledTimes(1);
+    expect(service.hasSessionAccess).not.toHaveBeenCalled();
+  });
+
   it("maps domain errors without exposing their private diagnostic text", async () => {
     const service = fakeService();
-    service.execute = vi.fn(() => {
+    service.execute = vi.fn(async () => {
       throw Object.assign(new Error("case B / API_KEY=secret"), {
         name: "DomainError",
         code: "STATE_VERSION_CONFLICT",
@@ -269,7 +290,7 @@ describe("frozen HTTP contract and authentication", () => {
   it("SSE uses cookie auth, public cursor IDs and stops cleanly; ambiguous cursor rejected", async () => {
     const service = fakeService();
     const event = examples.SseClockSample;
-    service.getEventsSince = vi.fn((_session, cursor) =>
+    service.getEventsSince = vi.fn(async (_session, cursor) =>
       cursor ? [] : [event],
     );
     const { app } = await setup(service);
@@ -305,6 +326,49 @@ describe("frozen HTTP contract and authentication", () => {
         })
       ).statusCode,
     ).toBe(400);
+  });
+
+  it("drains more than 250 replay events before live buffered events and unsubscribes on close", async () => {
+    const service = fakeService();
+    const events = Array.from({ length: 600 }, (_, index) => ({
+      ...examples.SseClockSample,
+      viewSequence: index + 1,
+    }));
+    const live = { ...examples.SseClockSample, viewSequence: 601 };
+    let listener: (event: typeof live) => void = () => {};
+    const stop = vi.fn();
+    service.subscribe = vi.fn(async (_id, fn) => {
+      listener = fn;
+      return stop;
+    });
+    service.getEventsSince = vi.fn(async (_id, cursor) => {
+      const after = cursor ? Number(cursor.split(":")[1]) : 0;
+      if (!cursor) listener(live);
+      return events.filter((e) => e.viewSequence > after).slice(0, 250);
+    });
+    const { app } = await setup(service);
+    const response = await app.inject({
+      url: `/api/v1/sessions/${uuid}/events`,
+      headers,
+      payloadAsStream: true,
+    });
+    const wire = await new Promise<string>((resolve, reject) => {
+      let body = "";
+      const stream = response.stream();
+      stream.on("data", (chunk) => {
+        body += chunk.toString();
+        if (body.includes('"viewSequence":601')) resolve(body);
+      });
+      stream.on("error", reject);
+    });
+    const sequences = [...wire.matchAll(/^id: [^:]+:(\d+)$/gm)].map((m) =>
+      Number(m[1]),
+    );
+    expect(sequences).toEqual(Array.from({ length: 601 }, (_, i) => i + 1));
+    expect(service.getEventsSince).toHaveBeenCalledTimes(3);
+    await app.close();
+    apps.splice(apps.indexOf(app), 1);
+    expect(stop).toHaveBeenCalledTimes(1);
   });
 
   it("production serves only frontend build files and applies CSP to the shell", async () => {

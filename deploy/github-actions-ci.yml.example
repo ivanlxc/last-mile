@@ -1,0 +1,36 @@
+name: LAST MILE checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  application:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: last_mile_test
+          POSTGRES_PASSWORD: ci-ephemeral-only
+          POSTGRES_DB: last_mile_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U last_mile_test -d last_mile_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      MODEL_PROVIDER: offline
+      PG_TEST_URL: postgresql://last_mile_test:ci-ephemeral-only@127.0.0.1:5432/last_mile_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --prod=false
+      - run: pnpm build
+      - run: pnpm test

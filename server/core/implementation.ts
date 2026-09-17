@@ -1,6 +1,7 @@
 import { asLocale, translateFixed, type Locale } from "../localization.js";
 import { localizePublic, translatePublicText } from "./locales/index.js";
 import { createHash, randomUUID } from "node:crypto";
+import { AsyncResource } from "node:async_hooks";
 import { fileURLToPath } from "node:url";
 import type * as P from "../../docs/engineering_v0.5/contracts/public.types.js";
 import type * as A from "../../docs/engineering_v0.5/contracts/agent-derived.types.js";
@@ -22,7 +23,7 @@ import {
   type EvidenceDefinition,
   type Plan,
 } from "./world.js";
-import { Store } from "./store.js";
+import { createStore, type Store } from "./store.js";
 import { buildAdvisorInput } from "../ai/context.js";
 import { createAiService } from "../ai/index.js";
 import {
@@ -56,14 +57,81 @@ function ERR(
 ): never {
   throw new DomainError(code, status, message, s?.version ?? null);
 }
+const asyncArray = {
+  async map<T, U>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<U> | U,
+  ): Promise<U[]> {
+    const out: U[] = [];
+    for (let i = 0; i < values.length; i++) out.push(await fn(values[i]!, i));
+    return out;
+  },
+  async filter<T>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<unknown> | unknown,
+  ): Promise<T[]> {
+    const out: T[] = [];
+    for (let i = 0; i < values.length; i++)
+      if (await fn(values[i]!, i)) out.push(values[i]!);
+    return out;
+  },
+  async find<T>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<unknown> | unknown,
+  ): Promise<T | undefined> {
+    for (let i = 0; i < values.length; i++)
+      if (await fn(values[i]!, i)) return values[i];
+  },
+  async some<T>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<unknown> | unknown,
+  ): Promise<boolean> {
+    for (let i = 0; i < values.length; i++)
+      if (await fn(values[i]!, i)) return true;
+    return false;
+  },
+  async every<T>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<unknown> | unknown,
+  ): Promise<boolean> {
+    for (let i = 0; i < values.length; i++)
+      if (!(await fn(values[i]!, i))) return false;
+    return true;
+  },
+  async flatMap<T, U>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<U[]> | U[],
+  ): Promise<U[]> {
+    return (await this.map(values, fn)).flat();
+  },
+  async forEach<T>(
+    values: readonly T[],
+    fn: (value: T, index: number) => Promise<void> | void,
+  ): Promise<void> {
+    for (let i = 0; i < values.length; i++) await fn(values[i]!, i);
+  },
+};
 const defaultClock: Clock = {
   nowMs: () => Date.now(),
   monotonicMs: () => performance.now(),
 };
-export function createGameService(
+export async function createGameService(
   options: GameServiceOptions = {},
-): GameService {
-  return new CoreGameService(options);
+): Promise<GameService> {
+  const store =
+    options.store ??
+    (await createStore({
+      dbPath: options.dbPath,
+      databaseUrl: options.databaseUrl,
+    }));
+  const service = new CoreGameService(options, store);
+  try {
+    await service.initialize();
+    return service;
+  } catch (error) {
+    if (!options.store) await store.close();
+    throw error;
+  }
 }
 export class CoreGameService implements GameService {
   readonly launchId: string;
@@ -83,11 +151,18 @@ export class CoreGameService implements GameService {
   private readonly lastClockSamples = new Map<string, number>();
   private readonly dispatched = new Set<string>();
   private readonly granted = new Set<string>();
+  private readonly liveSessions = new Set<string>();
+  private serialTail: Promise<void> = Promise.resolve();
+  private readonly detached = new AsyncResource("last-mile-background");
+  private jobsPending = false;
+  private dispatchScheduled = false;
+  private schedulerBusy = false;
+  private storageFailed = false;
   private closed = false;
   private closing = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   private contentVersionId!: string;
-  constructor(options: GameServiceOptions) {
+  constructor(options: GameServiceOptions, store: Store) {
     this.options = {
       ...options,
       agents: options.agents ?? createAiService({ env: {} }),
@@ -99,38 +174,210 @@ export class CoreGameService implements GameService {
           new URL("../../docs/engineering_v0.5/content", import.meta.url),
         ),
     );
-    this.store = new Store(options.dbPath ?? ":memory:");
+    this.store = store;
     this.launchId = options.launchId ?? uid();
-    this.store.transaction(() => {
-      let content = this.store.one(
+  }
+  private storageFailure(error: unknown) {
+    const code = (error as { code?: string })?.code;
+    if (
+      this.storageFailed ||
+      this.closed ||
+      this.closing ||
+      !(code === "STORAGE_CONNECTION_LOST" || code === "STORAGE_UNAVAILABLE")
+    )
+      return;
+    // A COMMIT may have reached storage even when its acknowledgement was lost.
+    // Freeze this process rather than guessing whether to replay game writes.
+    this.storageFailed = true;
+    if (this.timer) clearInterval(this.timer);
+    this.timer = null;
+    this.detached.runInAsyncScope(() =>
+      queueMicrotask(() => {
+        try {
+          this.options.onStorageFailure?.();
+        } catch {
+          /* Host handles restart. */
+        }
+      }),
+    );
+  }
+  private serialized<T>(fn: () => Promise<T>, allowFailed = false): Promise<T> {
+    const result = this.serialTail.then(async () => {
+      if (this.storageFailed && !allowFailed)
+        throw new DomainError(
+          "STORAGE_UNAVAILABLE",
+          503,
+          "Storage is unavailable. Please retry after the service restarts.",
+          null,
+          true,
+        );
+      try {
+        return await fn();
+      } catch (error) {
+        this.storageFailure(error);
+        throw error;
+      }
+    });
+    this.serialTail = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+  execute(operationId: MutationOperation, body: unknown, meta: CommandMeta) {
+    return this.executeWithMeta(operationId, body, meta).then((x) => x.result);
+  }
+  executeWithMeta(
+    operationId: MutationOperation,
+    body: unknown,
+    meta: CommandMeta,
+  ) {
+    return this.serialized(async () => {
+      const result = await this.executeInternal(operationId, body, meta);
+      return { result, replayed: this.lastExecutionReplayed };
+    });
+  }
+  read(
+    operationId: ReadOperation,
+    sessionId?: string,
+    id?: string,
+    query: Record<string, string | number | undefined> = {},
+  ) {
+    return this.serialized(
+      () => this.readInternal(operationId, sessionId, id, query),
+      operationId === "getHealth",
+    );
+  }
+  tick(sessionId?: string) {
+    return this.serialized(() => this.tickInternal(sessionId));
+  }
+  getSessionLocale(id: string) {
+    return this.serialized(() => this.getSessionLocaleInternal(id));
+  }
+  hasSessionAccess(
+    id: string,
+    capability: "read" | "command" | "evaluation" | "export" = "read",
+  ) {
+    return this.serialized(() => this.hasSessionAccessInternal(id, capability));
+  }
+  getEventsSince(id: string, cursor?: string) {
+    return this.serialized(() => this.getEventsSinceInternal(id, cursor));
+  }
+  subscribe(id: string, listener: (event: P.PublicSseEvent) => void) {
+    return this.serialized(() => this.subscribeInternal(id, listener));
+  }
+  close() {
+    return this.serialized(() => this.closeInternal(), true);
+  }
+  hasPlayerSessionAccess(
+    id: string,
+    playerId: string,
+    capability: "read" | "command" | "evaluation" | "export" = "read",
+  ) {
+    return this.serialized(() => this.playerAccess(id, playerId, capability));
+  }
+  private async playerAccess(
+    id: string,
+    playerId: string,
+    capability: "read" | "command" | "evaluation" | "export",
+  ) {
+    if (!playerId || this.closed) return false;
+    const owner = await this.store.one(
+      "SELECT player_id FROM cloud_sessions WHERE session_id=? AND player_id=?",
+      id,
+      playerId,
+    );
+    if (!owner) return false;
+    const s = await this.load(id);
+    if (!this.granted.has(id)) {
+      if (LIVE.has(s.lifecycle)) return false;
+      await this.grant(s, false);
+    }
+    return this.hasSessionAccessInternal(id, capability);
+  }
+  listPlayerSessions(playerId: string) {
+    return this.serialized(async () => {
+      if (!playerId || this.closed) return [];
+      const rows = await this.store.all(
+        "SELECT s.session_id,s.lifecycle,s.created_at_ms,s.updated_at_ms,m.locale FROM cloud_sessions c JOIN sessions s ON s.session_id=c.session_id JOIN runtime_session_meta m ON m.session_id=s.session_id WHERE c.player_id=? ORDER BY s.updated_at_ms DESC LIMIT 100",
+        playerId,
+      );
+      return rows.map((row) => ({
+        sessionId: row.session_id,
+        locale: asLocale(row.locale),
+        status:
+          row.lifecycle === "briefing"
+            ? ("created" as const)
+            : row.lifecycle === "running"
+              ? ("active" as const)
+              : ("sealed" as const),
+        createdAt: iso(row.created_at_ms),
+        updatedAt: iso(row.updated_at_ms),
+      }));
+    });
+  }
+  private scheduleDispatch() {
+    if (
+      this.closed ||
+      this.closing ||
+      this.storageFailed ||
+      !this.jobsPending ||
+      this.dispatchScheduled
+    )
+      return;
+    if (
+      this.dispatched.size >=
+      (this.options.cloud?.maxConcurrentModelJobs ?? Number.POSITIVE_INFINITY)
+    )
+      return;
+    this.dispatchScheduled = true;
+    this.detached.runInAsyncScope(() =>
+      queueMicrotask(() => {
+        void this.serialized(() => this.dispatch())
+          .catch(() => {
+            // Do not log database statements, connection strings, or provider inputs.
+            console.error("Agent scheduling unavailable");
+          })
+          .finally(() => {
+            this.dispatchScheduled = false;
+          });
+      }),
+    );
+  }
+  async initialize() {
+    const options = this.options;
+    await this.store.transaction(async () => {
+      let content = await this.store.one(
         "SELECT * FROM content_versions WHERE content_hash=?",
         this.world.contentHash,
       );
       if (!content) {
-        this.store.insert("content_versions", {
+        await this.store.insert("content_versions", {
           content_version_id: uid(),
           content_hash: this.world.contentHash,
           schema_version: "0.5",
           registry_json: canonical(this.world.campaign),
           created_at_ms: this.clock.nowMs(),
         });
-        content = this.store.one(
+        content = await this.store.one(
           "SELECT * FROM content_versions WHERE content_hash=?",
           this.world.contentHash,
         );
       }
       this.contentVersionId = content.content_version_id;
       if (
-        !this.store.one(
+        !(await this.store.one(
           "SELECT 1 FROM policy_profiles WHERE policy_hash=?",
           this.world.policyHash,
-        )
+        ))
       ) {
         const v =
-          (this.store.one(
-            "SELECT MAX(profile_version) AS v FROM policy_profiles",
+          ((
+            await this.store.one(
+              "SELECT MAX(profile_version) AS v FROM policy_profiles",
+            )
           )?.v ?? 0) + 1;
-        this.store.insert("policy_profiles", {
+        await this.store.insert("policy_profiles", {
           policy_hash: this.world.policyHash,
           profile_id: "SINGLE_PLAYER_REFERENCE",
           profile_version: v,
@@ -139,35 +386,40 @@ export class CoreGameService implements GameService {
           created_at_ms: this.clock.nowMs(),
         });
       }
-      this.store.insert("launches", {
+      await this.store.insert("launches", {
         launch_id: this.launchId,
         token_hash: options.tokenHash ?? hash(uid()),
         started_at_ms: this.clock.nowMs(),
       });
     });
-    this.contentVersionId = this.store.one(
-      "SELECT content_version_id FROM content_versions WHERE content_hash=?",
-      this.world.contentHash,
+    this.contentVersionId = (
+      await this.store.one(
+        "SELECT content_version_id FROM content_versions WHERE content_hash=?",
+        this.world.contentHash,
+      )
     ).content_version_id;
-    if (options.recoverOnStartup !== false) this.recover();
+    if (options.recoverOnStartup !== false) await this.recover();
     for (const id of options.resumeSessionIds ?? []) {
-      const s = this.load(id);
+      const s = await this.load(id);
       if (LIVE.has(s.lifecycle))
         ERR("NOT_TERMINAL", 422, "只能只读打开已封存历史", s);
-      this.grant(s, false);
+      await this.grant(s, false);
     }
     if (options.autoTick) this.startScheduler();
   }
-  private load(id: string): State {
-    const row = this.store.one(
+  private async load(id: string): Promise<State> {
+    const row = await this.store.one(
       "SELECT world_state_json FROM sessions WHERE session_id=?",
       id,
     );
     if (!row) ERR("RESOURCE_NOT_FOUND", 404, "找不到此会话");
     return JSON.parse(row.world_state_json);
   }
-  private row(id: string) {
-    return this.store.one("SELECT * FROM sessions WHERE session_id=?", id);
+  private async row(id: string) {
+    return await this.store.one(
+      "SELECT * FROM sessions WHERE session_id=?",
+      id,
+    );
   }
   private missionNow(s: State) {
     if (s.lifecycle !== "running") return s.mission;
@@ -184,8 +436,8 @@ export class CoreGameService implements GameService {
         )
       : s.mission;
   }
-  private save(s: State) {
-    this.store.run(
+  private async save(s: State) {
+    await this.store.run(
       "UPDATE sessions SET lifecycle=?,phase=?,scene_id=?,state_version=?,inbox_version=?,assistant_context_version=?,mission_ms=?,world_state_json=?,terminal_seal_id=?,updated_at_ms=? WHERE session_id=?",
       s.lifecycle,
       s.phase,
@@ -196,19 +448,39 @@ export class CoreGameService implements GameService {
       s.mission,
       canonical(s),
       s.outcome
-        ? this.store.one(
-            "SELECT seal_id FROM terminal_seals WHERE session_id=?",
-            s.sessionId,
+        ? (
+            await this.store.one(
+              "SELECT seal_id FROM terminal_seals WHERE session_id=?",
+              s.sessionId,
+            )
           )?.seal_id
         : null,
       this.clock.nowMs(),
       s.sessionId,
     );
+    if (LIVE.has(s.lifecycle)) this.liveSessions.add(s.sessionId);
+    else this.liveSessions.delete(s.sessionId);
   }
-  private tx<T>(fn: () => T): T {
+  private async tx<T>(fn: () => Promise<T> | T): Promise<T> {
+    const anchors = new Map(
+      [...this.anchors].map(([id, value]) => [id, { ...value }]),
+    );
+    const granted = new Set(this.granted),
+      live = new Set(this.liveSessions),
+      samples = new Map(this.lastClockSamples);
+    const jobsPending = this.jobsPending;
     try {
-      return this.store.transaction(fn);
+      return await this.store.transaction(fn);
     } catch (e) {
+      this.anchors.clear();
+      for (const [k, v] of anchors) this.anchors.set(k, v);
+      this.granted.clear();
+      for (const id of granted) this.granted.add(id);
+      this.liveSessions.clear();
+      for (const id of live) this.liveSessions.add(id);
+      this.lastClockSamples.clear();
+      for (const [k, v] of samples) this.lastClockSamples.set(k, v);
+      this.jobsPending = jobsPending;
       if (e instanceof DomainError) throw e;
       if ((e as Error).message?.includes("database is locked"))
         throw new DomainError(
@@ -221,30 +493,30 @@ export class CoreGameService implements GameService {
       throw e;
     }
   }
-  hasSessionAccess(
+  private async hasSessionAccessInternal(
     id: string,
     capability: "read" | "command" | "evaluation" | "export" = "read",
   ) {
     if (!this.granted.has(id)) return false;
     if (capability === "command") {
-      const row = this.row(id);
+      const row = await this.row(id);
       return row?.launch_id === this.launchId;
     }
     return true;
   }
-  private authorize(id: string) {
-    if (!this.hasSessionAccess(id))
+  private async authorize(id: string) {
+    if (!(await this.hasSessionAccessInternal(id)))
       ERR("CAPABILITY_DENIED", 403, "此启动实例未获该会话访问权限");
   }
-  private grant(s: State, command: boolean) {
-    this.tx(() => {
+  private async grant(s: State, command: boolean) {
+    await this.tx(async () => {
       for (const cap of [
         "commander.read",
         "evaluation.request",
         "export.request",
         ...(command ? ["commander.command"] : []),
       ])
-        this.store.run(
+        await this.store.run(
           "INSERT OR IGNORE INTO launch_session_access(launch_id,session_id,binding_id,capability,granted_at_ms) VALUES(?,?,?,?,?)",
           this.launchId,
           s.sessionId,
@@ -255,7 +527,7 @@ export class CoreGameService implements GameService {
     });
     this.granted.add(s.sessionId);
   }
-  private event(
+  private async event(
     s: State,
     kind: string,
     data: unknown,
@@ -263,9 +535,9 @@ export class CoreGameService implements GameService {
     binding?: string,
     requestId?: string,
   ) {
-    const seq = this.row(s.sessionId).last_event_seq + 1;
+    const seq = (await this.row(s.sessionId)).last_event_seq + 1;
     const eventId = uid();
-    this.store.insert("events", {
+    await this.store.insert("events", {
       session_id: s.sessionId,
       seq,
       event_id: eventId,
@@ -299,20 +571,22 @@ export class CoreGameService implements GameService {
       jobId,
     });
   }
-  private cursor(s: State) {
-    return this.store.one(
-      "SELECT COALESCE(MAX(cursor),0) AS n FROM view_events WHERE session_id=? AND view_role='commander'",
-      s.sessionId,
+  private async cursor(s: State) {
+    return (
+      await this.store.one(
+        "SELECT COALESCE(MAX(cursor),0) AS n FROM view_events WHERE session_id=? AND view_role='commander'",
+        s.sessionId,
+      )
     ).n as number;
   }
-  private publicEvent(
+  private async publicEvent(
     s: State,
     eventType: P.PublicSseEvent["eventType"],
     data: any,
   ) {
-    const n = this.cursor(s) + 1;
+    const n = (await this.cursor(s)) + 1;
     if (eventType === "projection.changed")
-      data.lastViewCursor = this.cursorString(s, n);
+      data.lastViewCursor = await this.cursorString(s, n);
     const e = {
       eventType,
       sessionId: s.sessionId,
@@ -321,34 +595,35 @@ export class CoreGameService implements GameService {
       stateVersion: s.version,
       data: localizePublic(data, asLocale(s.locale)),
     } as P.PublicSseEvent;
-    this.store.insert("view_events", {
+    await this.store.insert("view_events", {
       session_id: s.sessionId,
       view_role: "commander",
       cursor: n,
-      source_seq: this.row(s.sessionId).last_event_seq,
+      source_seq: (await this.row(s.sessionId)).last_event_seq,
       event_type: eventType,
       public_payload_json: canonical(e),
     });
     return e;
   }
-  private cursorString(s: State, n = this.cursor(s)) {
+  private async cursorString(s: State, n?: number) {
+    n ??= await this.cursor(s);
     return `${s.runEpoch}:${n}`;
   }
-  private flush(sid: string) {
+  private async flush(sid: string) {
     const listeners = this.listeners.get(sid);
     if (listeners)
       for (const [listener] of listeners) {
         while (listeners.has(listener)) {
           const after = listeners.get(listener)!;
-          const events = this.store
-            .all(
+          const events = (
+            await this.store.all(
               "SELECT public_payload_json FROM view_events WHERE session_id=? AND view_role='commander' AND cursor>? ORDER BY cursor LIMIT 250",
               sid,
               after,
             )
-            .map(
-              (row) => JSON.parse(row.public_payload_json) as P.PublicSseEvent,
-            );
+          ).map(
+            (row) => JSON.parse(row.public_payload_json) as P.PublicSseEvent,
+          );
           for (const event of events) {
             if (!listeners.has(listener)) break;
             if (event.viewSequence <= listeners.get(listener)!) continue;
@@ -363,16 +638,16 @@ export class CoreGameService implements GameService {
           if (events.length < 250) break;
         }
       }
-    this.dispatch();
+    this.scheduleDispatch();
   }
-  private account(s: State, key: string) {
-    return this.store.one(
+  private async account(s: State, key: string) {
+    return await this.store.one(
       "SELECT * FROM quota_accounts WHERE session_id=? AND account_id=?",
       s.sessionId,
       s.accounts[key],
     );
   }
-  private ledger(
+  private async ledger(
     s: State,
     key: string,
     kind: "reserve" | "spend" | "release" | "refund",
@@ -381,7 +656,7 @@ export class CoreGameService implements GameService {
     operation = uid(),
     reason = "DOMAIN_COMMAND",
   ) {
-    const q = this.account(s, key);
+    const q = await this.account(s, key);
     if (!q) throw Error("Missing quota account");
     const entry = uid();
     let delta: number[], bucket: string;
@@ -415,7 +690,7 @@ export class CoreGameService implements GameService {
         "可用额度不足",
         s,
       );
-    this.store.insert("quota_ledger", {
+    await this.store.insert("quota_ledger", {
       session_id: s.sessionId,
       entry_id: entry,
       account_id: q.account_id,
@@ -434,8 +709,12 @@ export class CoreGameService implements GameService {
     });
     return entry;
   }
-  private reportQuota(s: State, scene: P.SceneId, role: Role): P.ReportQuota {
-    const q = this.account(s, `${scene}:${role}:report`);
+  private async reportQuota(
+    s: State,
+    scene: P.SceneId,
+    role: Role,
+  ): Promise<P.ReportQuota> {
+    const q = await this.account(s, `${scene}:${role}:report`);
     return {
       role,
       sceneId: scene,
@@ -445,9 +724,9 @@ export class CoreGameService implements GameService {
       remaining: q.available,
     };
   }
-  private uploadQuota(s: State): P.UploadQuota | null {
+  private async uploadQuota(s: State): Promise<P.UploadQuota | null> {
     if (!s.sceneId) return null;
-    const q = this.account(s, `${s.sceneId}:commander:upload`);
+    const q = await this.account(s, `${s.sceneId}:commander:upload`);
     return {
       sceneId: s.sceneId,
       mode: "cumulative",
@@ -483,31 +762,31 @@ export class CoreGameService implements GameService {
       inspection: s.flags.inspectionPending ? "pending" : "notRequired",
     };
   }
-  private publicRecord(
+  private async publicRecord(
     s: State,
     key: string,
     kind: "report" | "advice" | "briefing" | "sceneFeedback",
     payload: any,
   ) {
-    const old = this.store.one(
+    const old = await this.store.one(
       "SELECT public_record_id FROM runtime_display_bindings WHERE session_id=? AND record_key=?",
       s.sessionId,
       key,
     );
     if (old) return old.public_record_id;
     const recordId = uid();
-    this.store.insert("public_records", {
+    await this.store.insert("public_records", {
       session_id: s.sessionId,
       public_record_id: recordId,
       revision: 1,
       view_role: "commander",
       record_kind: kind,
-      source_seq: this.row(s.sessionId).last_event_seq,
+      source_seq: (await this.row(s.sessionId)).last_event_seq,
       public_payload_json: canonical(
         localizePublic(payload, asLocale(s.locale)),
       ),
     });
-    this.store.run(
+    await this.store.run(
       "INSERT OR REPLACE INTO runtime_display_bindings VALUES(?,?,?,1)",
       s.sessionId,
       key,
@@ -515,10 +794,10 @@ export class CoreGameService implements GameService {
     );
     return recordId;
   }
-  private projection(s: State): P.SessionProjection {
+  private async projection(s: State): Promise<P.SessionProjection> {
     const now = this.missionNow(s),
       op = this.op(s);
-    const rows = this.store.all(
+    const rows = await this.store.all(
       "SELECT * FROM quota_accounts WHERE session_id=? AND quota_scope=?",
       s.sessionId,
       "session",
@@ -564,48 +843,52 @@ export class CoreGameService implements GameService {
         spent: q.spent,
         scope: "session",
       })),
-      reportQuotas: (["analyst", "liaison"] as const).map((r) =>
-        this.reportQuota(s, s.sceneId ?? "E1", r),
+      reportQuotas: await asyncArray.map(
+        ["analyst", "liaison"] as const,
+        async (r) => await this.reportQuota(s, s.sceneId ?? "E1", r),
       ),
-      uploadQuota: this.uploadQuota(s),
+      uploadQuota: await this.uploadQuota(s),
       reports,
       sceneUploads: uploads,
       inboxVersion: s.inboxVersion,
       assistantContextVersion: s.contextVersion,
       activeTasks: s.tasks.filter((t) => active(t.view)).map((t) => t.view),
       activeOperation: op ? this.operationView(s, op, now) : null,
-      taskOptions: this.taskOptions(s),
+      taskOptions: await this.taskOptions(s),
       actionOptions: this.actionOptions(s),
-      latestAdviceJob: this.currentJob(s),
+      latestAdviceJob: await this.currentJob(s),
       unuploadedReportIds: reports
         .filter((r) => !uploads.some((u) => u.reportId === r.reportId))
         .map((r) => r.reportId),
-      lastViewCursor: this.cursorString(s),
+      lastViewCursor: await this.cursorString(s),
       sealedHash: s.outcome?.sealedHash ?? null,
     };
   }
-  private taskOptions(s: State): P.TaskOption[] {
+  private async taskOptions(s: State): Promise<P.TaskOption[]> {
     if (!s.sceneId) return [];
     const defs = this.world
       .case(s.caseId)
       .evidenceDefinitions.filter(
         (d) => d.sceneId === s.sceneId && d.acquisition === "investigation",
       );
-    const make = (d: EvidenceDefinition, trace = false): P.TaskOption => {
+    const make = async (
+      d: EvidenceDefinition,
+      trace = false,
+    ): Promise<P.TaskOption> => {
       const role = trace ? "liaison" : d.sourceRole,
         channel = (trace ? d.traceCostChannel : d.channel) as Channel;
       const locked = s.lifecycle !== "running" || s.phase !== "decision",
         busy = s.tasks.some(
           (t) => t.view.targetRole === role && active(t.view),
         );
-      const q = this.reportQuota(s, s.sceneId!, role);
+      const q = await this.reportQuota(s, s.sceneId!, role);
       const reason = locked
         ? "phase_locked"
         : busy
           ? "role_busy"
           : q.remaining === 0
             ? "no_report_slot"
-            : this.account(s, channel).available === 0
+            : (await this.account(s, channel)).available === 0
               ? "no_resource"
               : null;
       return {
@@ -642,10 +925,11 @@ export class CoreGameService implements GameService {
       )
       .filter((d): d is EvidenceDefinition => !!d?.traceCostChannel);
     return [
-      ...defs.map((d) => make(d)),
-      ...Array.from(
-        new Map(traces.map((d) => [d.definitionId, d])).values(),
-      ).map((d) => make(d, true)),
+      ...(await asyncArray.map(defs, (d) => make(d))),
+      ...(await asyncArray.map(
+        Array.from(new Map(traces.map((d) => [d.definitionId, d])).values()),
+        (d) => make(d, true),
+      )),
     ];
   }
   private actionOptions(s: State): P.ActionOption[] {
@@ -694,20 +978,38 @@ export class CoreGameService implements GameService {
     });
     return list;
   }
-  getSessionLocale(id: string): Locale | null {
-    return this.hasSessionAccess(id) ? asLocale(this.load(id).locale) : null;
+  private async getSessionLocaleInternal(id: string): Promise<Locale | null> {
+    return (await this.hasSessionAccessInternal(id))
+      ? asLocale((await this.load(id)).locale)
+      : null;
   }
-  execute(
+  private async executeInternal(
     operationId: MutationOperation,
     body: unknown,
     meta: CommandMeta,
-  ): unknown {
+  ): Promise<unknown> {
+    if (this.options.cloud) {
+      if (!meta.playerId)
+        ERR("UNAUTHORIZED", 401, "A persistent visitor identity is required.");
+      if (meta.sessionId) {
+        const capability =
+          operationId === "requestEvaluation"
+            ? "evaluation"
+            : operationId === "createExport"
+              ? "export"
+              : "command";
+        if (
+          !(await this.playerAccess(meta.sessionId, meta.playerId, capability))
+        )
+          ERR("RESOURCE_NOT_FOUND", 404, "Session not found.");
+      }
+    }
     const locale = meta.sessionId
-      ? (this.getSessionLocale(meta.sessionId) ?? "en-US")
+      ? ((await this.getSessionLocaleInternal(meta.sessionId)) ?? "en-US")
       : asLocale((body as any)?.locale);
     try {
       return localizePublic(
-        this.executeCanonical(operationId, body, meta),
+        await this.executeCanonical(operationId, body, meta),
         locale,
       );
     } catch (error) {
@@ -716,11 +1018,11 @@ export class CoreGameService implements GameService {
       throw error;
     }
   }
-  private executeCanonical(
+  private async executeCanonical(
     operationId: MutationOperation,
     body: unknown,
     meta: CommandMeta,
-  ): unknown {
+  ): Promise<unknown> {
     this.lastExecutionReplayed = false;
     if (this.closed || this.closing)
       ERR("SERVICE_UNAVAILABLE", 503, "服务已停止");
@@ -734,11 +1036,15 @@ export class CoreGameService implements GameService {
       body,
     });
     if (operationId === "createSession")
-      return this.create(body as P.CreateSessionRequest, meta, commandHash);
+      return await this.create(
+        body as P.CreateSessionRequest,
+        meta,
+        commandHash,
+      );
     const sid = meta.sessionId;
     if (!sid) ERR("INVALID_REQUEST", 400, "缺少 sessionId");
-    this.authorize(sid);
-    const cached = this.store.one(
+    await this.authorize(sid);
+    const cached = await this.store.one(
       "SELECT * FROM commands WHERE session_id=? AND request_id=?",
       sid,
       meta.idempotencyKey,
@@ -749,11 +1055,11 @@ export class CoreGameService implements GameService {
       this.lastExecutionReplayed = true;
       return JSON.parse(cached.response_json);
     }
-    const receivedMission = this.missionNow(this.load(sid));
-    this.tick(sid, receivedMission);
+    const receivedMission = this.missionNow(await this.load(sid));
+    await this.tickInternal(sid, receivedMission);
     let response: unknown;
-    this.tx(() => {
-      const s = this.load(sid);
+    await this.tx(async () => {
+      const s = await this.load(sid);
       if (meta.runEpoch !== s.runEpoch)
         ERR("RUN_EPOCH_CONFLICT", 409, "运行世代已变化", s);
       const b = body as any;
@@ -780,32 +1086,32 @@ export class CoreGameService implements GameService {
       }
       switch (operationId) {
         case "startSession":
-          response = this.start(s, b);
+          response = await this.start(s, b);
           break;
         case "createTask":
-          response = this.createTask(s, b, meta);
+          response = await this.createTask(s, b, meta);
           break;
         case "uploadReports":
-          response = this.upload(s, b.payload.items, meta);
+          response = await this.upload(s, b.payload.items, meta);
           break;
         case "askAdvisor":
-          response = this.question(s, b, meta);
+          response = await this.question(s, b, meta);
           break;
         case "commitAction":
-          response = this.action(s, b, meta);
+          response = await this.action(s, b, meta);
           break;
         case "recordDisplay":
-          response = this.receipt(s, b);
+          response = await this.receipt(s, b);
           break;
         case "abandonSession":
-          this.seal(s, "abandoned");
+          await this.seal(s, "abandoned");
           response = s.outcome;
           break;
         case "requestEvaluation":
-          response = this.evaluate(s, b, meta);
+          response = await this.evaluate(s, b, meta);
           break;
         case "createExport":
-          response = this.export(s, b, meta);
+          response = await this.export(s, b, meta);
           break;
       }
       if (!management) {
@@ -814,10 +1120,14 @@ export class CoreGameService implements GameService {
           s.lifecycle !== "abandoned" &&
           s.lifecycle !== "interrupted"
         ) {
-          this.contextRecord(s);
-          this.save(s);
-          this.publicEvent(s, "projection.changed", this.projection(s));
-        } else this.save(s);
+          await this.contextRecord(s);
+          await this.save(s);
+          await this.publicEvent(
+            s,
+            "projection.changed",
+            await this.projection(s),
+          );
+        } else await this.save(s);
       }
       const statuses: Partial<Record<MutationOperation, number>> = {
         createTask: 202,
@@ -826,8 +1136,8 @@ export class CoreGameService implements GameService {
         requestEvaluation: 202,
         createExport: 202,
       };
-      if (operationId === "startSession") response = this.projection(s);
-      this.store.insert("commands", {
+      if (operationId === "startSession") response = await this.projection(s);
+      await this.store.insert("commands", {
         session_id: sid,
         request_id: meta.idempotencyKey,
         run_epoch: s.runEpoch,
@@ -840,24 +1150,33 @@ export class CoreGameService implements GameService {
         accepted_at_ms: this.clock.nowMs(),
       });
     });
-    this.flush(sid);
+    await this.flush(sid);
     return response;
   }
-  private create(
+  private async create(
     b: P.CreateSessionRequest,
     meta: CommandMeta,
     commandHash: string,
-  ): P.SessionCreated {
-    const old = this.store.one(
-      "SELECT * FROM session_creations WHERE launch_id=? AND request_id=?",
-      this.launchId,
-      meta.idempotencyKey,
-    );
+  ): Promise<P.SessionCreated> {
+    const old = this.options.cloud
+      ? await this.store.one(
+          "SELECT * FROM cloud_creation_keys WHERE player_id=? AND request_id=?",
+          meta.playerId,
+          meta.idempotencyKey,
+        )
+      : await this.store.one(
+          "SELECT * FROM session_creations WHERE launch_id=? AND request_id=?",
+          this.launchId,
+          meta.idempotencyKey,
+        );
     if (old) {
       if (old.payload_hash !== commandHash)
         ERR("IDEMPOTENCY_KEY_REUSED", 409, "请求键已用于不同创建参数");
       this.lastExecutionReplayed = true;
-      this.granted.add(old.session_id);
+      if (this.options.cloud) {
+        if (!(await this.playerAccess(old.session_id, meta.playerId!, "read")))
+          ERR("RESOURCE_NOT_FOUND", 404, "Session not found.");
+      } else this.granted.add(old.session_id);
       return JSON.parse(old.response_json);
     }
     if (b.contentVersionId !== this.contentVersionId)
@@ -866,8 +1185,38 @@ export class CoreGameService implements GameService {
       ERR("POLICY_NOT_APPROVED", 422, "参考规则仍在评审，请选择设计预览");
     const sid = uid(),
       now = this.clock.nowMs();
+    if (this.options.cloud) {
+      if (
+        !(await this.store.one(
+          "SELECT player_id FROM cloud_players WHERE player_id=?",
+          meta.playerId,
+        ))
+      )
+        ERR("UNAUTHORIZED", 401, "Visitor identity not found.");
+      await this.reapExpiredBriefings(now);
+    }
     let result!: P.SessionCreated;
-    this.tx(() => {
+    await this.tx(async () => {
+      if (this.options.cloud) {
+        const live = await this.store.one(
+          "SELECT COUNT(*) AS n FROM sessions WHERE lifecycle IN ('briefing','running')",
+        );
+        if (Number(live.n) >= this.options.cloud.maxActiveSessions)
+          ERR(
+            "RATE_LIMITED",
+            429,
+            "The game is at capacity. Please try again later.",
+          );
+        const dayStart = Math.floor(now / 86400000) * 86400000;
+        const daily = await this.store.one(
+          "SELECT COUNT(*) AS n FROM cloud_sessions c JOIN sessions s ON s.session_id=c.session_id WHERE c.player_id=? AND s.created_at_ms>=? AND s.created_at_ms<?",
+          meta.playerId,
+          dayStart,
+          dayStart + 86400000,
+        );
+        if (Number(daily.n) >= this.options.cloud.maxSessionsPerPlayerPerDay)
+          ERR("RATE_LIMITED", 429, "Your daily game limit has been reached.");
+      }
       const s: State = {
         sessionId: sid,
         runEpoch: uid(),
@@ -914,7 +1263,7 @@ export class CoreGameService implements GameService {
         outcome: null,
         arrivalMs: null,
       };
-      this.store.insert("sessions", {
+      await this.store.insert("sessions", {
         session_id: sid,
         run_epoch: s.runEpoch,
         launch_id: this.launchId,
@@ -926,19 +1275,24 @@ export class CoreGameService implements GameService {
         created_at_ms: now,
         updated_at_ms: now,
       });
-      this.store.insert("runtime_session_meta", {
+      await this.store.insert("runtime_session_meta", {
         session_id: sid,
         locale: asLocale(b.locale),
         run_purpose: b.runPurpose,
       });
+      if (this.options.cloud)
+        await this.store.insert("cloud_sessions", {
+          session_id: sid,
+          player_id: meta.playerId,
+        });
       for (const [i, scene] of (["E1", "E2", "E3"] as const).entries())
-        this.store.insert("session_scenes", {
+        await this.store.insert("session_scenes", {
           session_id: sid,
           scene_id: scene,
           ordinal: i + 1,
         });
       for (const [role, binding] of Object.entries(s.actors))
-        this.store.insert("actor_bindings", {
+        await this.store.insert("actor_bindings", {
           session_id: sid,
           binding_id: binding,
           role,
@@ -948,7 +1302,7 @@ export class CoreGameService implements GameService {
       for (const channel of CHANNELS) {
         const accountId = uid();
         s.accounts[channel] = accountId;
-        this.store.insert("quota_accounts", {
+        await this.store.insert("quota_accounts", {
           session_id: sid,
           account_id: accountId,
           quota_scope: "session",
@@ -969,7 +1323,7 @@ export class CoreGameService implements GameService {
           const key = `${scene}:${role}:${resource}`,
             id = uid();
           s.accounts[key] = id;
-          this.store.insert("quota_accounts", {
+          await this.store.insert("quota_accounts", {
             session_id: sid,
             account_id: id,
             quota_scope: "scene",
@@ -986,14 +1340,14 @@ export class CoreGameService implements GameService {
         "evaluation.request",
         "export.request",
       ])
-        this.store.insert("launch_session_access", {
+        await this.store.insert("launch_session_access", {
           launch_id: this.launchId,
           session_id: sid,
           binding_id: s.actors.commander,
           capability,
           granted_at_ms: now,
         });
-      this.event(s, "session.created", {
+      await this.event(s, "session.created", {
         profileId: "SINGLE_PLAYER_REFERENCE",
         runPurpose: b.runPurpose,
       });
@@ -1003,30 +1357,65 @@ export class CoreGameService implements GameService {
         "LAST MILE：护送20名平民抵达曙光接收站。当前为规则设计预览。",
         "system",
       );
-      this.contextRecord(s);
-      this.save(s);
-      this.publicEvent(s, "projection.changed", this.projection(s));
+      await this.contextRecord(s);
+      await this.save(s);
+      await this.publicEvent(s, "projection.changed", await this.projection(s));
       result = {
         sessionId: sid,
         runEpoch: s.runEpoch,
         location: `/api/v1/sessions/${sid}`,
-        projection: this.projection(s),
+        projection: await this.projection(s),
       };
-      this.store.insert("session_creations", {
+      await this.store.insert("session_creations", {
         launch_id: this.launchId,
-        request_id: meta.idempotencyKey,
+        // Cloud replay is keyed by (player_id, request_id). The legacy launch
+        // audit key must not collide when two visitors reuse the same UUID.
+        request_id: this.options.cloud ? uid() : meta.idempotencyKey,
         payload_hash: commandHash,
         session_id: sid,
         response_json: canonical(result),
         created_at_ms: now,
       });
+      if (this.options.cloud)
+        await this.store.insert("cloud_creation_keys", {
+          player_id: meta.playerId,
+          request_id: meta.idempotencyKey,
+          session_id: sid,
+          payload_hash: commandHash,
+          response_json: canonical(result),
+          created_at_ms: now,
+        });
     });
     this.granted.add(sid);
     return result;
   }
-  private contextRecord(s: State) {
+  private async reapExpiredBriefings(now: number) {
+    // Reap on admission, with no idle database polling. A briefing has no
+    // mission clock, so a closed browser must not retain a public slot forever.
+    const expired = await this.store.all(
+      "SELECT session_id FROM sessions WHERE lifecycle='briefing' AND created_at_ms<=?",
+      now - 15 * 60 * 1000,
+    );
+    for (const row of expired) {
+      await this.tx(async () => {
+        const s = await this.load(row.session_id);
+        if (s.lifecycle !== "briefing") return;
+        s.version++;
+        await this.seal(
+          s,
+          "technical_interruption",
+          asLocale(s.locale) === "en-US"
+            ? "The briefing was not started within 15 minutes. This session was sealed to release its place."
+            : "简报等待超过15分钟，尚未开始任务。本局已由系统封存并释放名额。",
+        );
+        await this.save(s);
+      });
+      await this.flush(row.session_id);
+    }
+  }
+  private async contextRecord(s: State) {
     if (s.lifecycle === "briefing" || s.phase === "decision")
-      this.publicRecord(
+      await this.publicRecord(
         s,
         `context:${s.sceneId ?? "briefing"}:${s.version}`,
         "briefing",
@@ -1034,11 +1423,11 @@ export class CoreGameService implements GameService {
           sceneId: s.sceneId,
           stateVersion: s.version,
           actions: this.actionOptions(s),
-          taskOptions: this.taskOptions(s),
+          taskOptions: await this.taskOptions(s),
         },
       );
   }
-  private start(s: State, b: P.StartRequest) {
+  private async start(s: State, b: P.StartRequest) {
     if (s.lifecycle !== "briefing")
       ERR("PHASE_NOT_ALLOWED", 422, "此局已经启动", s);
     if (!b.payload.acknowledgeDesignPreview)
@@ -1049,12 +1438,12 @@ export class CoreGameService implements GameService {
       mono: this.clock.monotonicMs(),
       mission: 0,
     });
-    this.store.run(
+    await this.store.run(
       "UPDATE runtime_session_meta SET start_wall_ms=? WHERE session_id=?",
       s.startWall,
       s.sessionId,
     );
-    this.event(
+    await this.event(
       s,
       "session.started",
       { missionDurationMs: 600000 },
@@ -1070,26 +1459,26 @@ export class CoreGameService implements GameService {
       endNodeId: "N01",
       effects: [],
     };
-    this.beginOperation(s, plan, "action", true, null);
-    return this.projection(s);
+    await this.beginOperation(s, plan, "action", true, null);
+    return await this.projection(s);
   }
   private ensureDecision(s: State) {
     if (s.lifecycle !== "running" || s.phase !== "decision" || !s.sceneId)
       ERR("PHASE_NOT_ALLOWED", 422, "车队尚未到达可决策现场", s);
   }
-  private createTask(
+  private async createTask(
     s: State,
     b: P.TaskRequest,
     meta: CommandMeta,
-  ): P.TaskAccepted {
+  ): Promise<P.TaskAccepted> {
     this.ensureDecision(s);
     const p = b.payload;
-    const choiceMeta = this.choiceMeta(s, b.expectedStateVersion);
+    const choiceMeta = await this.choiceMeta(s, b.expectedStateVersion);
     if (
       s.tasks.some((t) => t.view.targetRole === p.targetRole && active(t.view))
     )
       ERR("ROLE_BUSY", 422, "该岗位正在执行另一项任务", s);
-    if (this.reportQuota(s, s.sceneId!, p.targetRole).remaining === 0)
+    if ((await this.reportQuota(s, s.sceneId!, p.targetRole)).remaining === 0)
       ERR("REPORT_LIMIT", 422, "该岗位本场景上报额度已用完", s);
     let def!: EvidenceDefinition,
       inventory: InventoryItem | undefined,
@@ -1127,7 +1516,7 @@ export class CoreGameService implements GameService {
           (d) => d.definitionId === inventory!.definitionId,
         )!;
     } else {
-      const option = this.taskOptions(s).find(
+      const option = (await this.taskOptions(s)).find(
         (o) =>
           o.targetId === p.targetId &&
           o.targetRole === p.targetRole &&
@@ -1170,7 +1559,7 @@ export class CoreGameService implements GameService {
       duration = option.cost.knownDurationMs!;
     }
     const tid = uid(),
-      reservation = this.ledger(
+      reservation = await this.ledger(
         s,
         `${s.sceneId}:${p.targetRole}:report`,
         "reserve",
@@ -1179,7 +1568,7 @@ export class CoreGameService implements GameService {
         tid,
       );
     const charge = channel
-      ? this.ledger(s, channel, "spend", 1, null, tid)
+      ? await this.ledger(s, channel, "spend", 1, null, tid)
       : null;
     const iid = channel ? uid() : null;
     const view: P.TaskView = {
@@ -1209,7 +1598,7 @@ export class CoreGameService implements GameService {
       trace,
     };
     s.tasks.push(task);
-    this.store.insert("task_requests", {
+    await this.store.insert("task_requests", {
       session_id: s.sessionId,
       task_id: tid,
       scene_id: s.sceneId,
@@ -1233,7 +1622,7 @@ export class CoreGameService implements GameService {
       created_at_ms: this.clock.nowMs(),
     });
     if (iid)
-      this.store.insert("investigations", {
+      await this.store.insert("investigations", {
         session_id: s.sessionId,
         investigation_id: iid,
         task_id: tid,
@@ -1246,7 +1635,7 @@ export class CoreGameService implements GameService {
         accepted_mission_ms: s.mission,
         due_mission_ms: task.due,
       });
-    const acceptedEvent = this.event(
+    const acceptedEvent = await this.event(
       s,
       "task.accepted",
       {
@@ -1326,7 +1715,7 @@ export class CoreGameService implements GameService {
           }
         : null,
     };
-    this.store.insert("decision_snapshots", {
+    await this.store.insert("decision_snapshots", {
       session_id: s.sessionId,
       snapshot_id: decisionId,
       scene_id: s.sceneId,
@@ -1344,7 +1733,7 @@ export class CoreGameService implements GameService {
       `${p.targetRole === "analyst" ? "分析员" : "联络员"}开始${channel ? "调查" : "整理已获资料"}：${def.title}`,
       "player",
     );
-    this.publicEvent(s, "task.updated", view);
+    await this.publicEvent(s, "task.updated", view);
     return {
       requestId: meta.requestId ?? meta.idempotencyKey,
       stateVersion: s.version,
@@ -1353,11 +1742,11 @@ export class CoreGameService implements GameService {
       reservedReportSlots: 1,
     };
   }
-  private acquire(
+  private async acquire(
     s: State,
     def: EvidenceDefinition,
     task?: Task,
-  ): InventoryItem {
+  ): Promise<InventoryItem> {
     const source = task?.sourceReportId
       ? s.reports.find((r) => r.reportId === task.sourceReportId)
       : undefined;
@@ -1406,7 +1795,7 @@ export class CoreGameService implements GameService {
       ...(trace ? { traceRootLabel: def.traceResult!.rootLabel } : {}),
     };
     s.inventory.push(item);
-    this.store.insert("evidence_instances", {
+    await this.store.insert("evidence_instances", {
       session_id: s.sessionId,
       instance_id: id,
       revision: rev,
@@ -1432,7 +1821,7 @@ export class CoreGameService implements GameService {
       payload_hash: hash(card),
     });
     if (trace)
-      this.store.insert("provenance_disclosures", {
+      await this.store.insert("provenance_disclosures", {
         session_id: s.sessionId,
         finding_id: uid(),
         evidence_instance_id: id,
@@ -1451,13 +1840,13 @@ export class CoreGameService implements GameService {
       });
     return item;
   }
-  private finishTask(s: State, t: Task) {
+  private async finishTask(s: State, t: Task) {
     if (!active(t.view)) return;
     const def = this.world
       .case(s.caseId)
       .evidenceDefinitions.find((d) => d.definitionId === t.definitionId)!;
     if (t.view.investigationId)
-      this.store.run(
+      await this.store.run(
         "UPDATE investigations SET status='completed',finished_mission_ms=? WHERE session_id=? AND investigation_id=?",
         s.mission,
         s.sessionId,
@@ -1465,8 +1854,8 @@ export class CoreGameService implements GameService {
       );
     const item = t.inventoryId
       ? s.inventory.find((i) => i.card.evidenceInstanceId === t.inventoryId)!
-      : this.acquire(s, def, t);
-    const charge = this.ledger(
+      : await this.acquire(s, def, t);
+    const charge = await this.ledger(
       s,
       `${t.view.sceneId}:${t.view.targetRole}:report`,
       "spend",
@@ -1483,7 +1872,7 @@ export class CoreGameService implements GameService {
       reportedAtMissionMs: s.mission,
       card: item.card,
     };
-    this.store.insert("reports", {
+    await this.store.insert("reports", {
       session_id: s.sessionId,
       report_id: report.reportId,
       scene_id: report.sceneId,
@@ -1504,13 +1893,13 @@ export class CoreGameService implements GameService {
       reportId: report.reportId,
       completedAt: iso(this.clock.nowMs()),
     };
-    this.store.run(
+    await this.store.run(
       "UPDATE task_requests SET status='completed',completed_at_ms=? WHERE session_id=? AND task_id=?",
       this.clock.nowMs(),
       s.sessionId,
       t.view.taskId,
     );
-    this.event(
+    await this.event(
       s,
       "report.created",
       {
@@ -1524,7 +1913,7 @@ export class CoreGameService implements GameService {
       "npc",
       s.actors[report.sourceRole],
     );
-    this.publicRecord(s, `report:${report.reportId}`, "report", report);
+    await this.publicRecord(s, `report:${report.reportId}`, "report", report);
     this.log(
       s,
       "report_received",
@@ -1532,10 +1921,13 @@ export class CoreGameService implements GameService {
       "npc",
       [report.reportId],
     );
-    this.publicEvent(s, "task.updated", t.view);
-    this.publicEvent(s, "report.received", report);
+    await this.publicEvent(s, "task.updated", t.view);
+    await this.publicEvent(s, "report.received", report);
   }
-  private cancelTasks(s: State, reason: "scene_left" | "session_terminated") {
+  private async cancelTasks(
+    s: State,
+    reason: "scene_left" | "session_terminated",
+  ) {
     for (const t of s.tasks.filter((t) => active(t.view))) {
       t.view = {
         ...t.view,
@@ -1544,21 +1936,21 @@ export class CoreGameService implements GameService {
         failureCode: reason,
       };
       if (t.view.investigationId)
-        this.store.run(
+        await this.store.run(
           "UPDATE investigations SET status='cancelled',finished_mission_ms=?,failure_code=? WHERE session_id=? AND investigation_id=?",
           s.mission,
           reason,
           s.sessionId,
           t.view.investigationId,
         );
-      this.store.run(
+      await this.store.run(
         "UPDATE task_requests SET status='cancelled',completed_at_ms=?,failure_code=? WHERE session_id=? AND task_id=?",
         this.clock.nowMs(),
         reason,
         s.sessionId,
         t.view.taskId,
       );
-      this.ledger(
+      await this.ledger(
         s,
         `${t.view.sceneId}:${t.view.targetRole}:report`,
         "release",
@@ -1567,21 +1959,21 @@ export class CoreGameService implements GameService {
         uid(),
         reason,
       );
-      this.publicEvent(s, "task.updated", t.view);
+      await this.publicEvent(s, "task.updated", t.view);
     }
   }
-  private cancelAdvisor(
+  private async cancelAdvisor(
     s: State,
     status: "superseded" | "cancelled" = "superseded",
   ) {
-    this.store.run(
+    await this.store.run(
       "UPDATE agent_jobs SET status=?,updated_at_ms=? WHERE session_id=? AND agent_role='advisor' AND status IN ('queued','running')",
       status,
       this.clock.nowMs(),
       s.sessionId,
     );
   }
-  private enter(s: State, scene: P.SceneId) {
+  private async enter(s: State, scene: P.SceneId) {
     s.sceneId = scene;
     s.phase = "decision";
     s.location = {
@@ -1591,7 +1983,7 @@ export class CoreGameService implements GameService {
     };
     s.contextEpoch = uid();
     s.contextDisplayed = false;
-    this.store.run(
+    await this.store.run(
       "UPDATE session_scenes SET entered_mission_ms=? WHERE session_id=? AND scene_id=? AND entered_mission_ms IS NULL",
       s.mission,
       s.sessionId,
@@ -1603,15 +1995,15 @@ export class CoreGameService implements GameService {
         (d) => d.sceneId === scene && d.acquisition === "preloaded",
       ))
       if (!s.inventory.some((i) => i.definitionId === def.definitionId))
-        this.acquire(s, def);
-    this.event(s, "scene.entered", {
+        await this.acquire(s, def);
+    await this.event(s, "scene.entered", {
       sceneId: scene,
       nodeId: s.location.nodeId,
     });
     this.log(s, "brief", this.world.scene(scene).intro);
-    this.enqueueAdvisor(s);
+    await this.enqueueAdvisor(s);
   }
-  private beginOperation(
+  private async beginOperation(
     s: State,
     plan: Plan,
     kind: "action" | "wait",
@@ -1642,7 +2034,7 @@ export class CoreGameService implements GameService {
     if (kind !== "wait")
       s.phase = steps[0].kind === "route" ? "travelling" : "coordinating";
     if (steps[0].routeId) s.routeIdsTaken.push(steps[0].routeId);
-    this.store.insert("operations", {
+    await this.store.insert("operations", {
       session_id: s.sessionId,
       operation_id: view.operationId,
       scene_id: view.sceneId,
@@ -1655,17 +2047,17 @@ export class CoreGameService implements GameService {
       due_mission_ms: steps.at(-1)!.endMs,
       created_at_ms: this.clock.nowMs(),
     });
-    this.publicEvent(s, "operation.updated", view);
+    await this.publicEvent(s, "operation.updated", view);
     return op;
   }
-  private action(
+  private async action(
     s: State,
     b: P.ActionRequest,
     meta: CommandMeta,
-  ): P.ActionAccepted {
+  ): Promise<P.ActionAccepted> {
     this.ensureDecision(s);
     const p = b.payload;
-    const choiceMeta = this.choiceMeta(s, b.expectedStateVersion);
+    const choiceMeta = await this.choiceMeta(s, b.expectedStateVersion);
     const selected = this.actionOptions(s).find(
       (a) => a.actionId === p.actionId,
     );
@@ -1730,9 +2122,9 @@ export class CoreGameService implements GameService {
       .map((t) => t.view.investigationId)
       .filter(Boolean);
     if (p.actionId !== "WAIT") {
-      this.cancelTasks(s, "scene_left");
-      this.cancelAdvisor(s, "cancelled");
-      this.store.run(
+      await this.cancelTasks(s, "scene_left");
+      await this.cancelAdvisor(s, "cancelled");
+      await this.store.run(
         "UPDATE session_scenes SET closed_mission_ms=? WHERE session_id=? AND scene_id=?",
         s.mission,
         s.sessionId,
@@ -1761,14 +2153,14 @@ export class CoreGameService implements GameService {
       plan = this.world
         .case(s.caseId)
         .actionPlans.find((x) => x.actionId === p.actionId)!;
-    const op = this.beginOperation(
+    const op = await this.beginOperation(
       s,
       plan,
       p.actionId === "WAIT" ? "wait" : "action",
       false,
       decisionId,
     );
-    const event = this.event(
+    const event = await this.event(
       s,
       "action.committed",
       {
@@ -1786,7 +2178,7 @@ export class CoreGameService implements GameService {
       s.actors.commander,
       meta.idempotencyKey,
     );
-    this.store.insert("decision_snapshots", {
+    await this.store.insert("decision_snapshots", {
       session_id: s.sessionId,
       snapshot_id: decisionId,
       scene_id: s.sceneId,
@@ -1813,11 +2205,11 @@ export class CoreGameService implements GameService {
       operationLocation: `/api/v1/sessions/${s.sessionId}/operations/${op.view.operationId}`,
     };
   }
-  private advanceOperation(s: State, op: Operation) {
+  private async advanceOperation(s: State, op: Operation) {
     const step = op.steps[op.index];
     s.location = this.world.location(step, step.endMs);
     if (step.clearFlag) s.flags[step.clearFlag] = false;
-    this.event(s, "operation.segment_completed", {
+    await this.event(s, "operation.segment_completed", {
       operationId: op.view.operationId,
       segmentIndex: op.index,
       location: s.location,
@@ -1834,13 +2226,13 @@ export class CoreGameService implements GameService {
         publicProgressLabel:
           next.kind === "route" ? "车队正在行进" : "车队正在办理现场手续",
       };
-      this.store.run(
+      await this.store.run(
         "UPDATE operations SET public_progress_json=? WHERE session_id=? AND operation_id=?",
         canonical(op.view),
         s.sessionId,
         op.view.operationId,
       );
-      this.publicEvent(s, "operation.updated", op.view);
+      await this.publicEvent(s, "operation.updated", op.view);
       return;
     }
     for (const effect of op.plan.effects) s.flags[effect.flag] = effect.value;
@@ -1858,7 +2250,7 @@ export class CoreGameService implements GameService {
               ? "主桥车辆通行申请被拒绝"
               : "到达下一决策现场",
     };
-    this.store.run(
+    await this.store.run(
       "UPDATE operations SET status='completed',completed_at_ms=?,public_progress_json=? WHERE session_id=? AND operation_id=?",
       this.clock.nowMs(),
       canonical(op.view),
@@ -1870,16 +2262,16 @@ export class CoreGameService implements GameService {
       d.resultSummary = op.view.publicProgressLabel;
     }
     this.log(s, "consequence", op.view.publicProgressLabel);
-    this.publicRecord(
+    await this.publicRecord(
       s,
       `operation:${op.view.operationId}`,
       "sceneFeedback",
       op.view,
     );
-    this.publicEvent(s, "operation.updated", op.view);
+    await this.publicEvent(s, "operation.updated", op.view);
     if (op.plan.endNodeId === "N07") {
       s.arrivalMs = s.mission;
-      this.seal(
+      await this.seal(
         s,
         s.flags.manifestPending || s.flags.inspectionPending
           ? "awaiting_transfer"
@@ -1893,20 +2285,16 @@ export class CoreGameService implements GameService {
     }
     if (op.plan.nextSceneId === s.sceneId) {
       s.phase = "decision";
-      this.enqueueAdvisor(s);
+      await this.enqueueAdvisor(s);
       return;
     }
-    if (op.plan.nextSceneId) this.enter(s, op.plan.nextSceneId);
+    if (op.plan.nextSceneId) await this.enter(s, op.plan.nextSceneId);
   }
-  tick(sessionId?: string, missionLimit?: number) {
+  private async tickInternal(sessionId?: string, missionLimit?: number) {
     if (this.closed) return;
-    const ids = sessionId
-      ? [sessionId]
-      : this.store
-          .all("SELECT session_id FROM sessions WHERE lifecycle='running'")
-          .map((r) => r.session_id);
+    const ids = sessionId ? [sessionId] : [...this.liveSessions];
     for (const sid of ids) {
-      let s = this.load(sid);
+      let s = await this.load(sid);
       if (s.lifecycle !== "running") continue;
       const now = missionLimit ?? this.missionNow(s);
       let steps = 0;
@@ -1953,65 +2341,75 @@ export class CoreGameService implements GameService {
         )[0];
         if (next.due > now) break;
         if (++steps > 256) {
-          this.tx(() => {
+          await this.tx(async () => {
             s.version++;
-            this.seal(s, "technical_interruption");
-            this.save(s);
+            await this.seal(s, "technical_interruption");
+            await this.save(s);
           });
           break;
         }
-        this.tx(() => {
-          s = this.load(sid);
+        await this.tx(async () => {
+          s = await this.load(sid);
           s.mission = next.due;
           s.version++;
           if (next.kind === "task")
-            this.finishTask(
+            await this.finishTask(
               s,
               s.tasks.find((t) => t.view.taskId === next.id)!,
             );
           else if (next.kind === "operation")
-            this.advanceOperation(s, this.op(s)!);
+            await this.advanceOperation(s, this.op(s)!);
           else if (next.kind === "medical") {
             s.medical = {
               status: "target_missed",
               targetAtMissionMs: 480000,
               note: "已到转送目标时刻，需要优先转送；请尽快抵达接收站。",
             };
-            this.event(s, "medical.target_missed", {});
+            await this.event(s, "medical.target_missed", {});
             this.log(
               s,
               "consequence",
               "已到转送目标时刻，需要优先转送；请继续完成护送。",
             );
-          } else this.seal(s, "mission_deadline");
+          } else await this.seal(s, "mission_deadline");
           if (s.lifecycle === "running") {
-            this.contextRecord(s);
-            this.save(s);
-            this.publicEvent(s, "projection.changed", this.projection(s));
-          } else this.save(s);
+            await this.contextRecord(s);
+            await this.save(s);
+            await this.publicEvent(
+              s,
+              "projection.changed",
+              await this.projection(s),
+            );
+          } else await this.save(s);
         });
       }
       if (s.lifecycle === "running") {
         const second = Math.floor(now / 1000);
         if (second > (this.lastClockSamples.get(sid) ?? 0)) {
-          this.tx(() =>
-            this.publicEvent(s, "clock.sample", {
-              missionTimeMs: now,
-              serverNow: iso(this.clock.nowMs()),
-              missionDeadlineMs: 600000,
-            }),
+          await this.tx(
+            async () =>
+              await this.publicEvent(s, "clock.sample", {
+                missionTimeMs: now,
+                serverNow: iso(this.clock.nowMs()),
+                missionDeadlineMs: 600000,
+              }),
           );
           this.lastClockSamples.set(sid, second);
         }
       }
-      this.flush(sid);
+      await this.flush(sid);
     }
+    this.scheduleDispatch();
   }
-  private seal(s: State, reason: P.OutcomeView["terminationReason"]) {
+  private async seal(
+    s: State,
+    reason: P.OutcomeView["terminationReason"],
+    technicalSummary?: string,
+  ) {
     const op = this.op(s);
     s.location = this.location(s, s.mission);
-    this.cancelTasks(s, "session_terminated");
-    this.cancelAdvisor(s, "cancelled");
+    await this.cancelTasks(s, "session_terminated");
+    await this.cancelAdvisor(s, "cancelled");
     if (op) {
       op.view = {
         ...op.view,
@@ -2026,7 +2424,7 @@ export class CoreGameService implements GameService {
               ? "abandoned"
               : "technical_failure",
       };
-      this.store.run(
+      await this.store.run(
         "UPDATE operations SET status='cancelled',completed_at_ms=?,public_progress_json=? WHERE session_id=? AND operation_id=?",
         this.clock.nowMs(),
         canonical(op.view),
@@ -2053,7 +2451,7 @@ export class CoreGameService implements GameService {
       routeIdsTaken: [...s.routeIdsTaken],
       summary:
         reason === "technical_interruption"
-          ? "本机服务中断，本局已按最后保存状态封存。"
+          ? (technicalSummary ?? "本机服务中断，本局已按最后保存状态封存。")
           : reason === "abandoned"
             ? "你结束了本次护送演练。"
             : reason === "mission_deadline"
@@ -2073,7 +2471,7 @@ export class CoreGameService implements GameService {
       reports: s.reports.map((r) => r.reportId),
     });
     this.log(s, "sealed", outcome.summary);
-    const e = this.event(s, "session.sealed", {
+    const e = await this.event(s, "session.sealed", {
       sealedHash: outcome.sealedHash,
       outcome,
     });
@@ -2085,7 +2483,7 @@ export class CoreGameService implements GameService {
           ? "interrupted"
           : "completed";
     s.phase = "terminal";
-    this.store.insert("terminal_seals", {
+    await this.store.insert("terminal_seals", {
       session_id: s.sessionId,
       seal_id: uid(),
       sealed_hash: outcome.sealedHash,
@@ -2099,7 +2497,7 @@ export class CoreGameService implements GameService {
       policy_hash: this.world.policyHash,
       sealed_at_ms: this.clock.nowMs(),
     });
-    this.publicEvent(s, "outcome.sealed", outcome);
+    await this.publicEvent(s, "outcome.sealed", outcome);
     this.anchors.delete(s.sessionId);
   }
   private advisorInput(s: State, question?: A.Question): A.AdvisorInput {
@@ -2249,25 +2647,25 @@ export class CoreGameService implements GameService {
         (role === "advisor" ? 20000 : 25000))
     );
   }
-  private enqueueAdvisor(s: State, question?: A.Question) {
+  private async enqueueAdvisor(s: State, question?: A.Question) {
     s.contextVersion++;
-    this.cancelAdvisor(s);
+    await this.cancelAdvisor(s);
     const input = this.advisorInput(s, question),
       manifestId = uid(),
       jobId = uid();
     for (const u of s.uploads.filter((u) => u.sceneId === s.sceneId))
-      this.store.insert("input_manifest_members", {
+      await this.store.insert("input_manifest_members", {
         session_id: s.sessionId,
         manifest_id: manifestId,
         upload_id: u.uploadId,
       });
     for (const st of input.statements)
-      this.store.insert("manifest_statements", {
+      await this.store.insert("manifest_statements", {
         session_id: s.sessionId,
         manifest_id: manifestId,
         statement_id: st.statementId,
       });
-    this.store.insert("input_manifests", {
+    await this.store.insert("input_manifests", {
       session_id: s.sessionId,
       manifest_id: manifestId,
       scene_id: s.sceneId,
@@ -2279,7 +2677,7 @@ export class CoreGameService implements GameService {
       permitted_input_json: canonical(input),
       created_at_ms: this.clock.nowMs(),
     });
-    this.store.insert("agent_jobs", {
+    await this.store.insert("agent_jobs", {
       session_id: s.sessionId,
       job_id: jobId,
       agent_role: "advisor",
@@ -2296,20 +2694,21 @@ export class CoreGameService implements GameService {
       created_at_ms: this.clock.nowMs(),
       updated_at_ms: this.clock.nowMs(),
     });
-    return this.jobView(
-      this.store.one(
+    this.jobsPending = true;
+    return (await this.jobView(
+      await this.store.one(
         "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
         s.sessionId,
         jobId,
       ),
-    ) as P.AdvisorJobView;
+    )) as P.AdvisorJobView;
   }
-  private upload(
+  private async upload(
     s: State,
     items: ReadonlyArray<P.UploadItem>,
     meta: CommandMeta,
     enqueue = true,
-  ): P.UploadView {
+  ): Promise<P.UploadView> {
     this.ensureDecision(s);
     if (
       items.length < 1 ||
@@ -2332,7 +2731,7 @@ export class CoreGameService implements GameService {
         ERR("REVISION_CONFLICT", 409, "该报告版本已上传", s);
       return r;
     });
-    const charge = this.ledger(
+    const charge = await this.ledger(
       s,
       `${s.sceneId}:commander:upload`,
       "spend",
@@ -2341,7 +2740,7 @@ export class CoreGameService implements GameService {
       meta.idempotencyKey,
     );
     s.inboxVersion++;
-    const added = selected.map((r) => {
+    const added = await asyncArray.map(selected, async (r) => {
       const u: P.UploadSnapshot = {
         uploadId: uid(),
         reportId: r.reportId,
@@ -2351,7 +2750,7 @@ export class CoreGameService implements GameService {
         uploadedAtMissionMs: s.mission,
         payloadHash: hash(localizePublic(r.card, asLocale(s.locale))),
       };
-      this.store.insert("uploads", {
+      await this.store.insert("uploads", {
         session_id: s.sessionId,
         upload_id: u.uploadId,
         scene_id: u.sceneId,
@@ -2364,9 +2763,9 @@ export class CoreGameService implements GameService {
       s.uploads.push(u);
       return u;
     });
-    const job = enqueue ? this.enqueueAdvisor(s) : null;
+    const job = enqueue ? await this.enqueueAdvisor(s) : null;
     for (const u of added)
-      this.event(
+      await this.event(
         s,
         "upload.created",
         {
@@ -2396,22 +2795,22 @@ export class CoreGameService implements GameService {
       assistantContextVersion: s.contextVersion,
       added,
       currentSceneUploads: s.uploads.filter((u) => u.sceneId === s.sceneId),
-      quota: this.uploadQuota(s)!,
+      quota: (await this.uploadQuota(s))!,
       analysisJobId: job?.jobId ?? null,
     };
-    this.publicEvent(s, "uploads.changed", view);
+    await this.publicEvent(s, "uploads.changed", view);
     return view;
   }
-  private question(
+  private async question(
     s: State,
     b: P.QuestionRequest,
     meta: CommandMeta,
-  ): P.QuestionAccepted {
+  ): Promise<P.QuestionAccepted> {
     this.ensureDecision(s);
     const p = b.payload;
     if (p.expectedInboxVersion !== s.inboxVersion)
       ERR("REVISION_CONFLICT", 409, "AI收件箱已改变，请同步后再提问", s);
-    if (p.uploadBatch.length) this.upload(s, p.uploadBatch, meta, false);
+    if (p.uploadBatch.length) await this.upload(s, p.uploadBatch, meta, false);
     const questions: Record<string, string> = {
       explain_basis: "请解释当前判断的依据，并区分证据与推断。",
       compare_routes: "请比较当前路线的已知依据和不确定性。",
@@ -2433,7 +2832,7 @@ export class CoreGameService implements GameService {
         trustStatus: "unverified_player_statement",
       };
       s.statements.push(statement);
-      this.store.insert("player_statements", {
+      await this.store.insert("player_statements", {
         session_id: s.sessionId,
         statement_id: statement.statementId,
         scene_id: s.sceneId,
@@ -2452,13 +2851,13 @@ export class CoreGameService implements GameService {
         free_text: "free_text",
       } as const
     )[p.questionKind];
-    const job = this.enqueueAdvisor(s, {
+    const job = await this.enqueueAdvisor(s, {
       questionId: uid(),
       kind,
       text,
       selectedEvidenceRefs: [],
     });
-    this.event(
+    await this.event(
       s,
       "agent.job_queued",
       {
@@ -2479,7 +2878,7 @@ export class CoreGameService implements GameService {
       operationLocation: `/api/v1/sessions/${s.sessionId}/advice/${job.jobId}`,
     };
   }
-  private jobView(row: any): A.AgentJobView {
+  private async jobView(row: any): Promise<A.AgentJobView> {
     return {
       jobId: row.job_id,
       agentRole: row.agent_role,
@@ -2487,10 +2886,12 @@ export class CoreGameService implements GameService {
       mode: row.mode,
       inputVersion: row.input_version,
       createdAt: iso(row.created_at_ms),
-      attemptCount: this.store.one(
-        "SELECT COUNT(*) AS n FROM agent_attempts WHERE session_id=? AND job_id=?",
-        row.session_id,
-        row.job_id,
+      attemptCount: (
+        await this.store.one(
+          "SELECT COUNT(*) AS n FROM agent_attempts WHERE session_id=? AND job_id=?",
+          row.session_id,
+          row.job_id,
+        )
       ).n,
       result: row.result_json ? JSON.parse(row.result_json) : null,
       error: row.error_code
@@ -2505,16 +2906,19 @@ export class CoreGameService implements GameService {
         : null,
     };
   }
-  private currentJob(s: State): P.AdvisorJobView | null {
-    const row = this.store.one(
+  private async currentJob(s: State): Promise<P.AdvisorJobView | null> {
+    const row = await this.store.one(
       "SELECT * FROM agent_jobs WHERE session_id=? AND agent_role='advisor' AND scene_id=? AND context_version=? AND status NOT IN ('cancelled','superseded') ORDER BY created_at_ms DESC LIMIT 1",
       s.sessionId,
       s.sceneId,
       s.contextVersion,
     );
-    return row ? (this.jobView(row) as P.AdvisorJobView) : null;
+    return row ? ((await this.jobView(row)) as P.AdvisorJobView) : null;
   }
-  private receipt(s: State, b: P.DisplayReceiptRequest): P.ReceiptView {
+  private async receipt(
+    s: State,
+    b: P.DisplayReceiptRequest,
+  ): Promise<P.ReceiptView> {
     const p = b.payload;
     let key: string,
       kind: "opened" | "displayed" = "displayed";
@@ -2524,7 +2928,7 @@ export class CoreGameService implements GameService {
       key = `report:${p.reportId}`;
       kind = "opened";
     } else if (p.displayKind === "advice_displayed") {
-      const job = this.store.one(
+      const job = await this.store.one(
         "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
         s.sessionId,
         p.jobId,
@@ -2536,13 +2940,13 @@ export class CoreGameService implements GameService {
       key = `operation:${p.operationId}`;
     } else
       key = `context:${b.observedSceneId ?? "briefing"}:${b.observedStateVersion}`;
-    const record = this.store.one(
+    const record = await this.store.one(
       "SELECT * FROM runtime_display_bindings WHERE session_id=? AND record_key=?",
       s.sessionId,
       key,
     );
     if (!record) ERR("RESOURCE_NOT_FOUND", 404, "该公开记录尚不存在", s);
-    const old = this.store.one(
+    const old = await this.store.one(
       "SELECT receipt_id FROM display_receipts WHERE session_id=? AND binding_id=? AND public_record_id=? AND record_revision=? AND receipt_kind=?",
       s.sessionId,
       s.actors.commander,
@@ -2557,7 +2961,7 @@ export class CoreGameService implements GameService {
         stateVersion: s.version,
       };
     const rid = uid();
-    this.store.insert("display_receipts", {
+    await this.store.insert("display_receipts", {
       session_id: s.sessionId,
       receipt_id: rid,
       binding_id: s.actors.commander,
@@ -2572,7 +2976,7 @@ export class CoreGameService implements GameService {
     if (p.jobId && !s.displayedAdviceIds.includes(p.jobId))
       s.displayedAdviceIds.push(p.jobId);
     if (p.displayKind === "context_displayed") s.contextDisplayed = true;
-    this.event(
+    await this.event(
       s,
       "display.received",
       {
@@ -2645,9 +3049,11 @@ export class CoreGameService implements GameService {
         "只显示通过已收到报告披露的来源关系。同源关系确认不等于内容全部正确。",
     };
   }
-  private choiceMeta(s: State, version: number) {
-    const current = this.currentJob(s);
-    const shown = current ? this.shownAt(s, `advice:${current.jobId}`) : null;
+  private async choiceMeta(s: State, version: number) {
+    const current = await this.currentJob(s);
+    const shown = current
+      ? await this.shownAt(s, `advice:${current.jobId}`)
+      : null;
     return {
       eligibleAdviceJobId:
         current?.status === "succeeded" &&
@@ -2656,11 +3062,11 @@ export class CoreGameService implements GameService {
         shown <= s.mission
           ? current.jobId
           : null,
-      contextDisplayedAtMs: this.shownAt(
+      contextDisplayedAtMs: await this.shownAt(
         s,
         `context:${s.sceneId ?? "briefing"}:${version}`,
       ),
-      availableChecks: this.taskOptions(s).flatMap((o) =>
+      availableChecks: (await this.taskOptions(s)).flatMap((o) =>
         questionKeysForTarget(o.targetId).map((questionKey) => ({
           questionKey,
           available: o.available,
@@ -2669,109 +3075,118 @@ export class CoreGameService implements GameService {
       ),
     };
   }
-  private shownAt(s: State, key: string): number | null {
-    const row = this.store.one(
+  private async shownAt(s: State, key: string): Promise<number | null> {
+    const row = await this.store.one(
       "SELECT MIN(d.recorded_mission_ms) AS at FROM display_receipts d JOIN runtime_display_bindings b ON b.session_id=d.session_id AND b.public_record_id=d.public_record_id WHERE d.session_id=? AND b.record_key=?",
       s.sessionId,
       key,
     );
     return row?.at ?? null;
   }
-  private evaluatorInput(s: State): A.EvaluatorInput {
-    const slices: FilteredDecisionSlice[] = s.decisions.map((d) => {
-      const snap = this.store.one(
-        "SELECT d.*,e.event_id FROM decision_snapshots d JOIN events e ON e.session_id=d.session_id AND e.seq=d.source_seq WHERE d.session_id=? AND d.snapshot_id=?",
-        s.sessionId,
-        d.decisionId,
-      );
-      const displayedReports = d.viewedReportIds
-        .map((id) => s.reports.find((r) => r.reportId === id)!)
-        .filter(Boolean)
-        .map((r) => ({
-          instanceId: r.evidenceInstanceId,
-          revision: r.revision,
-          definitionId: r.card.definitionId,
-          body: r.card.body,
-          freshness: r.card.freshness,
-          displayedAtMissionMs:
-            this.shownAt(s, `report:${r.reportId}`) ?? d.committedAtMissionMs,
-        }));
-      const uploads = d.uploadedIds
-        .map((id) => s.uploads.find((u) => u.uploadId === id)!)
-        .filter(Boolean);
-      const jobIds = d.displayedAdviceJobIds.slice().reverse();
-      let displayedAdvice: FilteredDecisionSlice["displayedAdvice"] = null;
-      for (const id of jobIds) {
-        const row = this.store.one(
-            "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=? AND scene_id=? AND agent_role='advisor' AND result_json IS NOT NULL",
-            s.sessionId,
-            id,
-            d.sceneId,
-          ),
-          at = this.shownAt(s, `advice:${id}`);
-        if (row && at !== null && at <= d.committedAtMissionMs) {
-          displayedAdvice = {
-            jobId: id,
-            displayedAtMissionMs: at,
-            output: JSON.parse(row.result_json),
-          };
-          break;
+  private async evaluatorInput(s: State): Promise<A.EvaluatorInput> {
+    const slices: FilteredDecisionSlice[] = await asyncArray.map(
+      s.decisions,
+      async (d) => {
+        const snap = await this.store.one(
+          "SELECT d.*,e.event_id FROM decision_snapshots d JOIN events e ON e.session_id=d.session_id AND e.seq=d.source_seq WHERE d.session_id=? AND d.snapshot_id=?",
+          s.sessionId,
+          d.decisionId,
+        );
+        const displayedReports = await asyncArray.map(
+          d.viewedReportIds
+            .map((id) => s.reports.find((r) => r.reportId === id)!)
+            .filter(Boolean),
+          async (r) => ({
+            instanceId: r.evidenceInstanceId,
+            revision: r.revision,
+            definitionId: r.card.definitionId,
+            body: r.card.body,
+            freshness: r.card.freshness,
+            displayedAtMissionMs:
+              (await this.shownAt(s, `report:${r.reportId}`)) ??
+              d.committedAtMissionMs,
+          }),
+        );
+        const uploads = d.uploadedIds
+          .map((id) => s.uploads.find((u) => u.uploadId === id)!)
+          .filter(Boolean);
+        const jobIds = d.displayedAdviceJobIds.slice().reverse();
+        let displayedAdvice: FilteredDecisionSlice["displayedAdvice"] = null;
+        for (const id of jobIds) {
+          const row = await this.store.one(
+              "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=? AND scene_id=? AND agent_role='advisor' AND result_json IS NOT NULL",
+              s.sessionId,
+              id,
+              d.sceneId,
+            ),
+            at = await this.shownAt(s, `advice:${id}`);
+          if (row && at !== null && at <= d.committedAtMissionMs) {
+            displayedAdvice = {
+              jobId: id,
+              displayedAtMissionMs: at,
+              output: JSON.parse(row.result_json),
+            };
+            break;
+          }
         }
-      }
-      const contextRow = this.store.one(
-        "SELECT MIN(d.recorded_mission_ms) AS at FROM display_receipts d JOIN public_records p ON p.session_id=d.session_id AND p.public_record_id=d.public_record_id WHERE d.session_id=? AND p.record_kind='briefing' AND json_extract(p.public_payload_json,'$.sceneId')=? AND d.recorded_mission_ms<=?",
-        s.sessionId,
-        d.sceneId,
-        d.committedAtMissionMs,
-      );
-      return {
-        contextId: d.decisionId,
-        sourceEventId: snap.event_id,
-        sceneId: d.sceneId,
-        subjectBindingId: s.actors.commander,
-        controllerKind: "human",
-        kind:
-          s.decisionMeta?.[d.decisionId]?.kind ??
-          (d.actionId === "WAIT" ? "wait" : "route_decision"),
-        cutoffMissionMs: d.committedAtMissionMs,
-        chosenActionId: d.actionId,
-        legalActionIds: d.legalActionIds,
-        displayedReports,
-        advisorUploadedRefs: uploads.map((u) => ({
-          instanceId: u.evidenceInstanceId,
-          revision: u.revision,
-        })),
-        displayedAdvice,
-        reasonAnnotation: d.reasonAnnotation,
-        reasonText: d.reason,
-        referencedEvidenceRefs: d.viewedReportIds
-          .filter((id) => {
-            const event = JSON.parse(
-              this.store.one(
-                "SELECT payload_json FROM events WHERE session_id=? AND seq=?",
-                s.sessionId,
-                snap.source_seq,
-              ).payload_json,
-            );
-            return event.referencedReportIds?.includes(id);
-          })
-          .map((id) => {
+        const contextRow = await this.store.one(
+          "SELECT MIN(d.recorded_mission_ms) AS at FROM display_receipts d JOIN public_records p ON p.session_id=d.session_id AND p.public_record_id=d.public_record_id WHERE d.session_id=? AND p.record_kind='briefing' AND json_extract(p.public_payload_json,'$.sceneId')=? AND d.recorded_mission_ms<=?",
+          s.sessionId,
+          d.sceneId,
+          d.committedAtMissionMs,
+        );
+        return {
+          contextId: d.decisionId,
+          sourceEventId: snap.event_id,
+          sceneId: d.sceneId,
+          subjectBindingId: s.actors.commander,
+          controllerKind: "human",
+          kind:
+            s.decisionMeta?.[d.decisionId]?.kind ??
+            (d.actionId === "WAIT" ? "wait" : "route_decision"),
+          cutoffMissionMs: d.committedAtMissionMs,
+          chosenActionId: d.actionId,
+          legalActionIds: d.legalActionIds,
+          displayedReports,
+          advisorUploadedRefs: uploads.map((u) => ({
+            instanceId: u.evidenceInstanceId,
+            revision: u.revision,
+          })),
+          displayedAdvice,
+          reasonAnnotation: d.reasonAnnotation,
+          reasonText: d.reason,
+          referencedEvidenceRefs: (
+            await asyncArray.filter(d.viewedReportIds, async (id) => {
+              const event = JSON.parse(
+                (
+                  await this.store.one(
+                    "SELECT payload_json FROM events WHERE session_id=? AND seq=?",
+                    s.sessionId,
+                    snap.source_seq,
+                  )
+                ).payload_json,
+              );
+              return event.referencedReportIds?.includes(id);
+            })
+          ).map((id) => {
             const r = s.reports.find((r) => r.reportId === id)!;
             return { instanceId: r.evidenceInstanceId, revision: r.revision };
           }),
-        visibleCostSummary: d.knownCosts
-          .map((c) => `${c.actionId}: ${c.cost.description}`)
-          .join("；"),
-        contextDisplayedAtMs:
-          s.decisionMeta?.[d.decisionId]?.contextDisplayedAtMs ?? null,
-        availableChecks: s.decisionMeta?.[d.decisionId]?.availableChecks ?? [],
-        check: s.decisionMeta?.[d.decisionId]?.check ?? null,
-        oralKnowledgeStatus: "not_collected",
-        unobservedCommunication: false,
-        coverageComplete: true,
-        technicalLimitations: [],
-      };
-    });
+          visibleCostSummary: d.knownCosts
+            .map((c) => `${c.actionId}: ${c.cost.description}`)
+            .join("；"),
+          contextDisplayedAtMs:
+            s.decisionMeta?.[d.decisionId]?.contextDisplayedAtMs ?? null,
+          availableChecks:
+            s.decisionMeta?.[d.decisionId]?.availableChecks ?? [],
+          check: s.decisionMeta?.[d.decisionId]?.check ?? null,
+          oralKnowledgeStatus: "not_collected",
+          unobservedCommunication: false,
+          coverageComplete: true,
+          technicalLimitations: [],
+        };
+      },
+    );
     return localizePublic(
       buildEvaluatorInput({
         sessionId: s.sessionId,
@@ -2793,9 +3208,9 @@ export class CoreGameService implements GameService {
       asLocale(s.locale),
     );
   }
-  private audit(s: State, eventType: string, data: unknown) {
+  private async audit(s: State, eventType: string, data: unknown) {
     const auditId = uid();
-    this.store.insert("diagnostic_records", {
+    await this.store.insert("diagnostic_records", {
       session_id: s.sessionId,
       diagnostic_id: auditId,
       category: "postgame_audit",
@@ -2810,52 +3225,54 @@ export class CoreGameService implements GameService {
       }),
     });
   }
-  private evaluate(
+  private async evaluate(
     s: State,
     _b: P.EvaluationRequest,
     meta: CommandMeta,
-  ): P.EvaluationAccepted {
+  ): Promise<P.EvaluationAccepted> {
     const configHash =
       this.options.agents?.configHash ?? hash("offline-core-v1");
-    let row = this.store.one(
+    let row = await this.store.one(
       "SELECT * FROM agent_jobs WHERE session_id=? AND agent_role='evaluator' AND seal_hash=? AND config_hash=?",
       s.sessionId,
       s.outcome!.sealedHash,
       configHash,
     );
     if (row) {
-      const count = this.store.one(
-        "SELECT COUNT(*) AS n FROM agent_attempts WHERE session_id=? AND job_id=?",
-        s.sessionId,
-        row.job_id,
+      const count = (
+        await this.store.one(
+          "SELECT COUNT(*) AS n FROM agent_attempts WHERE session_id=? AND job_id=?",
+          s.sessionId,
+          row.job_id,
+        )
       ).n;
       if (
         ["fallback", "failed"].includes(row.status) &&
         count < row.max_attempts &&
         this.options.agents?.configured
       ) {
-        this.store.run(
+        await this.store.run(
           "UPDATE agent_jobs SET status='queued',mode='live_model',deadline_at_ms=?,updated_at_ms=? WHERE session_id=? AND job_id=?",
           this.agentDeadline("evaluator"),
           this.clock.nowMs(),
           s.sessionId,
           row.job_id,
         );
-        row = this.store.one(
+        row = await this.store.one(
           "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
           s.sessionId,
           row.job_id,
         );
       }
     } else {
-      const input = this.evaluatorInput(s);
+      const input = await this.evaluatorInput(s);
       for (const fact of input.facts) {
-        const snap = this.store.one(
+        const snap = await this.store.one(
           "SELECT source_seq,state_version FROM decision_snapshots WHERE session_id=? AND snapshot_id=?",
           s.sessionId,
           fact.contextId,
         );
-        this.store.insert("behavior_facts", {
+        await this.store.insert("behavior_facts", {
           session_id: s.sessionId,
           fact_id: fact.factId,
           seal_hash: s.outcome!.sealedHash,
@@ -2869,7 +3286,7 @@ export class CoreGameService implements GameService {
         });
       }
       const jobId = uid();
-      this.store.insert("agent_jobs", {
+      await this.store.insert("agent_jobs", {
         session_id: s.sessionId,
         job_id: jobId,
         agent_role: "evaluator",
@@ -2886,17 +3303,18 @@ export class CoreGameService implements GameService {
         created_at_ms: this.clock.nowMs(),
         updated_at_ms: this.clock.nowMs(),
       });
-      this.audit(s, "evaluator.job_queued", { jobId, inputVersion: 1 });
-      row = this.store.one(
+      await this.audit(s, "evaluator.job_queued", { jobId, inputVersion: 1 });
+      row = await this.store.one(
         "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
         s.sessionId,
         jobId,
       );
     }
+    if (row.status === "queued") this.jobsPending = true;
     return {
       requestId: meta.requestId ?? meta.idempotencyKey,
       sealedHash: s.outcome!.sealedHash,
-      job: this.jobView(row) as P.EvaluationJobView,
+      job: (await this.jobView(row)) as P.EvaluationJobView,
       operationLocation: `/api/v1/sessions/${s.sessionId}/evaluations/${row.job_id}`,
     };
   }
@@ -2918,11 +3336,11 @@ export class CoreGameService implements GameService {
           : null,
     };
   }
-  private export(
+  private async export(
     s: State,
     b: P.ExportRequest,
     meta: CommandMeta,
-  ): P.ExportAccepted {
+  ): Promise<P.ExportAccepted> {
     const exportId = uid();
     const pages: P.ReplayView[] = [];
     for (
@@ -2934,7 +3352,7 @@ export class CoreGameService implements GameService {
       if (!b.includePlayerStatements) page.playerStatements = [];
       pages.push(page);
     }
-    const job = this.store.one(
+    const job = await this.store.one(
       "SELECT * FROM agent_jobs WHERE session_id=? AND agent_role='evaluator' ORDER BY created_at_ms DESC LIMIT 1",
       s.sessionId,
     );
@@ -2946,11 +3364,13 @@ export class CoreGameService implements GameService {
         replayPages: pages,
         includedPlayerStatements: b.includePlayerStatements,
         generatedAt: iso(this.clock.nowMs()),
-        evaluationJob: job ? (this.jobView(job) as P.EvaluationJobView) : null,
+        evaluationJob: job
+          ? ((await this.jobView(job)) as P.EvaluationJobView)
+          : null,
       },
       asLocale(s.locale),
     );
-    this.store.insert("export_jobs", {
+    await this.store.insert("export_jobs", {
       session_id: s.sessionId,
       export_id: exportId,
       sealed_hash: s.outcome!.sealedHash,
@@ -2962,22 +3382,22 @@ export class CoreGameService implements GameService {
       created_at_ms: this.clock.nowMs(),
       completed_at_ms: this.clock.nowMs(),
     });
-    this.store.insert("runtime_export_artifacts", {
+    await this.store.insert("runtime_export_artifacts", {
       export_id: exportId,
       session_id: s.sessionId,
       artifact_json: canonical(artifact),
     });
-    this.audit(s, "export.finished", { exportId, status: "succeeded" });
-    const view = this.exportView(s.sessionId, exportId);
-    this.publicEvent(s, "export.updated", view);
+    await this.audit(s, "export.finished", { exportId, status: "succeeded" });
+    const view = await this.exportView(s.sessionId, exportId);
+    await this.publicEvent(s, "export.updated", view);
     return {
       requestId: meta.requestId ?? meta.idempotencyKey,
       export: view,
       operationLocation: `/api/v1/sessions/${s.sessionId}/exports/${exportId}`,
     };
   }
-  private exportView(sid: string, id: string): P.ExportView {
-    const row = this.store.one(
+  private async exportView(sid: string, id: string): Promise<P.ExportView> {
+    const row = await this.store.one(
       "SELECT * FROM export_jobs WHERE session_id=? AND export_id=?",
       sid,
       id,
@@ -2993,28 +3413,30 @@ export class CoreGameService implements GameService {
       artifact:
         row.status === "completed"
           ? JSON.parse(
-              this.store.one(
-                "SELECT artifact_json FROM runtime_export_artifacts WHERE session_id=? AND export_id=?",
-                sid,
-                id,
+              (
+                await this.store.one(
+                  "SELECT artifact_json FROM runtime_export_artifacts WHERE session_id=? AND export_id=?",
+                  sid,
+                  id,
+                )
               ).artifact_json,
             )
           : null,
       errorCode: row.error_code ?? null,
     };
   }
-  read(
+  private async readInternal(
     operationId: ReadOperation,
     sessionId?: string,
     id?: string,
     query: Record<string, string | number | undefined> = {},
-  ): unknown {
+  ): Promise<unknown> {
     const locale = sessionId
-      ? (this.getSessionLocale(sessionId) ?? "en-US")
+      ? ((await this.getSessionLocaleInternal(sessionId)) ?? "en-US")
       : "en-US";
     try {
       return localizePublic(
-        this.readCanonical(operationId, sessionId, id, query),
+        await this.readCanonical(operationId, sessionId, id, query),
         locale,
       );
     } catch (error) {
@@ -3023,18 +3445,23 @@ export class CoreGameService implements GameService {
       throw error;
     }
   }
-  private readCanonical(
+  private async readCanonical(
     operationId: ReadOperation,
     sessionId?: string,
     id?: string,
     query: Record<string, string | number | undefined> = {},
-  ): unknown {
+  ): Promise<unknown> {
     if (operationId === "getHealth")
       return {
-        status: this.options.agents?.configured ? "ok" : "degraded",
+        status:
+          this.options.agents?.configured && !this.closed && !this.storageFailed
+            ? "ok"
+            : "degraded",
         apiVersion: "v1",
         contractVersion: "0.5",
-        storageReady: !this.closed,
+        // Initialization/liveness only: an idle PostgreSQL socket may sleep.
+        // The next real operation reconnects; its failure freezes this process.
+        storageReady: !this.closed && !this.storageFailed,
         modelConfigured: !!this.options.agents?.configured,
       } satisfies P.HealthView;
     if (operationId === "getBootstrap")
@@ -3068,12 +3495,12 @@ export class CoreGameService implements GameService {
         sseReconnectMs: 2000,
       } satisfies P.BootstrapView;
     if (!sessionId) ERR("INVALID_REQUEST", 400, "缺少会话");
-    this.authorize(sessionId);
-    this.tick(sessionId);
-    const s = this.load(sessionId);
+    await this.authorize(sessionId);
+    await this.tickInternal(sessionId);
+    const s = await this.load(sessionId);
     switch (operationId) {
       case "getSession":
-        return this.projection(s);
+        return await this.projection(s);
       case "getTask": {
         const t = s.tasks.find((t) => t.view.taskId === id);
         if (!t) ERR("RESOURCE_NOT_FOUND", 404, "找不到任务", s);
@@ -3091,14 +3518,14 @@ export class CoreGameService implements GameService {
       }
       case "getAdvice":
       case "getEvaluation": {
-        const row = this.store.one(
+        const row = await this.store.one(
           "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=? AND agent_role=?",
           sessionId,
           id,
           operationId === "getAdvice" ? "advisor" : "evaluator",
         );
         if (!row) ERR("RESOURCE_NOT_FOUND", 404, "找不到该工作", s);
-        return this.jobView(row);
+        return await this.jobView(row);
       }
       case "getProvenance":
         return this.provenance(
@@ -3121,41 +3548,47 @@ export class CoreGameService implements GameService {
         return this.replay(s, offset);
       }
       case "getExport":
-        return this.exportView(sessionId, id!);
+        return await this.exportView(sessionId, id!);
       default:
         ERR("RESOURCE_NOT_FOUND", 404, "未知读取操作");
     }
   }
-  getEventsSince(sessionId: string, cursor?: string): P.PublicSseEvent[] {
-    this.authorize(sessionId);
+  private async getEventsSinceInternal(
+    sessionId: string,
+    cursor?: string,
+  ): Promise<P.PublicSseEvent[]> {
+    await this.authorize(sessionId);
     let after = 0;
     if (cursor) {
       const at = cursor.lastIndexOf(":");
       if (
-        cursor.slice(0, at) !== this.load(sessionId).runEpoch ||
+        cursor.slice(0, at) !== (await this.load(sessionId)).runEpoch ||
         !/^\d+$/.test(cursor.slice(at + 1))
       )
         ERR("CURSOR_SCOPE_MISMATCH", 403, "事件游标不属于当前会话");
       after = Number(cursor.slice(at + 1));
-      if (after > this.cursor(this.load(sessionId)))
+      if (after > (await this.cursor(await this.load(sessionId))))
         ERR("CURSOR_EXPIRED", 410, "事件游标超过当前记录");
     }
-    return this.store
-      .all(
+    return (
+      await this.store.all(
         "SELECT public_payload_json FROM view_events WHERE session_id=? AND view_role='commander' AND cursor>? ORDER BY cursor LIMIT 250",
         sessionId,
         after,
       )
-      .map((r) => JSON.parse(r.public_payload_json));
+    ).map((r) => JSON.parse(r.public_payload_json));
   }
-  subscribe(sessionId: string, listener: (e: P.PublicSseEvent) => void) {
-    this.authorize(sessionId);
+  private async subscribeInternal(
+    sessionId: string,
+    listener: (e: P.PublicSseEvent) => void,
+  ) {
+    await this.authorize(sessionId);
     let listeners = this.listeners.get(sessionId);
     if (!listeners) {
       listeners = new Map();
       this.listeners.set(sessionId, listeners);
     }
-    listeners.set(listener, this.cursor(this.load(sessionId)));
+    listeners.set(listener, await this.cursor(await this.load(sessionId)));
     return () => {
       listeners!.delete(listener);
       if (!listeners!.size) this.listeners.delete(sessionId);
@@ -3164,12 +3597,22 @@ export class CoreGameService implements GameService {
   startScheduler() {
     if (!this.timer)
       this.timer = setInterval(() => {
-        try {
-          this.tick();
-        } catch (e) {
-          console.error("Core scheduler failure", e);
-        }
-      }, 100);
+        if (
+          this.closed ||
+          this.closing ||
+          this.storageFailed ||
+          this.schedulerBusy ||
+          (!this.liveSessions.size && !this.jobsPending)
+        )
+          return;
+        this.schedulerBusy = true;
+        void this.tick()
+          .catch(() => console.error("Core scheduler unavailable"))
+          .finally(() => {
+            this.schedulerBusy = false;
+          });
+      }, 1000);
+    this.timer.unref();
     return () => {
       if (this.timer) {
         clearInterval(this.timer);
@@ -3177,33 +3620,33 @@ export class CoreGameService implements GameService {
       }
     };
   }
-  private recover() {
-    for (const row of this.store.all(
+  private async recover() {
+    for (const row of await this.store.all(
       "SELECT * FROM agent_attempts WHERE status IN ('sending','running')",
     ))
-      this.store.run(
+      await this.store.run(
         "UPDATE agent_attempts SET status='unknown',finished_at_ms=?,error_code='MODEL_TRANSPORT' WHERE session_id=? AND job_id=? AND attempt_no=?",
         Math.max(this.clock.nowMs(), row.sent_at_ms),
         row.session_id,
         row.job_id,
         row.attempt_no,
       );
-    this.store.run(
+    await this.store.run(
       "UPDATE agent_jobs SET status='failed',error_code='MODEL_TRANSPORT',updated_at_ms=? WHERE agent_role='evaluator' AND status IN ('queued','running')",
       this.clock.nowMs(),
     );
-    for (const row of this.store.all(
+    for (const row of await this.store.all(
       "SELECT session_id FROM sessions WHERE lifecycle IN ('briefing','running')",
     )) {
-      this.tx(() => {
-        const s = this.load(row.session_id);
+      await this.tx(async () => {
+        const s = await this.load(row.session_id);
         s.version++;
-        this.seal(s, "technical_interruption");
-        this.save(s);
+        await this.seal(s, "technical_interruption");
+        await this.save(s);
       });
     }
   }
-  close() {
+  private async closeInternal() {
     if (this.closed || this.closing) return;
     this.closing = true;
     if (this.timer) {
@@ -3211,154 +3654,207 @@ export class CoreGameService implements GameService {
       this.timer = null;
     }
     try {
+      if (this.storageFailed) return;
       for (const sid of this.granted) {
         // Sample once. Events due at shutdown are committed before deciding whether
         // a technical interruption remains necessary; no model work starts here.
-        const cutoff = this.missionNow(this.load(sid));
-        this.tick(sid, cutoff);
-        const s = this.load(sid);
+        const cutoff = this.missionNow(await this.load(sid));
+        await this.tickInternal(sid, cutoff);
+        const s = await this.load(sid);
         if (LIVE.has(s.lifecycle))
-          this.tx(() => {
+          await this.tx(async () => {
             s.mission = cutoff;
             s.version++;
-            this.seal(s, "technical_interruption");
-            this.save(s);
+            await this.seal(s, "technical_interruption");
+            await this.save(s);
           });
       }
-      this.store.run(
+      await this.store.run(
         "UPDATE launches SET ended_at_ms=? WHERE launch_id=?",
         this.clock.nowMs(),
         this.launchId,
       );
     } finally {
       this.closed = true;
-      this.store.close();
+      await this.store.close();
     }
   }
-  private dispatch() {
-    if (this.closed || this.closing) return;
-    for (const row of this.store.all(
-      "SELECT * FROM agent_jobs WHERE status='queued' ORDER BY created_at_ms",
-    )) {
+  private async dispatch() {
+    if (this.closed || this.closing || this.storageFailed || !this.jobsPending)
+      return;
+    const slots =
+      (this.options.cloud?.maxConcurrentModelJobs ?? Number.MAX_SAFE_INTEGER) -
+      this.dispatched.size;
+    if (slots <= 0) return;
+    const rows = await this.store.all(
+      "SELECT * FROM agent_jobs WHERE status='queued' ORDER BY created_at_ms LIMIT ?",
+      Math.min(slots, 100) + 1,
+    );
+    this.jobsPending = rows.length > Math.min(slots, 100);
+    for (const row of rows.slice(0, Math.min(slots, 100))) {
       if (this.dispatched.has(row.job_id)) continue;
-      this.dispatched.add(row.job_id);
-      this.tx(() =>
-        this.store.run(
-          "UPDATE agent_jobs SET status='running',updated_at_ms=? WHERE session_id=? AND job_id=?",
-          this.clock.nowMs(),
-          row.session_id,
-          row.job_id,
-        ),
-      );
-      const isCurrent = () => {
-        if (this.closed) return false;
-        const j = this.store.one(
-          "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
-          row.session_id,
-          row.job_id,
-        );
-        if (!j || j.status !== "running") return false;
-        const s = this.load(row.session_id);
-        return row.agent_role === "evaluator"
-          ? s.outcome?.sealedHash === row.seal_hash
-          : s.lifecycle === "running" &&
-              s.sceneId === row.scene_id &&
-              s.contextVersion === row.context_version;
-      };
-      const control: AttemptControl = {
-        locale: asLocale(this.load(row.session_id).locale),
-        isCurrent,
-        beginAttempt: () => {
-          if (!isCurrent()) throw Error("CONTEXT_SUPERSEDED");
-          let ticket!: { attemptNo: number; requestKey: string };
-          this.tx(() => {
-            const count = this.store.one(
-              "SELECT COUNT(*) AS n FROM agent_attempts WHERE session_id=? AND job_id=?",
-              row.session_id,
-              row.job_id,
-            ).n;
-            ticket = { attemptNo: count + 1, requestKey: uid() };
-            this.store.insert("agent_attempts", {
-              session_id: row.session_id,
-              job_id: row.job_id,
-              attempt_no: ticket.attemptNo,
-              request_key: ticket.requestKey,
-              status: "sending",
-              sent_at_ms: this.clock.nowMs(),
-            });
-          });
-          return ticket;
-        },
-        finishAttempt: (n, result) => {
-          if (this.closed) return;
-          this.tx(() => {
-            const a = this.store.one(
-              "SELECT * FROM agent_attempts WHERE session_id=? AND job_id=? AND attempt_no=?",
-              row.session_id,
-              row.job_id,
-              n,
-            );
-            if (!a || !["sending", "running"].includes(a.status)) return;
-            this.store.run(
-              "UPDATE agent_attempts SET status=?,finished_at_ms=?,provider_request_id=?,input_tokens=?,output_tokens=?,response_hash=?,error_code=? WHERE session_id=? AND job_id=? AND attempt_no=?",
-              result.status,
-              Math.max(this.clock.nowMs(), a.sent_at_ms),
-              result.providerRequestId ?? null,
-              result.inputTokens ?? null,
-              result.outputTokens ?? null,
-              result.responseHash ?? null,
-              result.errorCode ?? null,
-              row.session_id,
-              row.job_id,
-              n,
-            );
-          });
-        },
-      };
-      const input =
-        row.agent_role === "advisor"
-          ? JSON.parse(
-              this.store.one(
-                "SELECT permitted_input_json FROM input_manifests WHERE session_id=? AND manifest_id=?",
-                row.session_id,
-                row.manifest_id,
-              ).permitted_input_json,
+      try {
+        // Complete every fallible read before occupying a slot or changing status.
+        // A storage failure here leaves a durable queued job for recovery.
+        const locale = asLocale((await this.load(row.session_id)).locale);
+        const input =
+          row.agent_role === "advisor"
+            ? JSON.parse(
+                (
+                  await this.store.one(
+                    "SELECT permitted_input_json FROM input_manifests WHERE session_id=? AND manifest_id=?",
+                    row.session_id,
+                    row.manifest_id,
+                  )
+                ).permitted_input_json,
+              )
+            : JSON.parse(row.evaluator_input_json);
+        await this.tx(async () => {
+          await this.store.run(
+            "UPDATE agent_jobs SET status='running',updated_at_ms=? WHERE session_id=? AND job_id=?",
+            this.clock.nowMs(),
+            row.session_id,
+            row.job_id,
+          );
+        });
+        this.dispatched.add(row.job_id);
+        const current = async () => {
+          if (this.closed || this.closing || this.storageFailed) return false;
+          const j = await this.store.one(
+            "SELECT status FROM agent_jobs WHERE session_id=? AND job_id=?",
+            row.session_id,
+            row.job_id,
+          );
+          if (!j || j.status !== "running") return false;
+          const s = await this.load(row.session_id);
+          return row.agent_role === "evaluator"
+            ? s.outcome?.sealedHash === row.seal_hash
+            : s.lifecycle === "running" &&
+                s.sceneId === row.scene_id &&
+                s.contextVersion === row.context_version;
+        };
+        const control: AttemptControl = {
+          locale,
+          isCurrent: () => this.serialized(current),
+          beginAttempt: () =>
+            this.serialized(async () => {
+              if (!(await current())) throw Error("CONTEXT_SUPERSEDED");
+              return this.tx(async () => {
+                const count = Number(
+                  (
+                    await this.store.one(
+                      "SELECT COUNT(*) AS n FROM agent_attempts WHERE session_id=? AND job_id=?",
+                      row.session_id,
+                      row.job_id,
+                    )
+                  ).n,
+                );
+                const ticket = { attemptNo: count + 1, requestKey: uid() };
+                await this.store.insert("agent_attempts", {
+                  session_id: row.session_id,
+                  job_id: row.job_id,
+                  attempt_no: ticket.attemptNo,
+                  request_key: ticket.requestKey,
+                  status: "sending",
+                  sent_at_ms: this.clock.nowMs(),
+                });
+                if (this.options.cloud) {
+                  const day = iso(this.clock.nowMs()).slice(0, 10);
+                  await this.store.run(
+                    "INSERT INTO cloud_daily_usage(day,attempt_count) VALUES(?,0) ON CONFLICT(day) DO NOTHING",
+                    day,
+                  );
+                  const reserved = await this.store.run(
+                    "UPDATE cloud_daily_usage SET attempt_count=attempt_count+1 WHERE day=? AND attempt_count<?",
+                    day,
+                    this.options.cloud.maxModelAttemptsPerDay,
+                  );
+                  if (reserved.changes !== 1)
+                    throw Error("MODEL_BUDGET_EXHAUSTED");
+                }
+                return ticket;
+              });
+            }),
+          finishAttempt: (n, result) =>
+            this.serialized(async () => {
+              if (this.closed) return;
+              await this.tx(async () => {
+                const a = await this.store.one(
+                  "SELECT * FROM agent_attempts WHERE session_id=? AND job_id=? AND attempt_no=?",
+                  row.session_id,
+                  row.job_id,
+                  n,
+                );
+                if (!a || !["sending", "running"].includes(a.status)) return;
+                await this.store.run(
+                  "UPDATE agent_attempts SET status=?,finished_at_ms=?,provider_request_id=?,input_tokens=?,output_tokens=?,response_hash=?,error_code=? WHERE session_id=? AND job_id=? AND attempt_no=?",
+                  result.status,
+                  Math.max(this.clock.nowMs(), a.sent_at_ms),
+                  result.providerRequestId ?? null,
+                  result.inputTokens ?? null,
+                  result.outputTokens ?? null,
+                  result.responseHash ?? null,
+                  result.errorCode ?? null,
+                  row.session_id,
+                  row.job_id,
+                  n,
+                );
+              });
+            }),
+        };
+        // No model invocation, provider callback, or completion inherits a DB
+        // transaction's AsyncLocalStorage context or occupies the command queue.
+        this.detached.runInAsyncScope(() => {
+          const run = async () =>
+            row.agent_role === "advisor"
+              ? this.options.agents!.runAdvisor(input, control)
+              : this.options.agents!.runEvaluator(input, control);
+          void run()
+            .then(
+              (result) =>
+                this.serialized(async () => {
+                  if (await current()) await this.publishJob(row, result);
+                }),
+              () =>
+                this.serialized(async () => {
+                  if (await current())
+                    await this.publishJob(row, {
+                      status: "failed",
+                      mode: row.mode,
+                      result: null,
+                      error: { code: "MODEL_TRANSPORT", retryable: true },
+                    });
+                }),
             )
-          : JSON.parse(row.evaluator_input_json);
-      const promise =
-        row.agent_role === "advisor"
-          ? this.options.agents!.runAdvisor(input, control)
-          : this.options.agents!.runEvaluator(input, control);
-      promise
-        .then((result) => {
-          if (!isCurrent()) return;
-          this.publishJob(row, result);
-        })
-        .catch(() => {
-          if (!isCurrent()) return;
-          this.publishJob(row, {
-            status: "failed",
-            mode: row.mode,
-            result: null,
-            error: { code: "MODEL_TRANSPORT", retryable: true },
-          });
-        })
-        .finally(() => this.dispatched.delete(row.job_id));
+            .catch(() => console.error("Agent completion unavailable"))
+            .finally(() => {
+              void this.serialized(async () => {
+                this.dispatched.delete(row.job_id);
+                this.scheduleDispatch();
+              }).catch(() => {});
+            });
+        });
+      } catch (error) {
+        this.dispatched.delete(row.job_id);
+        this.jobsPending = true;
+        throw error;
+      }
     }
   }
-  private publishJob(row: any, result: AgentCompletion) {
+  private async publishJob(row: any, result: AgentCompletion) {
     if (this.closed) return;
     const sid = row.session_id;
-    const receivedMission = this.missionNow(this.load(sid));
-    if (row.agent_role === "advisor") this.tick(sid, receivedMission);
-    this.tx(() => {
-      const current = this.store.one(
+    const receivedMission = this.missionNow(await this.load(sid));
+    if (row.agent_role === "advisor")
+      await this.tickInternal(sid, receivedMission);
+    await this.tx(async () => {
+      const current = await this.store.one(
         "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
         sid,
         row.job_id,
       );
       if (current.status !== "running") return;
-      const s = this.load(sid);
+      const s = await this.load(sid);
       if (
         row.agent_role === "advisor" &&
         (s.lifecycle !== "running" ||
@@ -3366,7 +3862,7 @@ export class CoreGameService implements GameService {
           s.contextVersion !== row.context_version)
       )
         return;
-      this.store.run(
+      await this.store.run(
         "UPDATE agent_jobs SET status=?,mode=?,result_json=?,error_code=?,updated_at_ms=? WHERE session_id=? AND job_id=?",
         result.status,
         result.mode,
@@ -3376,8 +3872,8 @@ export class CoreGameService implements GameService {
         sid,
         row.job_id,
       );
-      const view = this.jobView(
-        this.store.one(
+      const view = await this.jobView(
+        await this.store.one(
           "SELECT * FROM agent_jobs WHERE session_id=? AND job_id=?",
           sid,
           row.job_id,
@@ -3386,14 +3882,14 @@ export class CoreGameService implements GameService {
       if (row.agent_role === "advisor") {
         s.mission = Math.max(s.mission, receivedMission);
         s.version++;
-        this.event(
+        await this.event(
           s,
           "agent.job_finished",
           { jobId: row.job_id, status: result.status, mode: result.mode },
           "system",
         );
         if (result.result)
-          this.publicRecord(s, `advice:${row.job_id}`, "advice", view);
+          await this.publicRecord(s, `advice:${row.job_id}`, "advice", view);
         this.log(
           s,
           "advice_displayed",
@@ -3404,20 +3900,26 @@ export class CoreGameService implements GameService {
           [],
           row.job_id,
         );
-        this.contextRecord(s);
-        this.save(s);
-        this.publicEvent(s, "advice.updated", view);
-        this.publicEvent(s, "projection.changed", this.projection(s));
+        await this.contextRecord(s);
+        await this.save(s);
+        await this.publicEvent(s, "advice.updated", view);
+        await this.publicEvent(
+          s,
+          "projection.changed",
+          await this.projection(s),
+        );
       } else {
         if (result.result) {
           const revision =
-            (this.store.one(
-              "SELECT MAX(revision) AS n FROM evaluation_reports WHERE session_id=? AND sealed_hash=? AND config_hash=?",
-              sid,
-              row.seal_hash,
-              row.config_hash,
+            ((
+              await this.store.one(
+                "SELECT MAX(revision) AS n FROM evaluation_reports WHERE session_id=? AND sealed_hash=? AND config_hash=?",
+                sid,
+                row.seal_hash,
+                row.config_hash,
+              )
             )?.n ?? 0) + 1;
-          this.store.insert("evaluation_reports", {
+          await this.store.insert("evaluation_reports", {
             session_id: sid,
             evaluation_id: uid(),
             job_id: row.job_id,
@@ -3429,14 +3931,14 @@ export class CoreGameService implements GameService {
             created_at_ms: this.clock.nowMs(),
           });
         }
-        this.audit(s, "evaluator.job_finished", {
+        await this.audit(s, "evaluator.job_finished", {
           jobId: row.job_id,
           status: result.status,
           mode: result.mode,
         });
-        this.publicEvent(s, "evaluation.updated", view);
+        await this.publicEvent(s, "evaluation.updated", view);
       }
     });
-    this.flush(sid);
+    await this.flush(sid);
   }
 }

@@ -29,8 +29,8 @@ class FakeClock implements Clock {
   }
 }
 const services: GameService[] = [];
-afterEach(() => {
-  for (const s of services.splice(0)) s.close();
+afterEach(async () => {
+  for (const s of services.splice(0)) await s.close();
 });
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 const annotation = (
@@ -42,7 +42,7 @@ const annotation = (
   acknowledgedLimitation: false,
   comparedKnownCosts: false,
 });
-function setup() {
+async function setup() {
   const advisorInputs: AdvisorInput[] = [],
     evaluations: EvaluatorInput[] = [];
   const clock = new FakeClock();
@@ -78,15 +78,15 @@ function setup() {
     }
     return { ok: true, value, usage: null, providerRequestId: null };
   });
-  const svc = createGameService({
+  const svc = await createGameService({
     clock,
     dbPath: ":memory:",
     selectCase: () => "A",
     agents: createAiService({ provider, env: {} }),
   });
   services.push(svc);
-  const boot = svc.read("getBootstrap") as P.BootstrapView;
-  const made = svc.execute(
+  const boot = (await svc.read("getBootstrap")) as P.BootstrapView;
+  const made = (await svc.execute(
     "createSession",
     {
       profileId: "SINGLE_PLAYER_REFERENCE",
@@ -95,12 +95,13 @@ function setup() {
       contentVersionId: boot.profiles[0]!.contentVersionId,
     },
     { idempotencyKey: randomUUID() },
-  ) as P.SessionCreated;
+  )) as P.SessionCreated;
   const sid = made.sessionId,
-    get = () => svc.read("getSession", sid) as P.SessionProjection;
-  const command = (op: any, payload: any) => {
-    const v = get();
-    return svc.execute(
+    get = async () =>
+      (await svc.read("getSession", sid)) as P.SessionProjection;
+  const command = async (op: any, payload: any) => {
+    const v = await get();
+    return (await svc.execute(
       op,
       {
         expectedStateVersion: v.stateVersion,
@@ -108,18 +109,18 @@ function setup() {
         payload,
       },
       { sessionId: sid, runEpoch: v.runEpoch, idempotencyKey: randomUUID() },
-    ) as any;
+    )) as any;
   };
-  const advance = (ms: number) => {
+  const advance = async (ms: number) => {
     clock.advance(ms);
-    svc.tick(sid);
+    await svc.tick(sid);
   };
-  const receipt = (
+  const receipt = async (
     displayKind: P.DisplayReceiptRequest["payload"]["displayKind"],
     ids: Partial<P.DisplayReceiptRequest["payload"]> = {},
   ) => {
-    const v = get();
-    return svc.execute(
+    const v = await get();
+    return await svc.execute(
       "recordDisplay",
       {
         observedStateVersion: v.stateVersion,
@@ -135,12 +136,12 @@ function setup() {
       { sessionId: sid, runEpoch: v.runEpoch, idempotencyKey: randomUUID() },
     );
   };
-  const task = (
+  const task = async (
     targetId: string,
     reasonAnnotation: ReasonAnnotation | null = null,
   ) => {
-    const o = get().taskOptions.find((o) => o.targetId === targetId)!;
-    return command("createTask", {
+    const o = (await get()).taskOptions.find((o) => o.targetId === targetId)!;
+    return await command("createTask", {
       taskKind: "investigate_and_report",
       targetRole: o.targetRole,
       targetId,
@@ -151,18 +152,18 @@ function setup() {
     });
   };
   const openAndUpload = async (report: P.ReportView) => {
-    receipt("report_opened", { reportId: report.reportId });
-    command("uploadReports", {
+    await receipt("report_opened", { reportId: report.reportId });
+    await command("uploadReports", {
       items: [{ reportId: report.reportId, expectedRevision: report.revision }],
     });
     await settle();
-    const job = get().latestAdviceJob!;
+    const job = (await get()).latestAdviceJob!;
     expect(job.status).toBe("succeeded");
-    receipt("advice_displayed", { jobId: job.jobId });
+    await receipt("advice_displayed", { jobId: job.jobId });
     return job;
   };
-  const decide = (actionId: string, reasonAnnotation: ReasonAnnotation) =>
-    command("commitAction", {
+  const decide = async (actionId: string, reasonAnnotation: ReasonAnnotation) =>
+    await command("commitAction", {
       actionId,
       waitDurationMs: null,
       reason: "",
@@ -172,10 +173,10 @@ function setup() {
       cancelPendingInvestigations: true,
     });
   const evaluate = async () => {
-    const outcome = command("abandonSession", {
+    const outcome = (await command("abandonSession", {
       reason: "player_exit",
-    }) as P.OutcomeView;
-    svc.execute(
+    })) as P.OutcomeView;
+    await svc.execute(
       "requestEvaluation",
       {
         sealedHash: outcome.sealedHash,
@@ -191,8 +192,16 @@ function setup() {
     expect(evaluations).toHaveLength(1);
     return evaluations[0]!;
   };
-  command("startSession", { acknowledgeDesignPreview: true });
-  advance(30000);
+  await command("startSession", { acknowledgeDesignPreview: true });
+  await advance(30000);
+  // Async storage permits the automatic E1 analysis to finish between reads and
+  // commands. Start the behavior scenario from its settled, visible baseline.
+  for (let i = 0; i < 100; i++) {
+    const job = (await get()).latestAdviceJob;
+    if (job && !["queued", "running"].includes(job.status)) break;
+    await settle();
+  }
+  expect((await get()).latestAdviceJob?.status).toBe("succeeded");
   return {
     svc,
     sid,
@@ -210,16 +219,16 @@ function setup() {
 }
 describe("AI boundaries through legal authoritative domain events", () => {
   it("can observe complacency with shown uncertainty, affordable check and explicit AI-only reason", async () => {
-    const x = setup();
-    x.command("createTask", {
+    const x = await setup();
+    await x.command("createTask", {
       taskKind: "request_report",
       targetRole: "analyst",
       topicId: "roads",
     });
-    x.advance(1000);
-    await x.openAndUpload(x.get().reports[0]!);
-    x.receipt("context_displayed");
-    x.decide("E1_MAIN", annotation(["ai_said_so"]));
+    await x.advance(1000);
+    await x.openAndUpload((await x.get()).reports[0]!);
+    await x.receipt("context_displayed");
+    await x.decide("E1_MAIN", annotation(["ai_said_so"]));
     const e = await x.evaluate();
     expect(e.bounds.complacency.eligibleOpportunities).toBe(1);
     expect(e.bounds.complacency.supportCandidates).toHaveLength(1);
@@ -229,20 +238,20 @@ describe("AI boundaries through legal authoritative domain events", () => {
     );
   });
   it("can observe distrust with displayed current supporting evidence and explicit past-error-only rejection", async () => {
-    const x = setup();
-    x.task("gate_agency");
-    x.advance(15000);
-    await x.openAndUpload(x.get().reports[0]!);
-    x.receipt("context_displayed");
-    x.decide("E1_BYPASS", annotation(["prior_ai_error_only"]));
+    const x = await setup();
+    await x.task("gate_agency");
+    await x.advance(15000);
+    await x.openAndUpload((await x.get()).reports[0]!);
+    await x.receipt("context_displayed");
+    await x.decide("E1_BYPASS", annotation(["prior_ai_error_only"]));
     const e = await x.evaluate();
     expect(e.bounds.distrust.eligibleOpportunities).toBe(1);
     expect(e.bounds.distrust.supportCandidates).toHaveLength(1);
   });
   it("can observe over-caution only after disclosed channel limitation and explicit no-new-question", async () => {
-    const x = setup();
-    x.receipt("context_displayed");
-    x.task(
+    const x = await setup();
+    await x.receipt("context_displayed");
+    await x.task(
       "gate_satellite",
       annotation(["no_new_question"], "gate_registration"),
     );
@@ -256,56 +265,56 @@ describe("AI boundaries through legal authoritative domain events", () => {
   ])(
     "drone refresh does not erase a disclosed capability limit for $question",
     async ({ question, expected }) => {
-      const x = setup();
-      x.receipt("context_displayed");
-      x.task("gate_drone", annotation(["no_new_question"], question));
+      const x = await setup();
+      await x.receipt("context_displayed");
+      await x.task("gate_drone", annotation(["no_new_question"], question));
       const e = await x.evaluate();
       expect(e.bounds.overCaution.supportCandidates).toHaveLength(expected);
     },
   );
   it("does not score an old displayed recommendation after a new authorized context supersedes it", async () => {
-    const x = setup();
-    x.command("createTask", {
+    const x = await setup();
+    await x.command("createTask", {
       taskKind: "request_report",
       targetRole: "analyst",
       topicId: "roads",
     });
-    x.advance(1000);
-    const old = await x.openAndUpload(x.get().reports[0]!);
-    x.command("askAdvisor", {
-      expectedInboxVersion: x.get().inboxVersion,
+    await x.advance(1000);
+    const old = await x.openAndUpload((await x.get()).reports[0]!);
+    await x.command("askAdvisor", {
+      expectedInboxVersion: (await x.get()).inboxVersion,
       questionKind: "uncertainties",
       text: null,
       uploadBatch: [],
     });
     await settle();
-    expect(x.get().latestAdviceJob!.jobId).not.toBe(old.jobId);
+    expect((await x.get()).latestAdviceJob!.jobId).not.toBe(old.jobId);
     // The new result is deliberately not acknowledged as displayed.
-    x.receipt("context_displayed");
-    x.decide("E1_MAIN", annotation(["ai_said_so"]));
+    await x.receipt("context_displayed");
+    await x.decide("E1_MAIN", annotation(["ai_said_so"]));
     const e = await x.evaluate();
     expect(e.bounds.complacency.supportCandidates).toHaveLength(0);
     expect(e.contexts.at(-1)!.displayedAdviceId).toBeNull();
   });
   it("does not give Advisor unuploaded cards, private state, time progression or a prior scene snapshot", async () => {
-    const x = setup();
+    const x = await setup();
     await settle();
     const first = x.advisorInputs.at(-1)!;
     expect(first.evidence).toHaveLength(0);
-    x.task("gate_agency");
-    x.advance(15000);
+    await x.task("gate_agency");
+    await x.advance(15000);
     await settle();
     expect(x.advisorInputs.at(-1)!.inputHash).toBe(first.inputHash);
     expect(x.advisorInputs.at(-1)!.evidence).toHaveLength(0);
-    await x.openAndUpload(x.get().reports[0]!);
+    await x.openAndUpload((await x.get()).reports[0]!);
     const uploaded = x.advisorInputs.at(-1)!;
     expect(uploaded.evidence).toHaveLength(1);
     expect(uploaded.evidence[0]!.text).toContain("电子登记在线");
     expect(JSON.stringify(uploaded)).not.toMatch(
       /missionTimeMs|receivedAtMissionMs|validUntilMissionMs|hiddenRootId|privateCaseId|medical|resourceBalance|remaining/,
     );
-    x.decide("E1_MAIN", annotation(["evidence_supported"]));
-    x.advance(65000);
+    await x.decide("E1_MAIN", annotation(["evidence_supported"]));
+    await x.advance(65000);
     await settle();
     const next = x.advisorInputs.at(-1)!;
     expect(next.sceneId).toBe("E2");

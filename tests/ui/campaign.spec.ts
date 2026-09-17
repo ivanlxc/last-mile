@@ -13,20 +13,20 @@ import { createAiService } from "../../server/ai/index.js";
 import { createHttpApp } from "../../server/http/app.js";
 import { loadHttpConfig } from "../../server/http/config.js";
 import type * as Public from "../../docs/engineering_v0.5/contracts/public.types.js";
-
 interface CampaignHarness {
   url: string;
   advance(milliseconds: number): Promise<void>;
-  projection(sessionId: string): Public.SessionProjection;
+  projection(sessionId: string): Promise<Public.SessionProjection>;
 }
-
 // This is a separate production-build UI test. Only this Node fixture owns the
 // injected clock; every player interaction still uses the actual browser/API.
 // No time-control route, browser clock override or network mock exists.
-const test = base.extend<{ campaign: CampaignHarness }>({
+const test = base.extend<{
+  campaign: CampaignHarness;
+}>({
   campaign: async ({}, use) => {
     let elapsed = 0;
-    const service: GameService = createGameService({
+    const service: GameService = await createGameService({
       dbPath: ":memory:",
       recoverOnStartup: false,
       autoTick: false,
@@ -51,19 +51,21 @@ const test = base.extend<{ campaign: CampaignHarness }>({
           if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0)
             throw new Error("Positive test-clock advance required");
           elapsed += milliseconds;
-          service.tick();
+          await service.tick();
           await new Promise<void>((resolve) => setImmediate(resolve));
         },
-        projection: (sessionId) =>
-          service.read("getSession", sessionId) as Public.SessionProjection,
+        projection: async (sessionId) =>
+          (await service.read(
+            "getSession",
+            sessionId,
+          )) as Public.SessionProjection,
       });
     } finally {
       if (app) await app.close();
-      else service.close();
+      else await service.close();
     }
   },
 });
-
 async function closeModal(page: Page) {
   await page
     .getByRole("dialog")
@@ -91,13 +93,15 @@ async function assertNoHorizontalOverflow(page: Page) {
     size.viewport + 1,
   );
 }
-
 test("production UI: authored A campaign, confirmed investigation, source disclosure and 390px fallback", async ({
   page,
   campaign,
 }, info) => {
   const errors: string[] = [];
-  const failures: Array<{ path: string; status: number }> = [];
+  const failures: Array<{
+    path: string;
+    status: number;
+  }> = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("response", (response) => {
     if (response.url().includes("/api/v1/") && response.status() >= 400)
@@ -119,16 +123,15 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     await createdResponse
   ).json()) as Public.SessionCreated;
   const sessionId = created.sessionId;
-  const projection = () => campaign.projection(sessionId);
+  const projection = async () => await campaign.projection(sessionId);
   await page.getByRole("button", { name: "开始护送" }).click();
   await expect(page.getByRole("heading", { name: "现场情报" })).toBeVisible();
   await campaign.advance(30000);
   await expect(
     page.getByRole("heading", { name: "门后的答案", exact: true }),
   ).toBeVisible();
-  expect(projection().location.nodeId).toBe("N01");
+  expect((await projection()).location.nodeId).toBe("N01");
   await screenshot(page, info, "01-E1-west-gate");
-
   const receipt = page.waitForResponse(
     (r) =>
       r.url().endsWith("/display-receipts") &&
@@ -142,12 +145,11 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   ).toBeVisible();
   expect((await receipt).status()).toBe(200);
   await closeModal(page);
-
   // A confirmation modal must not spend resources until its explicit submit.
-  const satellite = projection().taskOptions.find(
+  const satellite = (await projection()).taskOptions.find(
     (o) => o.investigationKind === "satellite_scan" && o.available,
   )!;
-  const initialSatellite = projection().resources.find(
+  const initialSatellite = (await projection()).resources.find(
     (r) => r.channel === "satellite",
   )!.remaining;
   await page
@@ -161,7 +163,8 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     page.getByText("这个渠道能回答什么", { exact: true }),
   ).toBeVisible();
   expect(
-    projection().resources.find((r) => r.channel === "satellite")!.remaining,
+    (await projection()).resources.find((r) => r.channel === "satellite")!
+      .remaining,
   ).toBe(initialSatellite);
   await page.getByLabel("我已考虑这个渠道的观察限制", { exact: true }).check();
   await page
@@ -178,11 +181,11 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     page.getByRole("button", { name: /^已收到\s*1$/ }),
   ).toBeVisible();
   expect(
-    projection().resources.find((r) => r.channel === "satellite")!.remaining,
+    (await projection()).resources.find((r) => r.channel === "satellite")!
+      .remaining,
   ).toBe(initialSatellite - 1);
-
   async function route(actionId: string, nextScene: Public.SceneId | null) {
-    const option = projection().actionOptions.find(
+    const option = (await projection()).actionOptions.find(
       (a) => a.actionId === actionId && a.available,
     )!;
     expect(option).toBeDefined();
@@ -199,22 +202,21 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     await expect(page.getByRole("dialog")).not.toBeVisible();
     for (let n = 0; n < 60; n += 1) {
       await campaign.advance(5000);
-      const p = projection();
+      const p = await projection();
       if (
         p.lifecycle === "sealed" ||
         (p.phase === "scene" && p.sceneId === nextScene)
       )
         break;
     }
-    if (nextScene) expect(projection().sceneId).toBe(nextScene);
-    else expect(projection().lifecycle).toBe("sealed");
+    if (nextScene) expect((await projection()).sceneId).toBe(nextScene);
+    else expect((await projection()).lifecycle).toBe("sealed");
   }
-
   await route("E1_MAIN", "E2");
   await expect(
     page.getByRole("heading", { name: "回声的重量", exact: true }),
   ).toBeVisible();
-  expect(projection().location.nodeId).toBe("N02");
+  expect((await projection()).location.nodeId).toBe("N02");
   await screenshot(page, info, "02-E2-market");
   await page
     .locator(".role-switch button")
@@ -229,7 +231,6 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   await expect(
     page.getByRole("button", { name: /^已收到\s*1$/ }),
   ).toBeVisible();
-
   // The same UI must show no inferred source edges before a paid trace.
   const beforeGraph = page.waitForResponse((r) =>
     r.url().includes("/provenance?sceneId=E2"),
@@ -244,8 +245,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   ).toBeVisible();
   await screenshot(page, info, "03-sources-before-trace");
   await closeModal(page);
-
-  const traceOption = projection().taskOptions.find(
+  const traceOption = (await projection()).taskOptions.find(
     (o) =>
       o.investigationKind === "provenance_trace" &&
       o.targetId === "market_broadcast.trace",
@@ -285,10 +285,9 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   await expect(page.locator(".provenance-relations")).toContainText("已核实");
   await screenshot(page, info, "04-sources-after-trace");
   await closeModal(page);
-
   await route("E2_BYPASS", "E3");
   await expect(page.locator(".scene-location")).toContainText("N05");
-  expect(projection().location.nodeId).toBe("N05");
+  expect((await projection()).location.nodeId).toBe("N05");
   await screenshot(page, info, "05-E3-west-bank");
   await page.setViewportSize({ width: 390, height: 844 });
   await assertNoHorizontalOverflow(page);

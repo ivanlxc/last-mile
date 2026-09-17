@@ -7,15 +7,20 @@ import { Landing, Briefing } from "./components/Landing";
 import { GameView } from "./components/GameView";
 import { Debrief } from "./components/Debrief";
 import { Modal } from "./components/Modal";
+import { AccessGate, type AccessMode } from "./components/AccessGate";
+import { CloudHistory } from "./components/CloudHistory";
 export default function App() {
+  return <AccessGate>{(mode) => <AuthenticatedGame mode={mode} />}</AccessGate>;
+}
+function AuthenticatedGame({ mode }: { mode: AccessMode }) {
   const game = useGame();
   return (
     <LocaleProvider locale={game.locale}>
-      <GameShell game={game} />
+      <GameShell game={game} mode={mode} />
     </LocaleProvider>
   );
 }
-function GameShell({ game }: { game: Game }) {
+function GameShell({ game, mode }: { game: Game; mode: AccessMode }) {
   const { t, campaign } = useI18n();
   const [guide, setGuide] = useState(false);
   return (
@@ -31,6 +36,7 @@ function GameShell({ game }: { game: Game }) {
       ) : (
         <Landing game={game} onGuide={() => setGuide(true)} />
       )}{" "}
+      {!game.state && mode === "cloud" && <CloudHistory />}
       {game.error && (
         <div className="error-toast" role="alert">
           <AlertCircle size={19} />

@@ -1,0 +1,51 @@
+# Optional Render Blueprint. Manual Web Service setup can use the same values.
+# Free application hosting only. PostgreSQL is provided separately by Neon.
+services:
+  - type: web
+    name: last-mile
+    runtime: node
+    plan: free
+    region: ohio
+    branch: main
+    autoDeployTrigger: "off"
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm build
+    startCommand: pnpm run start
+    healthCheckPath: /_platform/health
+    maxShutdownDelaySeconds: 60
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: LAST_MILE_MODE
+        value: cloud
+      - key: DATABASE_URL
+        sync: false
+      - key: LAST_MILE_INVITE_CODE
+        generateValue: true
+      - key: LAST_MILE_COOKIE_SECRET
+        generateValue: true
+      - key: MODEL_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.6-luna
+      - key: OPENAI_REASONING_EFFORT
+        value: low
+      - key: AI_ADVISOR_TIMEOUT_MS
+        value: "30000"
+      - key: AI_EVALUATOR_TIMEOUT_MS
+        value: "45000"
+      - key: AI_ADVISOR_MAX_OUTPUT_TOKENS
+        value: "2500"
+      - key: AI_EVALUATOR_MAX_OUTPUT_TOKENS
+        value: "5000"
+      - key: LAST_MILE_MAX_ACTIVE_SESSIONS
+        value: "5"
+      - key: LAST_MILE_MAX_SESSIONS_PER_PLAYER_PER_DAY
+        value: "3"
+      - key: AI_MAX_DAILY_ATTEMPTS
+        value: "100"
+      - key: AI_MAX_CONCURRENT_JOBS
+        value: "2"

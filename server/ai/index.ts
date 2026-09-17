@@ -39,7 +39,9 @@ export type {
 } from "./providers.js";
 export interface AttemptControl {
   readonly locale?: "en-US" | "zh-CN";
-  beginAttempt(): { attemptNo: number; requestKey: string };
+  beginAttempt():
+    | { attemptNo: number; requestKey: string }
+    | Promise<{ attemptNo: number; requestKey: string }>;
   finishAttempt(
     attemptNo: number,
     result: {
@@ -50,8 +52,8 @@ export interface AttemptControl {
       providerRequestId?: string;
       responseHash?: string;
     },
-  ): void;
-  isCurrent(): boolean;
+  ): void | Promise<void>;
+  isCurrent(): boolean | Promise<boolean>;
 }
 export interface AgentCompletion {
   mode: "live_model" | "offline_template";
@@ -201,7 +203,7 @@ export function createAiService(options: AiServiceOptions = {}) {
         error: { code: "AGENT_INPUT_INVALID", retryable: false },
       };
     }
-    if (!control.isCurrent()) return stale();
+    if (!(await control.isCurrent())) return stale();
     if (
       Buffer.byteLength(JSON.stringify(input), "utf8") >
       (role === "advisor" ? 65536 : 393216)
@@ -209,10 +211,10 @@ export function createAiService(options: AiServiceOptions = {}) {
       return degrade("AGENT_INPUT_TOO_LARGE", false);
     if (!provider.configured) return degrade("MODEL_NOT_CONFIGURED", false);
     for (let localAttempt = 0; localAttempt < 2; localAttempt++) {
-      if (!control.isCurrent()) return stale();
+      if (!(await control.isCurrent())) return stale();
       let ticket: { attemptNo: number; requestKey: string };
       try {
-        ticket = control.beginAttempt();
+        ticket = await control.beginAttempt();
       } catch {
         return degrade("MODEL_BUDGET_EXHAUSTED", false);
       }
@@ -268,7 +270,7 @@ export function createAiService(options: AiServiceOptions = {}) {
         : !response.ok && response.code === "MODEL_TIMEOUT"
           ? "timeout"
           : "failed";
-      control.finishAttempt(ticket.attemptNo, {
+      await control.finishAttempt(ticket.attemptNo, {
         status: attemptStatus,
         ...(response.usage
           ? {
@@ -286,7 +288,7 @@ export function createAiService(options: AiServiceOptions = {}) {
           ? { responseHash: sha256(canonicalJson(response.value)) }
           : {}),
       });
-      if (!control.isCurrent()) return stale();
+      if (!(await control.isCurrent())) return stale();
       if (valid && response.ok) {
         healthStatus = "ready";
         reasonCode = null;

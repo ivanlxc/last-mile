@@ -1,6 +1,6 @@
 # API key、启动与 GitHub
 
-## 1. 填写真实 API key
+## 1. 在本机填写真实 API key
 
 填写位置：`<repository-root>/.env`，其中 `<repository-root>` 是你克隆到的目录。新克隆默认使用离线模板；开发机已完成 OpenAI `gpt-5.6-luna` 真实接口及中英文合成测试，并于 2026-09-16 重启为 OpenAI 模式。详情见[真实模型接入验收](implementation/真实模型接入验收.md)。密钥是否可用于另一账户、电脑或模型，仍需独立检查。
 
@@ -128,3 +128,10 @@ git switch -c feature/your-change
 修改后运行相关测试与 `pnpm build`，检查 `git diff` 和暂存内容再提交，随后 `git push -u origin feature/your-change`，通过 Pull Request 合并。没有仓库写权限的成员可使用 Fork 和 Pull Request；公开访问并不授予推送权限。
 
 每台电脑独立维护 `.env` 和 `.last-mile/`；Git 拉取不会同步密钥或玩家存档。只维护自己的仓库副本，不把 Codex 的整份 `outputs/`、`work/` 或本机历史归档嵌套复制进来。
+
+
+## 6. 云端试玩配置
+
+Render 不会从 GitHub 获得本机 `.env`。在 Render 的 Environment 页面填写 `MODEL_PROVIDER=openai`、`OPENAI_API_KEY`、`OPENAI_MODEL` 与数据库和邀请配置。试玩者使用网站与邀请口令，无需克隆仓库或准备 API key。
+
+免费部署步骤和完整空模板见[云端试玩部署](implementation/云端试玩部署.md)。`deploy/render.env.example` 与 `render.yaml` 可提交；真实值只能存在 Render 环境变量或被忽略的本机文件中。

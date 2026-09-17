@@ -52,13 +52,64 @@ export function useGame() {
       ),
     [],
   );
+  const refreshJobs = useRef(
+    new Map<
+      string,
+      {
+        promise: Promise<P.SessionProjection | undefined>;
+        controller: AbortController;
+        again: boolean;
+      }
+    >(),
+  );
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      for (const job of refreshJobs.current.values()) job.controller.abort();
+      refreshJobs.current.clear();
+    };
+  }, []);
   const refresh = useCallback(
-    async (id?: string) => {
+    (id?: string): Promise<P.SessionProjection | undefined> => {
       const sid = id ?? ref.current?.sessionId;
-      if (!sid) return;
-      const s = await get<P.SessionProjection>(sessionPath(sid));
-      apply(s);
-      return s;
+      if (!sid) return Promise.resolve(undefined);
+      const existing = refreshJobs.current.get(sid);
+      if (existing) {
+        existing.again = true;
+        return existing.promise;
+      }
+      const controller = new AbortController();
+      const job = {
+        controller,
+        again: false,
+        promise: Promise.resolve(undefined) as Promise<
+          P.SessionProjection | undefined
+        >,
+      };
+      job.promise = (async () => {
+        let result: P.SessionProjection | undefined;
+        do {
+          job.again = false;
+          result = await get<P.SessionProjection>(
+            sessionPath(sid),
+            controller.signal,
+          );
+          if (
+            mounted.current &&
+            !controller.signal.aborted &&
+            ref.current?.sessionId === sid
+          )
+            apply(result);
+        } while (job.again && mounted.current && !controller.signal.aborted);
+        return result;
+      })().finally(() => {
+        if (refreshJobs.current.get(sid) === job)
+          refreshJobs.current.delete(sid);
+      });
+      refreshJobs.current.set(sid, job);
+      return job.promise;
     },
     [apply],
   );
@@ -110,8 +161,16 @@ export function useGame() {
     const sid = state.sessionId;
     const stream = new EventSource("/api/v1" + sessionPath(sid, "/events"));
     let disposed = false;
-    stream.onopen = () => setConnected(true);
-    stream.onerror = () => setConnected(false);
+    let streamHealthy = false;
+    stream.onopen = () => {
+      streamHealthy = true;
+      setConnected(true);
+      resync();
+    };
+    stream.onerror = () => {
+      streamHealthy = false;
+      setConnected(false);
+    };
     stream.addEventListener("projection.changed", (e) => {
       try {
         const v = JSON.parse((e as MessageEvent).data);
@@ -158,13 +217,16 @@ export function useGame() {
       "export.updated",
     ])
       stream.addEventListener(name, resync);
-    const interval = setInterval(resync, 1000);
+    const interval = setInterval(() => {
+      if (!streamHealthy) resync();
+    }, 15000);
     const visible = () => {
       if (document.visibilityState === "visible") resync();
     };
     document.addEventListener("visibilitychange", visible);
     return () => {
       disposed = true;
+      refreshJobs.current.get(sid)?.controller.abort();
       stream.close();
       clearInterval(interval);
       clearTimeout(pending);

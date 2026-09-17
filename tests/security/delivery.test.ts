@@ -38,26 +38,35 @@ const forbiddenKeys = [
 const service: GameService = {
   launchId: "11111111-1111-4111-8111-111111111111",
   lastExecutionReplayed: false,
-  execute() {
+  async executeWithMeta() {
     throw Error("not used");
   },
-  read() {
-    throw Error("not used");
+  async hasPlayerSessionAccess() {
+    return false;
   },
-  getEventsSince() {
+  async listPlayerSessions() {
     return [];
   },
-  subscribe() {
+  async execute() {
+    throw Error("not used");
+  },
+  async read() {
+    throw Error("not used");
+  },
+  async getEventsSince() {
+    return [];
+  },
+  async subscribe() {
     return () => {};
   },
-  tick() {},
-  hasSessionAccess() {
+  async tick() {},
+  async hasSessionAccess() {
     return false;
   },
   startScheduler() {
     return () => {};
   },
-  close() {},
+  async close() {},
 };
 describe("production client delivery isolation (run pnpm build first)", () => {
   it("contains no server files, source maps, private campaign records or provider configuration", () => {

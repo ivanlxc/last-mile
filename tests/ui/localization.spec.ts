@@ -13,20 +13,20 @@ import { createAiService } from "../../server/ai/index.js";
 import { createHttpApp } from "../../server/http/app.js";
 import { loadHttpConfig } from "../../server/http/config.js";
 import type * as Public from "../../docs/engineering_v0.5/contracts/public.types.js";
-
 interface CampaignHarness {
   url: string;
   advance(milliseconds: number): Promise<void>;
-  projection(sessionId: string): Public.SessionProjection;
+  projection(sessionId: string): Promise<Public.SessionProjection>;
 }
-
 // This is a separate production-build UI test. Only this Node fixture owns the
 // injected clock; every player interaction still uses the actual browser/API.
 // No time-control route, browser clock override or network mock exists.
-const test = base.extend<{ campaign: CampaignHarness }>({
+const test = base.extend<{
+  campaign: CampaignHarness;
+}>({
   campaign: async ({}, use) => {
     let elapsed = 0;
-    const service: GameService = createGameService({
+    const service: GameService = await createGameService({
       dbPath: ":memory:",
       recoverOnStartup: false,
       autoTick: false,
@@ -51,19 +51,21 @@ const test = base.extend<{ campaign: CampaignHarness }>({
           if (!Number.isSafeInteger(milliseconds) || milliseconds <= 0)
             throw new Error("Positive test-clock advance required");
           elapsed += milliseconds;
-          service.tick();
+          await service.tick();
           await new Promise<void>((resolve) => setImmediate(resolve));
         },
-        projection: (sessionId) =>
-          service.read("getSession", sessionId) as Public.SessionProjection,
+        projection: async (sessionId) =>
+          (await service.read(
+            "getSession",
+            sessionId,
+          )) as Public.SessionProjection,
       });
     } finally {
       if (app) await app.close();
-      else service.close();
+      else await service.close();
     }
   },
 });
-
 async function english(page: Page) {
   await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
   // The Chinese language selector is deliberately written in its own language.
@@ -110,7 +112,6 @@ async function close(page: Page) {
   await page.locator("dialog .modal-header button").click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
 }
-
 test("language choice: English by default, Chinese and English persist after reload", async ({
   page,
   campaign,
@@ -139,13 +140,15 @@ test("language choice: English by default, Chinese and English persist after rel
   await english(page);
   await fit(page);
 });
-
 test("English complete campaign: translated evidence, modals, sources, advisor and sealed review", async ({
   page,
   campaign,
 }, info) => {
   const errors: string[] = [];
-  const badResponses: Array<{ url: string; status: number }> = [];
+  const badResponses: Array<{
+    url: string;
+    status: number;
+  }> = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("response", (r) => {
     if (r.url().includes("/api/v1/") && r.status() >= 400)
@@ -167,7 +170,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   expect(createResponse.request().postDataJSON().locale).toBe("en-US");
   const created = (await createResponse.json()) as Public.SessionCreated;
   const sid = created.sessionId;
-  const projection = () => campaign.projection(sid);
+  const projection = async () => await campaign.projection(sid);
   await expect(page.locator(".brief-footer .primary")).toBeEnabled();
   await english(page);
   await fit(page);
@@ -179,7 +182,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await english(page);
   await page.reload();
   await expect(page.locator(".scene-location")).toContainText("N01");
-  expect(projection().locale).toBe("en-US");
+  expect((await projection()).locale).toBe("en-US");
   await english(page);
   const contextReceipt = page.waitForResponse(
     (r) =>
@@ -196,7 +199,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await expect(page.getByRole("dialog")).toBeVisible();
   await english(page);
   await close(page);
-  const satellite = projection().taskOptions.find(
+  const satellite = (await projection()).taskOptions.find(
     (o) => o.investigationKind === "satellite_scan" && o.available,
   )!;
   await page
@@ -226,9 +229,8 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await page.locator(".evidence-toggle").click();
   await english(page);
   await shot(page, info, "05-English-evidence-and-advisor");
-
   async function route(actionId: string, nextScene: Public.SceneId | null) {
-    const option = projection().actionOptions.find(
+    const option = (await projection()).actionOptions.find(
       (a) => a.actionId === actionId && a.available,
     )!;
     await page
@@ -244,7 +246,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
     expect((await accepted).status()).toBe(202);
     for (let n = 0; n < 60; n++) {
       await campaign.advance(5000);
-      const p = projection();
+      const p = await projection();
       if (
         p.lifecycle === "sealed" ||
         (p.phase === "scene" && p.sceneId === nextScene)
@@ -267,7 +269,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await expect(
     page.locator(".intel-panel .tab-bar button").nth(1),
   ).toContainText("1");
-  const trace = projection().taskOptions.find(
+  const trace = (await projection()).taskOptions.find(
     (o) => o.targetId === "market_broadcast.trace",
   )!;
   await page

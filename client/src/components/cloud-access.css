@@ -1,0 +1,172 @@
+.cloud-gate {
+  min-height: 100svh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  background: #111a17;
+}
+.cloud-gate-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(12, 22, 18, 0.97) 0%,
+      rgba(12, 22, 18, 0.88) 35%,
+      rgba(12, 22, 18, 0.3) 100%
+    ),
+    url("/assets/hero.png") center/cover;
+}
+.cloud-gate-nav {
+  padding: 30px clamp(24px, 6vw, 88px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.cloud-gate-nav > strong {
+  letter-spacing: 0.16em;
+  font-size: 20px;
+}
+.cloud-gate-nav > strong span {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  margin-top: 7px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+.cloud-gate-panel {
+  width: min(700px, 100%);
+  padding: 48px clamp(24px, 6vw, 88px) 42px;
+  box-sizing: border-box;
+}
+.cloud-gate-panel .overline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold);
+}
+.cloud-gate-panel h1 {
+  margin: 26px 0 22px;
+  font-size: clamp(38px, 4.5vw, 65px);
+  line-height: 1.14;
+  letter-spacing: -0.045em;
+}
+.cloud-gate-panel > p {
+  max-width: 440px;
+  color: #b7c1b5;
+  font-size: 15px;
+}
+.cloud-gate-panel form {
+  max-width: 400px;
+  margin: 30px 0 20px;
+}
+.cloud-gate-panel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.cloud-gate-panel input {
+  width: 100%;
+  padding: 15px;
+  color: var(--mint);
+  border: 1px solid #69786c;
+  border-radius: 5px;
+  background: #15221ecc;
+}
+.cloud-gate-panel form .primary {
+  width: 100%;
+  margin-top: 14px;
+  justify-content: space-between;
+}
+.cloud-gate-panel .cloud-access-note {
+  max-width: 380px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: #8c9d90;
+}
+.cloud-access-error {
+  color: #e8b59f !important;
+  margin: 16px 0;
+}
+.cloud-access-status {
+  margin-top: 25px;
+}
+.cloud-gate-footer {
+  padding: 25px clamp(24px, 6vw, 88px);
+  margin-top: auto;
+  font-size: 11px;
+  color: #9aa89a;
+  letter-spacing: 0.08em;
+}
+.cloud-history-trigger {
+  position: absolute;
+  right: clamp(24px, 4vw, 70px);
+  top: 115px;
+  z-index: 5;
+  font-size: 12px;
+  padding: 10px 14px;
+  gap: 10px;
+  background: #14211fe6;
+}
+.cloud-history-help {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.cloud-history-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 55svh;
+  overflow: auto;
+}
+.cloud-history-list a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  text-decoration: none;
+  border-top: 1px solid var(--line);
+  padding: 15px 0;
+}
+.cloud-history-list strong,
+.cloud-history-list small {
+  display: block;
+}
+.cloud-history-list strong {
+  font-size: 14px;
+}
+.cloud-history-list small {
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .cloud-gate-nav {
+    padding: 22px 22px;
+  }
+  .cloud-gate-panel {
+    width: auto;
+    box-sizing: border-box;
+    padding: 40px 24px 26px;
+  }
+  .cloud-gate-panel h1 {
+    font-size: 40px;
+  }
+  .cloud-gate-art {
+    background-position: 65% center;
+  }
+  .cloud-history-trigger {
+    position: fixed;
+    top: auto;
+    bottom: 18px;
+    right: 18px;
+    box-shadow: 0 3px 20px #0006;
+  }
+}

@@ -32,8 +32,8 @@ import { ContractRegistry } from "../../server/http/contracts.js";
 import type * as P from "../../docs/engineering_v0.5/contracts/public.types.js";
 const services: GameService[] = [];
 const temporaryDirs: string[] = [];
-afterEach(() => {
-  for (const svc of services.splice(0)) svc.close();
+afterEach(async () => {
+  for (const svc of services.splice(0)) await svc.close();
   for (const dir of temporaryDirs.splice(0))
     rmSync(dir, { recursive: true, force: true });
 });
@@ -48,7 +48,7 @@ class TestClock implements Clock {
     return this.elapsed;
   }
 }
-function setup(
+async function setup(
   locale: Locale,
   caseId: "A" | "B" = "A",
   mockLive = false,
@@ -108,15 +108,15 @@ function setup(
       return offline.runEvaluator(input, control);
     },
   };
-  const svc = createGameService({
+  const svc = await createGameService({
     dbPath,
     clock,
     agents,
     selectCase: () => caseId,
   });
   services.push(svc);
-  const bootstrap = svc.read("getBootstrap") as P.BootstrapView;
-  const created = svc.execute(
+  const bootstrap = (await svc.read("getBootstrap")) as P.BootstrapView;
+  const created = (await svc.execute(
     "createSession",
     {
       profileId: "SINGLE_PLAYER_REFERENCE",
@@ -125,12 +125,13 @@ function setup(
       contentVersionId: bootstrap.profiles[0]!.contentVersionId,
     },
     { idempotencyKey: randomUUID() },
-  ) as P.SessionCreated;
+  )) as P.SessionCreated;
   const sid = created.sessionId,
-    get = () => svc.read("getSession", sid) as P.SessionProjection;
-  const command = (op: any, payload: any) => {
-    const v = get();
-    return svc.execute(
+    get = async () =>
+      (await svc.read("getSession", sid)) as P.SessionProjection;
+  const command = async (op: any, payload: any) => {
+    const v = await get();
+    return (await svc.execute(
       op,
       {
         expectedStateVersion: v.stateVersion,
@@ -138,19 +139,19 @@ function setup(
         payload,
       },
       { sessionId: sid, runEpoch: v.runEpoch, idempotencyKey: randomUUID() },
-    ) as any;
+    )) as any;
   };
   const advance = async (ms: number) => {
     clock.elapsed += ms;
-    svc.tick(sid);
+    await svc.tick(sid);
     await settle();
   };
-  const receipt = (
+  const receipt = async (
     kind: P.DisplayReceiptRequest["payload"]["displayKind"],
     ids: Partial<P.DisplayReceiptRequest["payload"]> = {},
   ) => {
-    const v = get();
-    return svc.execute(
+    const v = await get();
+    return await svc.execute(
       "recordDisplay",
       {
         observedStateVersion: v.stateVersion,
@@ -166,9 +167,9 @@ function setup(
       { sessionId: sid, runEpoch: v.runEpoch, idempotencyKey: randomUUID() },
     );
   };
-  const task = (targetId: string, reasonAnnotation: any = null) => {
-    const o = get().taskOptions.find((o) => o.targetId === targetId)!;
-    return command("createTask", {
+  const task = async (targetId: string, reasonAnnotation: any = null) => {
+    const o = (await get()).taskOptions.find((o) => o.targetId === targetId)!;
+    return (await command("createTask", {
       taskKind: "investigate_and_report",
       targetRole: o.targetRole,
       topicId: o.topicId,
@@ -176,14 +177,14 @@ function setup(
       investigationKind: o.investigationKind,
       sourceReportId: null,
       reasonAnnotation,
-    }) as P.TaskAccepted;
+    })) as P.TaskAccepted;
   };
-  const action = (
+  const action = async (
     actionId: string,
     reason = "",
     declaredQuestionKey: string | null = null,
   ) =>
-    command("commitAction", {
+    (await command("commitAction", {
       actionId,
       waitDurationMs: null,
       reason,
@@ -196,7 +197,7 @@ function setup(
       basedOnAdviceJobId: null,
       referencedReportIds: [],
       cancelPendingInvestigations: true,
-    }) as P.ActionAccepted;
+    })) as P.ActionAccepted;
   return {
     svc,
     sid,
@@ -215,39 +216,43 @@ function setup(
   };
 }
 describe("session-bound backend localization", () => {
-  it("defaults public metadata to English and preserves the selected locale across projection refreshes", () => {
-    const x = setup("en-US"),
-      zh = setup("zh-CN");
+  it("defaults public metadata to English and preserves the selected locale across projection refreshes", async () => {
+    const x = await setup("en-US"),
+      zh = await setup("zh-CN");
     expect(x.bootstrap.defaultLocale).toBe("en-US");
     expect(x.bootstrap.supportedLocales).toEqual(["en-US", "zh-CN"]);
     expect(han(x.bootstrap)).toBe(false);
     expect(x.created.projection.locale).toBe("en-US");
-    expect(x.get().locale).toBe("en-US");
-    expect(han(x.get())).toBe(false);
-    expect(zh.get().locale).toBe("zh-CN");
-    expect(han(zh.get())).toBe(true);
+    expect((await x.get()).locale).toBe("en-US");
+    expect(han(await x.get())).toBe(false);
+    expect((await zh.get()).locale).toBe("zh-CN");
+    expect(han(await zh.get())).toBe(true);
     const registry = new ContractRegistry(process.cwd());
     expect(registry.errors("BootstrapView", x.bootstrap)).toEqual([]);
-    expect(registry.errors("SessionProjection", x.get())).toEqual([]);
+    expect(registry.errors("SessionProjection", await x.get())).toEqual([]);
   });
   it.each(["en-US", "zh-CN"] as const)(
     "%s keeps displayed cards, upload hashes and authorized Advisor evidence consistent",
     async (locale) => {
-      const x = setup(locale);
-      x.command("startSession", { acknowledgeDesignPreview: true });
+      const x = await setup(locale);
+      await x.command("startSession", { acknowledgeDesignPreview: true });
       await x.advance(30000);
-      x.task("gate_agency");
+      await x.task("gate_agency");
       await x.advance(15000);
-      const report = x.get().reports[0]!,
-        read = x.svc.read("getReport", x.sid, report.reportId) as P.ReportView;
+      const report = (await x.get()).reports[0]!,
+        read = (await x.svc.read(
+          "getReport",
+          x.sid,
+          report.reportId,
+        )) as P.ReportView;
       expect(read).toEqual(report);
       expect(han(report)).toBe(locale === "zh-CN");
-      x.receipt("report_opened", { reportId: report.reportId });
-      const upload = x.command("uploadReports", {
+      await x.receipt("report_opened", { reportId: report.reportId });
+      const upload = (await x.command("uploadReports", {
         items: [
           { reportId: report.reportId, expectedRevision: report.revision },
         ],
-      }) as P.UploadView;
+      })) as P.UploadView;
       await settle();
       expect(upload.added[0]!.payloadHash).toBe(hash(report.card));
       const input = x.advisorInputs.at(-1)!;
@@ -258,7 +263,7 @@ describe("session-bound backend localization", () => {
       expect(input.evidence[0]!.instanceId).toBe(report.evidenceInstanceId);
       expect(input.evidence[0]!.revision).toBe(report.revision);
       expect(han(input)).toBe(locale === "zh-CN");
-      const fallback = x.get().latestAdviceJob!;
+      const fallback = (await x.get()).latestAdviceJob!;
       expect(fallback.mode).toBe("offline_template");
       expect(han(fallback.result)).toBe(locale === "zh-CN");
       expect((fallback.result as any).recommendation.actionId).toBeNull();
@@ -268,36 +273,36 @@ describe("session-bound backend localization", () => {
   it("keeps bilingual route decisions identical in time, resource cost and outcome", async () => {
     const snapshots = [];
     for (const locale of ["en-US", "zh-CN"] as const) {
-      const x = setup(locale);
-      x.command("startSession", { acknowledgeDesignPreview: true });
+      const x = await setup(locale);
+      await x.command("startSession", { acknowledgeDesignPreview: true });
       await x.advance(30000);
       for (const [action, duration] of [
         ["E1_MAIN", 65000],
         ["E2_MAIN", 245000],
         ["E3_BRIDGE", 105000],
       ] as const) {
-        const accepted = x.action(action);
+        const accepted = await x.action(action);
         expect(han(accepted)).toBe(locale === "zh-CN");
         await x.advance(duration);
       }
-      const outcome = x.svc.read("getOutcome", x.sid) as P.OutcomeView;
+      const outcome = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
       expect(han(outcome)).toBe(locale === "zh-CN");
       if (locale === "en-US")
         expect(outcome.summary).toMatch(
           /Reception Point\. (Handover|Required)/,
         );
-      expect(x.get().locale).toBe(locale);
+      expect((await x.get()).locale).toBe(locale);
       snapshots.push({
         time: outcome.sealedAtMissionMs,
         success: outcome.taskSuccess,
         location: outcome.finalLocation,
         routes: outcome.routeIdsTaken,
         pending: outcome.pendingTasks,
-        resources: x.get().resources,
+        resources: (await x.get()).resources,
       });
-      const replay = x.svc.read("getReplay", x.sid) as P.ReplayView;
+      const replay = (await x.svc.read("getReplay", x.sid)) as P.ReplayView;
       expect(han(replay)).toBe(locale === "zh-CN");
-      const accepted = x.svc.execute(
+      const accepted = (await x.svc.execute(
         "requestEvaluation",
         {
           sealedHash: outcome.sealedHash,
@@ -308,31 +313,31 @@ describe("session-bound backend localization", () => {
           runEpoch: outcome.runEpoch,
           idempotencyKey: randomUUID(),
         },
-      ) as P.EvaluationAccepted;
+      )) as P.EvaluationAccepted;
       await settle();
       const input = x.evaluatorInputs[0]!;
       guardEvaluatorInput(input);
       expect(han(input)).toBe(locale === "zh-CN");
-      const result = x.svc.read(
+      const result = (await x.svc.read(
         "getEvaluation",
         x.sid,
         accepted.job.jobId,
-      ) as P.EvaluationJobView;
+      )) as P.EvaluationJobView;
       expect(han(result)).toBe(locale === "zh-CN");
       expect((result.result as any).sealedHash).toBe(outcome.sealedHash);
-      expect(x.svc.getEventsSince(x.sid).every((e) => !han(e))).toBe(
+      expect((await x.svc.getEventsSince(x.sid)).every((e) => !han(e))).toBe(
         locale === "en-US",
       );
     }
     expect(snapshots[0]).toEqual(snapshots[1]);
   });
   it("preserves verbatim player text even when it exactly matches a fixed translation key", async () => {
-    const x = setup("en-US");
-    x.command("startSession", { acknowledgeDesignPreview: true });
+    const x = await setup("en-US");
+    await x.command("startSession", { acknowledgeDesignPreview: true });
     await x.advance(30000);
     const playerText = "原地等待";
-    x.command("askAdvisor", {
-      expectedInboxVersion: x.get().inboxVersion,
+    await x.command("askAdvisor", {
+      expectedInboxVersion: (await x.get()).inboxVersion,
       questionKind: "free_text",
       text: playerText,
       uploadBatch: [],
@@ -341,8 +346,8 @@ describe("session-bound backend localization", () => {
     const input = x.advisorInputs.at(-1)!;
     expect(input.question.text).toBe(playerText);
     expect(input.statements[0]!.text).toBe(playerText);
-    x.command("askAdvisor", {
-      expectedInboxVersion: x.get().inboxVersion,
+    await x.command("askAdvisor", {
+      expectedInboxVersion: (await x.get()).inboxVersion,
       questionKind: "compare_routes",
       text: playerText,
       uploadBatch: [],
@@ -350,17 +355,17 @@ describe("session-bound backend localization", () => {
     await settle();
     expect(x.advisorInputs.at(-1)!.question.text).toBe(playerText);
     expect(x.advisorInputs.at(-1)!.statements.at(-1)!.text).toBe(playerText);
-    x.action("E1_MAIN", playerText, playerText);
+    await x.action("E1_MAIN", playerText, playerText);
     await x.advance(65000);
-    const outcome = x.command("abandonSession", {
+    const outcome = (await x.command("abandonSession", {
       reason: "player_exit",
-    }) as P.OutcomeView;
-    const replay = x.svc.read("getReplay", x.sid) as P.ReplayView;
+    })) as P.OutcomeView;
+    const replay = (await x.svc.read("getReplay", x.sid)) as P.ReplayView;
     expect(replay.decisions.at(-1)!.reason).toBe(playerText);
     expect(replay.decisions.at(-1)!.reasonAnnotation?.declaredQuestionKey).toBe(
       playerText,
     );
-    const exported = x.svc.execute(
+    const exported = (await x.svc.execute(
       "createExport",
       {
         sealedHash: outcome.sealedHash,
@@ -372,7 +377,7 @@ describe("session-bound backend localization", () => {
         runEpoch: outcome.runEpoch,
         idempotencyKey: randomUUID(),
       },
-    ) as P.ExportAccepted;
+    )) as P.ExportAccepted;
     expect(
       exported.export.artifact!.replayPages[0]!.playerStatements[0]!.text,
     ).toBe(playerText);
@@ -480,28 +485,28 @@ describe("session-bound backend localization", () => {
   it.each(["en-US", "zh-CN"] as const)(
     "%s retains live model prose and recognizes equivalent observable evidence",
     async (locale) => {
-      const x = setup(locale, "A", true);
-      x.command("startSession", { acknowledgeDesignPreview: true });
+      const x = await setup(locale, "A", true);
+      await x.command("startSession", { acknowledgeDesignPreview: true });
       await x.advance(30000);
-      x.task("gate_agency");
+      await x.task("gate_agency");
       await x.advance(15000);
-      const report = x.get().reports[0]!;
-      x.receipt("report_opened", { reportId: report.reportId });
-      x.command("uploadReports", {
+      const report = (await x.get()).reports[0]!;
+      await x.receipt("report_opened", { reportId: report.reportId });
+      await x.command("uploadReports", {
         items: [{ reportId: report.reportId, expectedRevision: 1 }],
       });
       await settle();
-      const job = x.get().latestAdviceJob!;
+      const job = (await x.get()).latestAdviceJob!;
       expect(job.mode).toBe("live_model");
       expect(job.result).toEqual(x.generated.at(-1));
       expect(job.result!.summary).toBe("Player quote: 原地等待");
-      const event = x.svc
-        .getEventsSince(x.sid)
-        .findLast((e) => e.eventType === "advice.updated")!;
+      const event = (await x.svc.getEventsSince(x.sid)).findLast(
+        (e) => e.eventType === "advice.updated",
+      )!;
       expect((event.data as any).result).toEqual(job.result);
-      x.receipt("advice_displayed", { jobId: job.jobId });
-      x.receipt("context_displayed");
-      x.command("commitAction", {
+      await x.receipt("advice_displayed", { jobId: job.jobId });
+      await x.receipt("context_displayed");
+      await x.command("commitAction", {
         actionId: "E1_BYPASS",
         waitDurationMs: null,
         reason: "",
@@ -515,10 +520,10 @@ describe("session-bound backend localization", () => {
         referencedReportIds: [],
         cancelPendingInvestigations: true,
       });
-      const outcome = x.command("abandonSession", {
+      const outcome = (await x.command("abandonSession", {
         reason: "player_exit",
-      }) as P.OutcomeView;
-      const accepted = x.svc.execute(
+      })) as P.OutcomeView;
+      const accepted = (await x.svc.execute(
         "requestEvaluation",
         {
           sealedHash: outcome.sealedHash,
@@ -529,7 +534,7 @@ describe("session-bound backend localization", () => {
           runEpoch: outcome.runEpoch,
           idempotencyKey: randomUUID(),
         },
-      ) as P.EvaluationAccepted;
+      )) as P.EvaluationAccepted;
       await settle();
       expect(
         x.evaluatorInputs[0]!.bounds.distrust.supportCandidates,
@@ -537,13 +542,13 @@ describe("session-bound backend localization", () => {
       expect(x.evaluatorInputs[0]!.bounds.distrust.eligibleOpportunities).toBe(
         1,
       );
-      const result = x.svc.read(
+      const result = (await x.svc.read(
         "getEvaluation",
         x.sid,
         accepted.job.jobId,
-      ) as P.EvaluationJobView;
+      )) as P.EvaluationJobView;
       expect(result.result).toEqual(x.generated.at(-1));
-      const exported = x.svc.execute(
+      const exported = (await x.svc.execute(
         "createExport",
         {
           sealedHash: outcome.sealedHash,
@@ -555,7 +560,7 @@ describe("session-bound backend localization", () => {
           runEpoch: outcome.runEpoch,
           idempotencyKey: randomUUID(),
         },
-      ) as P.ExportAccepted;
+      )) as P.ExportAccepted;
       expect(exported.export.artifact!.evaluationJob!.result).toEqual(
         result.result,
       );
@@ -568,20 +573,20 @@ describe("session-bound backend localization", () => {
     const dir = mkdtempSync(join(tmpdir(), "last-mile-locale-"));
     temporaryDirs.push(dir);
     const dbPath = join(dir, "game.sqlite");
-    const x = setup("en-US", "A", false, dbPath);
-    x.command("startSession", { acknowledgeDesignPreview: true });
+    const x = await setup("en-US", "A", false, dbPath);
+    await x.command("startSession", { acknowledgeDesignPreview: true });
     await x.advance(30000);
-    x.task("gate_agency");
+    await x.task("gate_agency");
     await x.advance(15000);
-    const report = x.get().reports[0]!;
-    const upload = x.command("uploadReports", {
+    const report = (await x.get()).reports[0]!;
+    const upload = (await x.command("uploadReports", {
       items: [{ reportId: report.reportId, expectedRevision: 1 }],
-    }) as P.UploadView;
+    })) as P.UploadView;
     await settle();
-    const outcome = x.command("abandonSession", {
+    const outcome = (await x.command("abandonSession", {
       reason: "player_exit",
-    }) as P.OutcomeView;
-    const exported = x.svc.execute(
+    })) as P.OutcomeView;
+    const exported = (await x.svc.execute(
       "createExport",
       {
         sealedHash: outcome.sealedHash,
@@ -593,7 +598,7 @@ describe("session-bound backend localization", () => {
         runEpoch: outcome.runEpoch,
         idempotencyKey: randomUUID(),
       },
-    ) as P.ExportAccepted;
+    )) as P.ExportAccepted;
     const db = new DatabaseSync(dbPath);
     try {
       const row: any = db
@@ -616,19 +621,19 @@ describe("session-bound backend localization", () => {
         exported.export.artifact,
       );
       expect(job.output_hash).toBe(hash(exported.export.artifact));
-      const reread = x.svc.read(
+      const reread = (await x.svc.read(
         "getExport",
         x.sid,
         exported.export.exportId,
-      ) as P.ExportView;
+      )) as P.ExportView;
       expect(canonical(reread.artifact)).toBe(artifactRow.artifact_json);
     } finally {
       db.close();
     }
   });
   it("returns session-language HTTP errors and English errors before session creation", async () => {
-    const en = setup("en-US"),
-      zh = setup("zh-CN");
+    const en = await setup("en-US"),
+      zh = await setup("zh-CN");
     for (const x of [en, zh]) {
       const app = await createHttpApp({
         service: x.svc,
@@ -647,7 +652,9 @@ describe("session-bound backend localization", () => {
           },
         });
         expect(result.statusCode).toBe(404);
-        expect(han(result.json().detail)).toBe(x.get().locale === "zh-CN");
+        expect(han(result.json().detail)).toBe(
+          (await x.get()).locale === "zh-CN",
+        );
         const unknown = await app.inject({
           url: "/api/v1/missing",
           headers: {

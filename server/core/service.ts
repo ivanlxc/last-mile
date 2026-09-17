@@ -1,5 +1,6 @@
 import type * as Public from "../../docs/engineering_v0.5/contracts/public.types.js";
 import type * as Agent from "../../docs/engineering_v0.5/contracts/agent-derived.types.js";
+import type { Store } from "./store.js";
 export type { Public, Agent };
 export type MutationOperation =
   | "createSession"
@@ -31,6 +32,7 @@ export interface CommandMeta {
   runEpoch?: string;
   requestId?: string;
   launchId?: string;
+  playerId?: string;
 }
 export interface Clock {
   nowMs(): number;
@@ -38,7 +40,9 @@ export interface Clock {
 }
 export interface AttemptControl {
   readonly locale?: "en-US" | "zh-CN";
-  beginAttempt(): { attemptNo: number; requestKey: string };
+  beginAttempt():
+    | { attemptNo: number; requestKey: string }
+    | Promise<{ attemptNo: number; requestKey: string }>;
   finishAttempt(
     attemptNo: number,
     result: {
@@ -49,8 +53,8 @@ export interface AttemptControl {
       providerRequestId?: string;
       responseHash?: string;
     },
-  ): void;
-  isCurrent(): boolean;
+  ): void | Promise<void>;
+  isCurrent(): boolean | Promise<boolean>;
 }
 export interface AgentCompletion {
   mode: "live_model" | "offline_template";
@@ -78,6 +82,14 @@ export interface AgentGateway {
 }
 export interface GameServiceOptions {
   dbPath?: string;
+  databaseUrl?: string;
+  store?: Store;
+  cloud?: {
+    maxActiveSessions: number;
+    maxSessionsPerPlayerPerDay: number;
+    maxModelAttemptsPerDay: number;
+    maxConcurrentModelJobs: number;
+  };
   contentDir?: string;
   clock?: Clock;
   launchId?: string;
@@ -88,6 +100,8 @@ export interface GameServiceOptions {
   /** Internal tests only; never supplied by HTTP. */ selectCase?: () =>
     "A" | "B";
   autoTick?: boolean;
+  /** Called once after an uncertain storage failure; the host should restart. */
+  onStorageFailure?: () => void;
 }
 export class DomainError extends Error {
   constructor(
@@ -102,31 +116,52 @@ export class DomainError extends Error {
   }
 }
 export interface GameService {
-  getSessionLocale?(id: string): "en-US" | "zh-CN" | null;
+  getSessionLocale?(id: string): Promise<"en-US" | "zh-CN" | null>;
   readonly launchId: string;
   readonly lastExecutionReplayed: boolean;
   execute(
     operationId: MutationOperation,
     body: unknown,
     meta: CommandMeta,
-  ): unknown;
+  ): Promise<unknown>;
+  executeWithMeta(
+    operationId: MutationOperation,
+    body: unknown,
+    meta: CommandMeta,
+  ): Promise<{ result: unknown; replayed: boolean }>;
   read(
     operationId: ReadOperation,
     sessionId?: string,
     id?: string,
     query?: Record<string, string | number | undefined>,
-  ): unknown;
-  getEventsSince(sessionId: string, cursor?: string): Public.PublicSseEvent[];
+  ): Promise<unknown>;
+  getEventsSince(
+    sessionId: string,
+    cursor?: string,
+  ): Promise<Public.PublicSseEvent[]>;
   subscribe(
     sessionId: string,
     listener: (event: Public.PublicSseEvent) => void,
-  ): () => void;
-  tick(sessionId?: string): void;
+  ): Promise<() => void>;
+  tick(sessionId?: string): Promise<void>;
   hasSessionAccess(
     sessionId: string,
     capability?: "read" | "command" | "evaluation" | "export",
-  ): boolean;
+  ): Promise<boolean>;
+  hasPlayerSessionAccess(
+    sessionId: string,
+    playerId: string,
+    capability?: "read" | "command" | "evaluation" | "export",
+  ): Promise<boolean>;
+  listPlayerSessions(playerId: string): Promise<PlayerSessionSummary[]>;
   startScheduler(): () => void;
-  close(): void;
+  close(): Promise<void>;
+}
+export interface PlayerSessionSummary {
+  sessionId: string;
+  locale: "en-US" | "zh-CN";
+  status: "created" | "active" | "sealed";
+  createdAt: string;
+  updatedAt: string;
 }
 export { createGameService } from "./implementation.js";

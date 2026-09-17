@@ -9,15 +9,15 @@ import type * as P from "../../docs/engineering_v0.5/contracts/public.types.js";
 
 const registry = new ContractRegistry(process.cwd());
 const services: GameService[] = [];
-afterEach(() => {
-  for (const service of services.splice(0)) service.close();
+afterEach(async () => {
+  for (const service of services.splice(0)) await service.close();
 });
 
 describe("paid provenance disclosure satisfies the complete public graph contract", () => {
   for (const caseId of ["A", "B"] as const) {
-    it(`case ${caseId}: disclosed nodes and edges are stable UUIDs with valid references`, () => {
+    it(`case ${caseId}: disclosed nodes and edges are stable UUIDs with valid references`, async () => {
       let elapsed = 0;
-      const service = createGameService({
+      const service = await createGameService({
         selectCase: () => caseId,
         clock: {
           nowMs: () => 1800000000000 + elapsed,
@@ -25,8 +25,8 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
         },
       });
       services.push(service);
-      const bootstrap = service.read("getBootstrap") as P.BootstrapView;
-      const created = service.execute(
+      const bootstrap = (await service.read("getBootstrap")) as P.BootstrapView;
+      const created = (await service.execute(
         "createSession",
         {
           profileId: "SINGLE_PLAYER_REFERENCE",
@@ -35,15 +35,18 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
           contentVersionId: bootstrap.profiles[0]!.contentVersionId,
         },
         { idempotencyKey: randomUUID() },
-      ) as P.SessionCreated;
-      const get = () =>
-        service.read("getSession", created.sessionId) as P.SessionProjection;
-      const command = (
+      )) as P.SessionCreated;
+      const get = async () =>
+        (await service.read(
+          "getSession",
+          created.sessionId,
+        )) as P.SessionProjection;
+      const command = async (
         operation: Parameters<GameService["execute"]>[0],
         payload: unknown,
       ) => {
-        const current = get();
-        return service.execute(
+        const current = await get();
+        return await service.execute(
           operation,
           {
             expectedStateVersion: current.stateVersion,
@@ -57,18 +60,18 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
           },
         );
       };
-      const advance = (milliseconds: number) => {
+      const advance = async (milliseconds: number) => {
         elapsed += milliseconds;
-        service.tick(created.sessionId);
+        await service.tick(created.sessionId);
       };
-      const graph = () =>
-        service.read("getProvenance", created.sessionId, undefined, {
+      const graph = async () =>
+        (await service.read("getProvenance", created.sessionId, undefined, {
           sceneId: "E2",
-        }) as P.ProvenanceView;
+        })) as P.ProvenanceView;
 
-      command("startSession", { acknowledgeDesignPreview: true });
-      advance(30000);
-      command("commitAction", {
+      await command("startSession", { acknowledgeDesignPreview: true });
+      await advance(30000);
+      await command("commitAction", {
         actionId: "E1_BYPASS",
         waitDurationMs: null,
         reason: "",
@@ -77,21 +80,21 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
         referencedReportIds: [],
         cancelPendingInvestigations: true,
       });
-      advance(130000);
+      await advance(130000);
       for (const targetRole of ["analyst", "liaison"]) {
-        command("createTask", {
+        await command("createTask", {
           taskKind: "request_report",
           targetRole,
           topicId: "cause",
         });
       }
-      advance(1000);
-      const source = get().reports.find(
+      await advance(1000);
+      const source = (await get()).reports.find(
         (r) => r.card.definitionId === "market_broadcast",
       )!;
       expect(source).toBeDefined();
-      expect(graph().edges).toEqual([]);
-      command("createTask", {
+      expect((await graph()).edges).toEqual([]);
+      await command("createTask", {
         taskKind: "investigate_and_report",
         targetRole: "liaison",
         topicId: "cause",
@@ -100,9 +103,9 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
         sourceReportId: source.reportId,
         reasonAnnotation: null,
       });
-      advance(15000);
+      await advance(15000);
 
-      const first = graph();
+      const first = await graph();
       expect(registry.errors("ProvenanceView", first)).toEqual([]);
       expect(first.nodes.some((node) => node.kind === "verified_source")).toBe(
         true,
@@ -116,11 +119,11 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
           /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
         );
       }
-      const second = graph();
+      const second = await graph();
       expect(second.nodes).toEqual(first.nodes);
       expect(second.edges).toEqual(first.edges);
       expect(
-        get().resources.find((r) => r.channel === "localAgency")?.spent,
+        (await get()).resources.find((r) => r.channel === "localAgency")?.spent,
       ).toBe(1);
       expect(JSON.stringify(first)).not.toMatch(
         /hiddenRootId|privateCaseId|market_rumor/,

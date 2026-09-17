@@ -25,29 +25,46 @@ class FakeClock implements Clock {
 }
 const services: GameService[] = [];
 const dirs: string[] = [];
-afterEach(() => {
-  for (const s of services.splice(0)) s.close();
+afterEach(async () => {
+  for (const s of services.splice(0)) await s.close();
   for (const p of dirs.splice(0)) rmSync(p, { recursive: true, force: true });
 });
-function setup(caseId: "A" | "B" = "A", dbPath = ":memory:") {
+async function setup(caseId: "A" | "B" = "A", dbPath = ":memory:") {
   const clock = new FakeClock();
-  const svc = createGameService({ clock, dbPath, selectCase: () => caseId });
+  const svc = await createGameService({
+    clock,
+    dbPath,
+    selectCase: () => caseId,
+  });
   services.push(svc);
-  const boot = svc.read("getBootstrap") as P.BootstrapView;
+  const boot = (await svc.read("getBootstrap")) as P.BootstrapView;
   const create = {
     profileId: "SINGLE_PLAYER_REFERENCE",
     runPurpose: "design_preview",
     locale: "zh-CN",
     contentVersionId: boot.profiles[0]!.contentVersionId,
   };
-  const made = svc.execute("createSession", create, {
+  const made = (await svc.execute("createSession", create, {
     idempotencyKey: randomUUID(),
-  }) as P.SessionCreated;
+  })) as P.SessionCreated;
   const sid = made.sessionId;
-  const get = () => svc.read("getSession", sid) as P.SessionProjection;
-  const command = (op: any, payload: any, extra: any = {}) => {
-    const v = get();
-    return svc.execute(
+  const get = async () => {
+    // Offline advice now publishes asynchronously, just like a real provider.
+    // Freeze test decisions only after those background state changes settle.
+    for (let i = 0; i < 100; i++) {
+      const view = (await svc.read("getSession", sid)) as P.SessionProjection;
+      if (
+        !view.latestAdviceJob ||
+        !["queued", "running"].includes(view.latestAdviceJob.status)
+      )
+        return view;
+      await settle();
+    }
+    throw new Error("Offline advice did not settle");
+  };
+  const command = async (op: any, payload: any, extra: any = {}) => {
+    const v = await get();
+    return (await svc.execute(
       op,
       {
         expectedStateVersion: v.stateVersion,
@@ -60,24 +77,24 @@ function setup(caseId: "A" | "B" = "A", dbPath = ":memory:") {
         idempotencyKey: randomUUID(),
         ...extra,
       },
-    ) as any;
+    )) as any;
   };
-  const advance = (n: number) => {
+  const advance = async (n: number) => {
     clock.advance(n);
-    svc.tick(sid);
-    return get();
+    await svc.tick(sid);
+    return await get();
   };
-  command("startSession", { acknowledgeDesignPreview: true });
-  advance(30000);
+  await command("startSession", { acknowledgeDesignPreview: true });
+  await advance(30000);
   return { svc, clock, sid, get, command, advance, made };
 }
-function task(
-  x: ReturnType<typeof setup>,
+async function task(
+  x: Awaited<ReturnType<typeof setup>>,
   role: "analyst" | "liaison",
   targetId: string,
 ) {
-  const o = x.get().taskOptions.find((t) => t.targetId === targetId)!;
-  return x.command("createTask", {
+  const o = (await x.get()).taskOptions.find((t) => t.targetId === targetId)!;
+  return (await x.command("createTask", {
     taskKind: "investigate_and_report",
     targetRole: role,
     targetId,
@@ -85,14 +102,14 @@ function task(
     investigationKind: o.investigationKind,
     sourceReportId: null,
     reasonAnnotation: null,
-  }) as P.TaskAccepted;
+  })) as P.TaskAccepted;
 }
-function action(
-  x: ReturnType<typeof setup>,
+async function action(
+  x: Awaited<ReturnType<typeof setup>>,
   actionId: string,
   waitDurationMs: number | null = null,
 ) {
-  return x.command("commitAction", {
+  return (await x.command("commitAction", {
     actionId,
     waitDurationMs,
     reason: "",
@@ -100,89 +117,92 @@ function action(
     basedOnAdviceJobId: null,
     referencedReportIds: [],
     cancelPendingInvestigations: true,
-  }) as P.ActionAccepted;
+  })) as P.ActionAccepted;
 }
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 describe("SQLite authoritative core", () => {
-  it("runs case A all three main decisions including market partial out-and-back, then seals arrival", () => {
-    const x = setup();
-    expect(x.get().sceneId).toBe("E1");
-    action(x, "E1_MAIN");
-    x.advance(65000);
-    expect(x.get().sceneId).toBe("E2");
-    action(x, "E2_MAIN");
-    let v = x.advance(35000);
+  it("runs case A all three main decisions including market partial out-and-back, then seals arrival", async () => {
+    const x = await setup();
+    expect((await x.get()).sceneId).toBe("E1");
+    await action(x, "E1_MAIN");
+    await x.advance(65000);
+    expect((await x.get()).sceneId).toBe("E2");
+    await action(x, "E2_MAIN");
+    let v = await x.advance(35000);
     expect(v.location.routeId).toBe("R04");
     expect(v.location.progressPermille).toBe(200);
-    v = x.advance(20000);
+    v = await x.advance(20000);
     expect(v.location.routeId).toBe("R04");
     expect(v.location.progressPermille).toBe(200);
-    x.advance(190000);
-    expect(x.get().sceneId).toBe("E3");
-    action(x, "E3_BRIDGE");
-    v = x.advance(105000);
+    await x.advance(190000);
+    expect((await x.get()).sceneId).toBe("E3");
+    await action(x, "E3_BRIDGE");
+    v = await x.advance(105000);
     expect(v.lifecycle).toBe("sealed");
-    const o = x.svc.read("getOutcome", x.sid) as P.OutcomeView;
+    const o = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
     expect(o.taskSuccess).toBe(true);
     expect(o.sealedAtMissionMs).toBe(445000);
     expect(o.pendingTasks.inspection).toBe("pending");
     expect(o.handoffCompletedAtMissionMs).toBeNull();
   });
-  it("case B bridge refusal stays in E3 with same quotas; ford clears actual conditional manifest hold", () => {
-    const x = setup("B");
-    action(x, "E1_BYPASS");
-    x.advance(130000);
-    action(x, "E2_MAIN");
-    x.advance(75000);
-    const quota = x.get().uploadQuota;
-    action(x, "E3_BRIDGE");
-    x.advance(20000);
-    expect(x.get().sceneId).toBe("E3");
-    expect(x.get().uploadQuota).toEqual(quota);
+  it("case B bridge refusal stays in E3 with same quotas; ford clears actual conditional manifest hold", async () => {
+    const x = await setup("B");
+    await action(x, "E1_BYPASS");
+    await x.advance(130000);
+    await action(x, "E2_MAIN");
+    await x.advance(75000);
+    const quota = (await x.get()).uploadQuota;
+    await action(x, "E3_BRIDGE");
+    await x.advance(20000);
+    expect((await x.get()).sceneId).toBe("E3");
+    expect((await x.get()).uploadQuota).toEqual(quota);
     expect(
-      x.get().actionOptions.find((a) => a.actionId === "E3_BRIDGE")?.available,
+      (await x.get()).actionOptions.find((a) => a.actionId === "E3_BRIDGE")
+        ?.available,
     ).toBe(false);
-    action(x, "E3_FORD");
-    x.advance(140000);
-    expect(x.get().location.nodeId).toBe("N10");
-    expect(x.get().pendingTasks.manifest).toBe("pending");
-    x.advance(20000);
-    expect(x.get().pendingTasks.manifest).toBe("completed");
-    x.advance(60000);
-    const o = x.svc.read("getOutcome", x.sid) as P.OutcomeView;
+    await action(x, "E3_FORD");
+    await x.advance(140000);
+    expect((await x.get()).location.nodeId).toBe("N10");
+    expect((await x.get()).pendingTasks.manifest).toBe("pending");
+    await x.advance(20000);
+    expect((await x.get()).pendingTasks.manifest).toBe("completed");
+    await x.advance(60000);
+    const o = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
     expect(o.taskSuccess).toBe(true);
     expect(o.sealedAtMissionMs).toBe(475000);
   });
-  it("two roles observe concurrently on one clock, and same-role second task cannot take resources", () => {
-    const x = setup();
-    task(x, "analyst", "gate_drone");
-    task(x, "liaison", "gate_agency");
-    expect(() => task(x, "analyst", "service_drone")).toThrow(DomainError);
-    let v = x.advance(15000);
+  it("two roles observe concurrently on one clock, and same-role second task cannot take resources", async () => {
+    const x = await setup();
+    await task(x, "analyst", "gate_drone");
+    await task(x, "liaison", "gate_agency");
+    await expect(task(x, "analyst", "service_drone")).rejects.toThrow(
+      DomainError,
+    );
+    let v = await x.advance(15000);
     expect(v.reports).toHaveLength(1);
     expect(v.activeTasks).toHaveLength(1);
-    v = x.advance(15000);
+    v = await x.advance(15000);
     expect(v.reports).toHaveLength(2);
     expect(v.missionTimeMs).toBe(60000);
     expect(v.resources.find((r) => r.channel === "drone")?.spent).toBe(1);
   });
-  it("WAIT leaves investigation active and permits other-role tasks without double charging time", () => {
-    const x = setup();
-    task(x, "analyst", "gate_drone");
-    action(x, "WAIT", 15000);
-    task(x, "liaison", "gate_agency");
-    const v = x.advance(15000);
+  it("WAIT leaves investigation active and permits other-role tasks without double charging time", async () => {
+    const x = await setup();
+    await task(x, "analyst", "gate_drone");
+    await action(x, "WAIT", 15000);
+    await task(x, "liaison", "gate_agency");
+    const v = await x.advance(15000);
     expect(v.phase).toBe("scene");
     expect(v.activeOperation).toBeNull();
     expect(v.activeTasks).toHaveLength(1);
     expect(v.reports).toHaveLength(1);
     expect(v.missionTimeMs).toBe(45000);
   });
-  it("leaving cancels unfinished tasks, releases report reservation and retains spent channel", () => {
-    const x = setup();
-    const t = task(x, "analyst", "gate_drone");
-    action(x, "E1_MAIN");
-    const v = x.get();
+  it("leaving cancels unfinished tasks, releases report reservation and retains spent channel", async () => {
+    const x = await setup();
+    const t = await task(x, "analyst", "gate_drone");
+    await action(x, "E1_MAIN");
+    const v = await x.get();
     expect(v.activeTasks).toHaveLength(0);
     expect(v.reportQuotas.find((q) => q.role === "analyst")).toMatchObject({
       used: 0,
@@ -193,18 +213,18 @@ describe("SQLite authoritative core", () => {
       remaining: 2,
       spent: 1,
     });
-    expect(x.svc.read("getTask", x.sid, t.task.taskId)).toMatchObject({
+    expect(await x.svc.read("getTask", x.sid, t.task.taskId)).toMatchObject({
       status: "cancelled",
       failureCode: "scene_left",
     });
-    x.advance(65000);
+    await x.advance(65000);
     expect(
-      x.get().resources.find((r) => r.channel === "drone")?.remaining,
+      (await x.get()).resources.find((r) => r.channel === "drone")?.remaining,
     ).toBe(2);
   });
-  it("cached success precedes CAS, different content same key conflicts, catch-up survives rejected stale command", () => {
-    const x = setup();
-    const before = x.get();
+  it("cached success precedes CAS, different content same key conflicts, catch-up survives rejected stale command", async () => {
+    const x = await setup();
+    const before = await x.get();
     const key = randomUUID();
     const body = {
       expectedStateVersion: before.stateVersion,
@@ -224,18 +244,18 @@ describe("SQLite authoritative core", () => {
       runEpoch: before.runEpoch,
       idempotencyKey: key,
     };
-    const first = x.svc.execute("createTask", body, meta);
+    const first = await x.svc.execute("createTask", body, meta);
     x.clock.advance(30000);
-    expect(x.svc.execute("createTask", body, meta)).toEqual(first);
+    expect(await x.svc.execute("createTask", body, meta)).toEqual(first);
     expect(x.svc.lastExecutionReplayed).toBe(true);
-    expect(() =>
+    await expect(
       x.svc.execute(
         "createTask",
         { ...body, payload: { ...body.payload, targetId: "service_drone" } },
         meta,
       ),
-    ).toThrowError(/请求键/);
-    expect(() =>
+    ).rejects.toThrowError(/请求键/);
+    await expect(
       x.svc.execute(
         "commitAction",
         {
@@ -245,127 +265,133 @@ describe("SQLite authoritative core", () => {
         },
         { ...meta, idempotencyKey: randomUUID() },
       ),
-    ).toThrow(DomainError);
-    expect(x.get().reports).toHaveLength(1);
-    expect(x.get().resources.find((r) => r.channel === "drone")?.spent).toBe(1);
+    ).rejects.toThrow(DomainError);
+    expect((await x.get()).reports).toHaveLength(1);
+    expect(
+      (await x.get()).resources.find((r) => r.channel === "drone")?.spent,
+    ).toBe(1);
   });
   it("batch upload is all-or-none and AI only gets explicitly uploaded cards", async () => {
-    const x = setup();
-    task(x, "analyst", "gate_drone");
-    task(x, "liaison", "gate_agency");
-    x.advance(30000);
-    const [r] = x.get().reports;
-    expect(() =>
+    const x = await setup();
+    await task(x, "analyst", "gate_drone");
+    await task(x, "liaison", "gate_agency");
+    await x.advance(30000);
+    const [r] = (await x.get()).reports;
+    await expect(
       x.command("uploadReports", {
         items: [
           { reportId: r!.reportId, expectedRevision: r!.revision },
           { reportId: randomUUID(), expectedRevision: 1 },
         ],
       }),
-    ).toThrow(DomainError);
-    expect(x.get().uploadQuota?.used).toBe(0);
-    x.command("uploadReports", {
+    ).rejects.toThrow(DomainError);
+    expect((await x.get()).uploadQuota?.used).toBe(0);
+    await x.command("uploadReports", {
       items: [{ reportId: r!.reportId, expectedRevision: r!.revision }],
     });
-    expect(x.get().sceneUploads).toHaveLength(1);
-    expect(x.get().unuploadedReportIds).toHaveLength(1);
+    expect((await x.get()).sceneUploads).toHaveLength(1);
+    expect((await x.get()).unuploadedReportIds).toHaveLength(1);
     await settle();
-    expect(x.get().latestAdviceJob?.mode).toBe("offline_template");
-    expect(x.get().latestAdviceJob?.attemptCount).toBe(0);
-    expect(JSON.stringify(x.get())).not.toMatch(
+    expect((await x.get()).latestAdviceJob?.mode).toBe("offline_template");
+    expect((await x.get()).latestAdviceJob?.attemptCount).toBe(0);
+    expect(JSON.stringify(await x.get())).not.toMatch(
       /privateCaseId|hiddenRootId|explosionCause/,
     );
   });
-  it("channel resources are shared across scenes and never reset on entry", () => {
-    const x = setup();
-    task(x, "analyst", "gate_satellite");
-    x.advance(10000);
-    action(x, "E1_MAIN");
-    x.advance(65000);
+  it("channel resources are shared across scenes and never reset on entry", async () => {
+    const x = await setup();
+    await task(x, "analyst", "gate_satellite");
+    await x.advance(10000);
+    await action(x, "E1_MAIN");
+    await x.advance(65000);
     expect(
-      x.get().resources.find((r) => r.channel === "satellite")?.remaining,
+      (await x.get()).resources.find((r) => r.channel === "satellite")
+        ?.remaining,
     ).toBe(1);
-    task(x, "analyst", "market_satellite");
-    x.advance(10000);
+    await task(x, "analyst", "market_satellite");
+    await x.advance(10000);
     expect(
-      x.get().resources.find((r) => r.channel === "satellite")?.remaining,
+      (await x.get()).resources.find((r) => r.channel === "satellite")
+        ?.remaining,
     ).toBe(0);
-    expect(() => task(x, "analyst", "market_satellite")).toThrow(DomainError);
+    await expect(task(x, "analyst", "market_satellite")).rejects.toThrow(
+      DomainError,
+    );
   });
-  it("mission deadline preserves a partial route location and refuses post-terminal gameplay", () => {
-    const x = setup();
+  it("mission deadline preserves a partial route location and refuses post-terminal gameplay", async () => {
+    const x = await setup();
     for (let i = 0; i < 6; i++) {
-      action(x, "WAIT", 60000);
-      x.advance(60000);
+      await action(x, "WAIT", 60000);
+      await x.advance(60000);
     }
-    action(x, "E1_MAIN");
-    x.advance(65000);
-    action(x, "E2_MAIN");
-    x.advance(145000);
-    const o = x.svc.read("getOutcome", x.sid) as P.OutcomeView;
+    await action(x, "E1_MAIN");
+    await x.advance(65000);
+    await action(x, "E2_MAIN");
+    await x.advance(145000);
+    const o = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
     expect(o.terminationReason).toBe("mission_deadline");
     expect(o.taskSuccess).toBe(false);
     expect(o.finalLocation.nodeId).toBeNull();
     expect(o.finalLocation.routeId).toBe("R03");
-    expect(() => action(x, "WAIT", 15000)).toThrow(DomainError);
+    await expect(action(x, "WAIT", 15000)).rejects.toThrow(DomainError);
   });
-  it("medical status is stable at 479999 ms and changes to priority transfer exactly at 480000 ms", () => {
-    const x = setup();
-    expect(x.get().medical.status).toBe("stable");
-    expect(x.get().medical.note).toContain("稳定");
-    const before = x.advance(449999);
+  it("medical status is stable at 479999 ms and changes to priority transfer exactly at 480000 ms", async () => {
+    const x = await setup();
+    expect((await x.get()).medical.status).toBe("stable");
+    expect((await x.get()).medical.note).toContain("稳定");
+    const before = await x.advance(449999);
     expect(before.missionTimeMs).toBe(479999);
     expect(before.medical.status).toBe("stable");
-    const after = x.advance(1);
+    const after = await x.advance(1);
     expect(after.missionTimeMs).toBe(480000);
     expect(after.medical.status).toBe("target_missed");
     expect(after.medical.note).toContain("需要优先转送");
     expect(after.civilianCount).toBe(20);
     expect(after.lifecycle).toBe("active");
   });
-  it("clock samples advance view cursor but neither stateVersion nor game event count", () => {
-    const x = setup();
-    const old = x.get();
-    x.advance(1000);
-    const events = x.svc.getEventsSince(x.sid, old.lastViewCursor);
+  it("clock samples advance view cursor but neither stateVersion nor game event count", async () => {
+    const x = await setup();
+    const old = await x.get();
+    await x.advance(1000);
+    const events = await x.svc.getEventsSince(x.sid, old.lastViewCursor);
     expect(events.some((e) => e.eventType === "clock.sample")).toBe(true);
-    expect(x.get().stateVersion).toBe(old.stateVersion);
-    expect(x.get().missionTimeMs).toBe(31000);
+    expect((await x.get()).stateVersion).toBe(old.stateVersion);
+    expect((await x.get()).missionTimeMs).toBe(31000);
   });
-  it("subscriptions deliver every future committed view event exactly once beyond one outbox page", () => {
-    const x = setup();
-    const start = Number(x.get().lastViewCursor.split(":").at(-1));
+  it("subscriptions deliver every future committed view event exactly once beyond one outbox page", async () => {
+    const x = await setup();
+    const start = Number((await x.get()).lastViewCursor.split(":").at(-1));
     const seen: P.PublicSseEvent[] = [];
-    const stop = x.svc.subscribe(x.sid, (e) => seen.push(e));
-    const stopBroken = x.svc.subscribe(x.sid, () => {
+    const stop = await x.svc.subscribe(x.sid, (e) => seen.push(e));
+    const stopBroken = await x.svc.subscribe(x.sid, () => {
       throw Error("subscriber failed");
     });
-    task(x, "analyst", "gate_drone");
-    for (let i = 0; i < 270; i++) x.advance(1000);
-    const end = Number(x.get().lastViewCursor.split(":").at(-1));
+    await task(x, "analyst", "gate_drone");
+    for (let i = 0; i < 270; i++) await x.advance(1000);
+    const end = Number((await x.get()).lastViewCursor.split(":").at(-1));
     expect(end - start).toBeGreaterThan(250);
     expect(seen.map((e) => e.viewSequence)).toEqual(
       Array.from({ length: end - start }, (_, i) => start + i + 1),
     );
     const late: P.PublicSseEvent[] = [];
-    const stopLate = x.svc.subscribe(x.sid, (e) => late.push(e));
-    x.advance(1000);
+    const stopLate = await x.svc.subscribe(x.sid, (e) => late.push(e));
+    await x.advance(1000);
     expect(late.map((e) => e.viewSequence)).toEqual([end + 1]);
     stop();
     stopBroken();
     stopLate();
     const length = seen.length;
-    x.advance(1000);
+    await x.advance(1000);
     expect(seen).toHaveLength(length);
   });
   for (const question of ["gate_registration", "gate_activity"])
-    it(`fresh drone observation respects the declared capability boundary: ${question}`, () => {
+    it(`fresh drone observation respects the declared capability boundary: ${question}`, async () => {
       const dir = mkdtempSync(join(tmpdir(), "last-mile-capability-"));
       dirs.push(dir);
       const dbPath = join(dir, "game.sqlite");
-      const x = setup("A", dbPath);
-      const before = x.get();
-      x.svc.execute(
+      const x = await setup("A", dbPath);
+      const before = await x.get();
+      await x.svc.execute(
         "recordDisplay",
         {
           observedStateVersion: before.stateVersion,
@@ -383,7 +409,7 @@ describe("SQLite authoritative core", () => {
           idempotencyKey: randomUUID(),
         },
       );
-      x.command("createTask", {
+      await x.command("createTask", {
         taskKind: "investigate_and_report",
         targetRole: "analyst",
         topicId: "gate_status",
@@ -397,10 +423,10 @@ describe("SQLite authoritative core", () => {
           comparedKnownCosts: false,
         },
       });
-      const outcome = x.command("abandonSession", {
+      const outcome = (await x.command("abandonSession", {
         reason: "player_exit",
-      }) as P.OutcomeView;
-      x.svc.execute(
+      })) as P.OutcomeView;
+      await x.svc.execute(
         "requestEvaluation",
         {
           sealedHash: outcome.sealedHash,
@@ -424,24 +450,27 @@ describe("SQLite authoritative core", () => {
         question === "gate_registration" ? 1 : 0,
       );
     });
-  it("a persisted terminal session opens through explicit read-only grant and cannot resume", () => {
+  it("a persisted terminal session opens through explicit read-only grant and cannot resume", async () => {
     const dir = mkdtempSync(join(tmpdir(), "last-mile-core-"));
     dirs.push(dir);
     const db = join(dir, "game.sqlite");
-    const x = setup("A", db);
-    task(x, "analyst", "gate_drone");
-    x.svc.close();
+    const x = await setup("A", db);
+    await task(x, "analyst", "gate_drone");
+    await x.svc.close();
     services.splice(services.indexOf(x.svc), 1);
-    const second = createGameService({
+    const second = await createGameService({
       dbPath: db,
       clock: x.clock,
       resumeSessionIds: [x.sid],
     });
     services.push(second);
-    const projection = second.read("getSession", x.sid) as P.SessionProjection;
+    const projection = (await second.read(
+      "getSession",
+      x.sid,
+    )) as P.SessionProjection;
     expect(projection.lifecycle).toBe("sealed");
-    expect(second.hasSessionAccess(x.sid, "command")).toBe(false);
-    expect(second.read("getOutcome", x.sid)).toMatchObject({
+    expect(await second.hasSessionAccess(x.sid, "command")).toBe(false);
+    expect(await second.read("getOutcome", x.sid)).toMatchObject({
       terminationReason: "technical_interruption",
     });
     const check = new DatabaseSync(db);
@@ -449,30 +478,32 @@ describe("SQLite authoritative core", () => {
     check.close();
   });
   it("terminal evaluation and export preserve seal and original gameplay event range", async () => {
-    const x = setup();
-    x.command("createTask", {
+    const x = await setup();
+    await x.command("createTask", {
       taskKind: "request_report",
       targetRole: "analyst",
       topicId: "roads",
     });
-    x.advance(1000);
-    const o = x.command("abandonSession", {
+    await x.advance(1000);
+    const o = (await x.command("abandonSession", {
       reason: "player_exit",
-    }) as P.OutcomeView;
-    const e = x.svc.execute(
+    })) as P.OutcomeView;
+    const e = (await x.svc.execute(
       "requestEvaluation",
       {
         sealedHash: o.sealedHash,
         evaluationConfigId: "EVALUATION_REFERENCE_V1",
       },
       { sessionId: x.sid, runEpoch: o.runEpoch, idempotencyKey: randomUUID() },
-    ) as P.EvaluationAccepted;
+    )) as P.EvaluationAccepted;
     await settle();
-    expect(x.svc.read("getEvaluation", x.sid, e.job.jobId)).toMatchObject({
-      status: "fallback",
-      mode: "offline_template",
-    });
-    const exportResult = x.svc.execute(
+    expect(await x.svc.read("getEvaluation", x.sid, e.job.jobId)).toMatchObject(
+      {
+        status: "fallback",
+        mode: "offline_template",
+      },
+    );
+    const exportResult = (await x.svc.execute(
       "createExport",
       {
         sealedHash: o.sealedHash,
@@ -480,12 +511,12 @@ describe("SQLite authoritative core", () => {
         includePlayerStatements: false,
       },
       { sessionId: x.sid, runEpoch: o.runEpoch, idempotencyKey: randomUUID() },
-    ) as P.ExportAccepted;
+    )) as P.ExportAccepted;
     expect(exportResult.export.artifact?.outcome.sealedHash).toBe(o.sealedHash);
     expect(
       exportResult.export.artifact?.replayPages[0]?.decisions,
     ).toHaveLength(1);
-    expect(x.svc.read("getOutcome", x.sid)).toEqual(o);
+    expect(await x.svc.read("getOutcome", x.sid)).toEqual(o);
   });
 });
 
@@ -494,18 +525,18 @@ describe("authored route matrix and arrival deadline", () => {
     for (const gate of ["E1_MAIN", "E1_BYPASS"])
       for (const market of ["E2_MAIN", "E2_BYPASS"])
         for (const river of ["E3_BRIDGE", "E3_FORD"]) {
-          it(`${caseId} ${gate} / ${market} / ${river} resolves authored durations without skipping a scene`, () => {
-            const x = setup(caseId);
+          it(`${caseId} ${gate} / ${market} / ${river} resolves authored durations without skipping a scene`, async () => {
+            const x = await setup(caseId);
             const gateMs =
               gate === "E1_BYPASS" ? 130000 : caseId === "A" ? 65000 : 155000;
-            action(x, gate);
-            x.advance(gateMs);
-            expect(x.get().sceneId).toBe("E2");
+            await action(x, gate);
+            await x.advance(gateMs);
+            expect((await x.get()).sceneId).toBe("E2");
             const marketMs =
               market === "E2_BYPASS" ? 145000 : caseId === "A" ? 245000 : 75000;
-            action(x, market);
-            x.advance(marketMs);
-            expect(x.get().sceneId).toBe("E3");
+            await action(x, market);
+            await x.advance(marketMs);
+            expect((await x.get()).sceneId).toBe("E3");
             const pendingManifest = gate === "E1_BYPASS",
               pendingInspection = caseId === "A" && market === "E2_MAIN";
             let riverMs =
@@ -516,24 +547,27 @@ describe("authored route matrix and arrival deadline", () => {
                 : 200000 +
                   (pendingManifest ? 20000 : 0) +
                   (pendingInspection ? 25000 : 0);
-            action(x, river);
-            x.advance(riverMs);
+            await action(x, river);
+            await x.advance(riverMs);
             if (river === "E3_BRIDGE" && caseId === "B") {
-              expect(x.get().lifecycle).toBe("active");
-              expect(x.get().location.nodeId).toBe("N05");
-              expect(x.get().reportQuotas.every((q) => q.used === 0)).toBe(
-                true,
-              );
-              action(x, "E3_FORD");
+              expect((await x.get()).lifecycle).toBe("active");
+              expect((await x.get()).location.nodeId).toBe("N05");
+              expect(
+                (await x.get()).reportQuotas.every((q) => q.used === 0),
+              ).toBe(true);
+              await action(x, "E3_FORD");
               const recoveryMs =
                 200000 +
                 (pendingManifest ? 20000 : 0) +
                 (pendingInspection ? 25000 : 0);
               riverMs += recoveryMs;
-              x.advance(recoveryMs);
+              await x.advance(recoveryMs);
             }
             const expected = 30000 + gateMs + marketMs + riverMs;
-            const out = x.svc.read("getOutcome", x.sid) as P.OutcomeView;
+            const out = (await x.svc.read(
+              "getOutcome",
+              x.sid,
+            )) as P.OutcomeView;
             expect(out.sealedAtMissionMs).toBe(Math.min(600000, expected));
             expect(out.taskSuccess).toBe(expected <= 600000);
             expect(out.finalLocation.nodeId === "N07").toBe(expected <= 600000);
@@ -541,41 +575,41 @@ describe("authored route matrix and arrival deadline", () => {
           });
         }
   for (const extra of [0, 1])
-    it(`arrival at deadline ${extra === 0 ? "exactly" : "plus one millisecond"}`, () => {
-      const x = setup();
+    it(`arrival at deadline ${extra === 0 ? "exactly" : "plus one millisecond"}`, async () => {
+      const x = await setup();
       for (let i = 0; i < 4; i++) {
-        action(x, "WAIT", 60000);
-        x.advance(60000);
+        await action(x, "WAIT", 60000);
+        await x.advance(60000);
       }
-      action(x, "WAIT", 15000);
-      x.advance(15000);
-      x.advance(extra);
-      action(x, "E1_MAIN");
-      x.advance(65000);
-      action(x, "E2_BYPASS");
-      x.advance(145000);
-      action(x, "E3_BRIDGE");
-      x.advance(105000);
-      const o = x.svc.read("getOutcome", x.sid) as P.OutcomeView;
+      await action(x, "WAIT", 15000);
+      await x.advance(15000);
+      await x.advance(extra);
+      await action(x, "E1_MAIN");
+      await x.advance(65000);
+      await action(x, "E2_BYPASS");
+      await x.advance(145000);
+      await action(x, "E3_BRIDGE");
+      await x.advance(105000);
+      const o = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
       expect(o.sealedAtMissionMs).toBe(600000);
       expect(o.taskSuccess).toBe(extra === 0);
       expect(o.terminationReason).toBe(
         extra === 0 ? "arrived" : "mission_deadline",
       );
     });
-  it("five immutable uploads fill quota and tracing produces a new charged report instead of editing original", () => {
-    const x = setup();
-    x.command("createTask", {
+  it("five immutable uploads fill quota and tracing produces a new charged report instead of editing original", async () => {
+    const x = await setup();
+    await x.command("createTask", {
       taskKind: "request_report",
       targetRole: "liaison",
       topicId: "gate_status",
     });
-    x.advance(1000);
-    const original = x.get().reports[0]!;
-    const option = x
-      .get()
-      .taskOptions.find((t) => t.targetId === "gate_queue.trace")!;
-    x.command("createTask", {
+    await x.advance(1000);
+    const original = (await x.get()).reports[0]!;
+    const option = (await x.get()).taskOptions.find(
+      (t) => t.targetId === "gate_queue.trace",
+    )!;
+    await x.command("createTask", {
       taskKind: "investigate_and_report",
       targetRole: "liaison",
       topicId: option.topicId,
@@ -584,59 +618,64 @@ describe("authored route matrix and arrival deadline", () => {
       sourceReportId: original.reportId,
       reasonAnnotation: null,
     });
-    x.advance(15000);
-    const trace = x
-      .get()
-      .reports.find((r) => r.card.statementKind === "provenance")!;
+    await x.advance(15000);
+    const trace = (await x.get()).reports.find(
+      (r) => r.card.statementKind === "provenance",
+    )!;
     expect(trace.card.supersedesEvidenceInstanceId).toBe(
       original.evidenceInstanceId,
     );
     expect(trace.revision).toBe(2);
-    expect(x.svc.read("getReport", x.sid, original.reportId)).toEqual(original);
-    expect(x.get().resources.find((r) => r.channel === "witness")?.spent).toBe(
-      1,
+    expect(await x.svc.read("getReport", x.sid, original.reportId)).toEqual(
+      original,
     );
+    expect(
+      (await x.get()).resources.find((r) => r.channel === "witness")?.spent,
+    ).toBe(1);
     for (let i = 0; i < 3; i++) {
-      task(x, "analyst", "gate_drone");
-      x.advance(30000);
+      await task(x, "analyst", "gate_drone");
+      await x.advance(30000);
     }
-    x.command("uploadReports", {
-      items: x
-        .get()
-        .reports.map((r) => ({
-          reportId: r.reportId,
-          expectedRevision: r.revision,
-        })),
+    await x.command("uploadReports", {
+      items: (await x.get()).reports.map((r) => ({
+        reportId: r.reportId,
+        expectedRevision: r.revision,
+      })),
     });
-    expect(x.get().uploadQuota).toMatchObject({ used: 5, remaining: 0 });
-    task(x, "liaison", "gate_agency");
-    x.advance(15000);
-    const sixth = x
-      .get()
-      .reports.find(
-        (r) => !x.get().sceneUploads.some((u) => u.reportId === r.reportId),
-      )!;
-    expect(() =>
+    expect((await x.get()).uploadQuota).toMatchObject({
+      used: 5,
+      remaining: 0,
+    });
+    await task(x, "liaison", "gate_agency");
+    await x.advance(15000);
+    const current = await x.get();
+    const sixth = current.reports.find(
+      (r) => !current.sceneUploads.some((u) => u.reportId === r.reportId),
+    )!;
+    await expect(
       x.command("uploadReports", {
         items: [{ reportId: sixth.reportId, expectedRevision: sixth.revision }],
       }),
-    ).toThrow(DomainError);
-    expect(x.get().sceneUploads).toHaveLength(5);
+    ).rejects.toThrow(DomainError);
+    expect((await x.get()).sceneUploads).toHaveLength(5);
   });
-  it("fresh server startup seals an unclosed active session and releases outstanding report reservations", () => {
+  it("fresh server startup seals an unclosed active session and releases outstanding report reservations", async () => {
     const dir = mkdtempSync(join(tmpdir(), "last-mile-recovery-"));
     dirs.push(dir);
     const db = join(dir, "game.sqlite");
-    const x = setup("B", db);
-    task(x, "analyst", "gate_drone");
+    const x = await setup("B", db);
+    await task(x, "analyst", "gate_drone");
     // The old service is deliberately not closed: a new constructor sees durable active rows, as after a killed process.
-    const recovered = createGameService({
+    const recovered = await createGameService({
       dbPath: db,
       clock: x.clock,
       resumeSessionIds: [x.sid],
     });
     services.push(recovered);
-    const view = recovered.read("getSession", x.sid) as P.SessionProjection;
+    const view = (await recovered.read(
+      "getSession",
+      x.sid,
+    )) as P.SessionProjection;
     expect(view.lifecycle).toBe("sealed");
     expect(view.activeTasks).toHaveLength(0);
     expect(view.reportQuotas.find((q) => q.role === "analyst")).toMatchObject({
@@ -644,25 +683,25 @@ describe("authored route matrix and arrival deadline", () => {
       remaining: 3,
     });
     expect(view.resources.find((r) => r.channel === "drone")?.spent).toBe(1);
-    expect(recovered.hasSessionAccess(x.sid, "command")).toBe(false);
+    expect(await recovered.hasSessionAccess(x.sid, "command")).toBe(false);
   });
 });
 
 describe("graceful shutdown catches up due authoritative events", () => {
   for (const extra of [-1, 0])
-    it(`closing ${extra === 0 ? "at" : "one millisecond before"} arrival preserves the actual boundary`, () => {
+    it(`closing ${extra === 0 ? "at" : "one millisecond before"} arrival preserves the actual boundary`, async () => {
       const dir = mkdtempSync(join(tmpdir(), "last-mile-close-arrival-"));
       dirs.push(dir);
       const dbPath = join(dir, "game.sqlite");
-      const x = setup("A", dbPath);
-      action(x, "E1_MAIN");
-      x.advance(65000);
-      action(x, "E2_BYPASS");
-      x.advance(145000);
-      action(x, "E3_BRIDGE");
+      const x = await setup("A", dbPath);
+      await action(x, "E1_MAIN");
+      await x.advance(65000);
+      await action(x, "E2_BYPASS");
+      await x.advance(145000);
+      await action(x, "E3_BRIDGE");
       // No tick or read between advancing the clock and closing the service.
       x.clock.advance(105000 + extra);
-      x.svc.close();
+      await x.svc.close();
       const check = new DatabaseSync(dbPath);
       const row = check
         .prepare("SELECT outcome_json FROM terminal_seals WHERE session_id=?")
@@ -678,13 +717,13 @@ describe("graceful shutdown catches up due authoritative events", () => {
       expect(outcome.finalLocation.nodeId).toBe(extra === 0 ? "N07" : null);
     });
   for (const extra of [-1, 0])
-    it(`closing ${extra === 0 ? "at" : "one millisecond before"} the mission deadline processes only due events`, () => {
+    it(`closing ${extra === 0 ? "at" : "one millisecond before"} the mission deadline processes only due events`, async () => {
       const dir = mkdtempSync(join(tmpdir(), "last-mile-close-deadline-"));
       dirs.push(dir);
       const dbPath = join(dir, "game.sqlite");
-      const x = setup("B", dbPath);
+      const x = await setup("B", dbPath);
       x.clock.advance(570000 + extra);
-      x.svc.close();
+      await x.svc.close();
       const check = new DatabaseSync(dbPath);
       const row = check
         .prepare("SELECT outcome_json FROM terminal_seals WHERE session_id=?")

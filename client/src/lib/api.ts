@@ -34,12 +34,12 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
     );
   }
   if (!response.ok) {
-    const problem = await response
-      .json()
-      .catch(() => ({
-        code: "SERVICE_UNAVAILABLE",
-        detail: `Request failed (${response.status})`,
-      }));
+    if (response.status === 401)
+      window.dispatchEvent(new Event("last-mile-access-required"));
+    const problem = await response.json().catch(() => ({
+      code: "SERVICE_UNAVAILABLE",
+      detail: `Request failed (${response.status})`,
+    }));
     throw new ApiError(problem);
   }
   return response.json() as Promise<T>;
