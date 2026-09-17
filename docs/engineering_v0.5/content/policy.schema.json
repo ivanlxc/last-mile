@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:last-mile:policy:0.5",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "profileId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "review"
+      ]
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "single_player"
+      ]
+    },
+    "sceneIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "E1",
+          "E2",
+          "E3"
+        ]
+      },
+      "minItems": 1
+    },
+    "missionDurationMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "medicalSupportAtMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "civilianCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "channelLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "satellite": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "drone": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "localAgency": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "witness": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "satellite",
+        "drone",
+        "localAgency",
+        "witness"
+      ]
+    },
+    "channelScope": {
+      "type": "string",
+      "enum": [
+        "session"
+      ]
+    },
+    "reportLimitPerRolePerScene": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "uploadLimitPerScene": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "uploadPolicy": {
+      "type": "string",
+      "enum": [
+        "cumulative_immutable"
+      ]
+    },
+    "correctionConsumesNewQuota": {
+      "type": "boolean"
+    },
+    "investigationDurationMs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "satellite": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "drone": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "localAgency": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "witness": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "provenanceTrace": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "satellite",
+        "drone",
+        "localAgency",
+        "witness",
+        "provenanceTrace"
+      ]
+    },
+    "satelliteObservationAgeMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maxActiveInvestigationPerRole": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reportDeliveryMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "waitDurationsMs": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1
+    },
+    "clockMode": {
+      "type": "string",
+      "enum": [
+        "realtime"
+      ]
+    },
+    "backgroundDuringWait": {
+      "type": "boolean"
+    },
+    "npcSelection": {
+      "type": "string",
+      "enum": [
+        "topic_then_priority_then_acquisition"
+      ]
+    },
+    "leaveSceneCostPolicy": {
+      "type": "string",
+      "enum": [
+        "keep_channel_release_report_reservation"
+      ]
+    },
+    "technicalFailureCostPolicy": {
+      "type": "string",
+      "enum": [
+        "compensate_channel_release_report_reservation"
+      ]
+    },
+    "roleAbilitiesAreActionGates": {
+      "type": "boolean"
+    },
+    "textInput": {
+      "type": "string",
+      "enum": [
+        "unverified_statements"
+      ]
+    },
+    "advisorMode": {
+      "type": "string",
+      "enum": [
+        "live_with_labeled_fallback"
+      ]
+    },
+    "confidencePresentation": {
+      "type": "string",
+      "enum": [
+        "qualitative"
+      ]
+    },
+    "evaluationProfile": {
+      "type": "string",
+      "enum": [
+        "four_dimensions_mixed_or_insufficient"
+      ]
+    },
+    "outcomeSuccess": {
+      "type": "string",
+      "enum": [
+        "arrival_N07_before_or_at_deadline"
+      ]
+    },
+    "bridgeRefusalRecoveryLimit": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "normalLaunchAllowed": {
+      "type": "boolean"
+    },
+    "demoLaunchAllowed": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "profileId",
+    "version",
+    "status",
+    "mode",
+    "sceneIds",
+    "missionDurationMs",
+    "medicalSupportAtMs",
+    "civilianCount",
+    "channelLimits",
+    "channelScope",
+    "reportLimitPerRolePerScene",
+    "uploadLimitPerScene",
+    "uploadPolicy",
+    "correctionConsumesNewQuota",
+    "investigationDurationMs",
+    "satelliteObservationAgeMs",
+    "maxActiveInvestigationPerRole",
+    "reportDeliveryMs",
+    "waitDurationsMs",
+    "clockMode",
+    "backgroundDuringWait",
+    "npcSelection",
+    "leaveSceneCostPolicy",
+    "technicalFailureCostPolicy",
+    "roleAbilitiesAreActionGates",
+    "textInput",
+    "advisorMode",
+    "confidencePresentation",
+    "evaluationProfile",
+    "outcomeSuccess",
+    "bridgeRefusalRecoveryLimit",
+    "normalLaunchAllowed",
+    "demoLaunchAllowed"
+  ]
+}

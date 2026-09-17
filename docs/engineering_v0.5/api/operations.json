@@ -1,0 +1,186 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/v1/health",
+    "operationId": "getHealth",
+    "request": null,
+    "response": "HealthView",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/bootstrap",
+    "operationId": "getBootstrap",
+    "request": null,
+    "response": "BootstrapView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions",
+    "operationId": "createSession",
+    "request": "CreateSessionRequest",
+    "response": "SessionCreated",
+    "status": 201
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}",
+    "operationId": "getSession",
+    "request": null,
+    "response": "SessionProjection",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/start",
+    "operationId": "startSession",
+    "request": "StartRequest",
+    "response": "SessionProjection",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/tasks",
+    "operationId": "createTask",
+    "request": "TaskRequest",
+    "response": "TaskAccepted",
+    "status": 202
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/tasks/{taskId}",
+    "operationId": "getTask",
+    "request": null,
+    "response": "TaskView",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/reports/{reportId}",
+    "operationId": "getReport",
+    "request": null,
+    "response": "ReportView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/uploads",
+    "operationId": "uploadReports",
+    "request": "UploadRequest",
+    "response": "UploadView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/questions",
+    "operationId": "askAdvisor",
+    "request": "QuestionRequest",
+    "response": "QuestionAccepted",
+    "status": 202
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/advice/{jobId}",
+    "operationId": "getAdvice",
+    "request": null,
+    "response": "AgentJobView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/actions",
+    "operationId": "commitAction",
+    "request": "ActionRequest",
+    "response": "ActionAccepted",
+    "status": 202
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/operations/{operationId}",
+    "operationId": "getOperation",
+    "request": null,
+    "response": "OperationView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/display-receipts",
+    "operationId": "recordDisplay",
+    "request": "DisplayReceiptRequest",
+    "response": "ReceiptView",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/provenance",
+    "operationId": "getProvenance",
+    "request": null,
+    "response": "ProvenanceView",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/events",
+    "operationId": "streamEvents",
+    "request": null,
+    "response": "SessionProjection",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/abandon",
+    "operationId": "abandonSession",
+    "request": "AbandonRequest",
+    "response": "OutcomeView",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/outcome",
+    "operationId": "getOutcome",
+    "request": null,
+    "response": "OutcomeView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/evaluations",
+    "operationId": "requestEvaluation",
+    "request": "EvaluationRequest",
+    "response": "EvaluationAccepted",
+    "status": 202
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/evaluations/{jobId}",
+    "operationId": "getEvaluation",
+    "request": null,
+    "response": "AgentJobView",
+    "status": 200
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/replay",
+    "operationId": "getReplay",
+    "request": null,
+    "response": "ReplayView",
+    "status": 200
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/sessions/{sessionId}/exports",
+    "operationId": "createExport",
+    "request": "ExportRequest",
+    "response": "ExportAccepted",
+    "status": 202
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sessions/{sessionId}/exports/{exportId}",
+    "operationId": "getExport",
+    "request": null,
+    "response": "ExportView",
+    "status": 200
+  }
+]

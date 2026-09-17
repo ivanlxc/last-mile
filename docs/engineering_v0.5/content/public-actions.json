@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "0.5.0",
+  "actions": [
+    {
+      "sceneId": "E1",
+      "actionId": "E1_MAIN",
+      "label": "主门登记后前进",
+      "knownRouteIds": [
+        "R01"
+      ],
+      "knownDurationMs": 65000,
+      "uncertainty": "possible_delay",
+      "knownRisk": "登记耗时可能变化。"
+    },
+    {
+      "sceneId": "E1",
+      "actionId": "E1_BYPASS",
+      "label": "经南侧服务路绕行",
+      "knownRouteIds": [
+        "R02",
+        "R03"
+      ],
+      "knownDurationMs": 130000,
+      "uncertainty": "possible_delay",
+      "knownRisk": "绕行后可能需要补录名单。"
+    },
+    {
+      "sceneId": "E2",
+      "actionId": "E2_MAIN",
+      "label": "选择市集主路",
+      "knownRouteIds": [
+        "R04"
+      ],
+      "knownDurationMs": 75000,
+      "uncertainty": "possible_delay",
+      "knownRisk": "目前未确认主路通行，遇阻会增加旅程。"
+    },
+    {
+      "sceneId": "E2",
+      "actionId": "E2_BYPASS",
+      "label": "经连接路前往桥头",
+      "knownRouteIds": [
+        "R03",
+        "R05"
+      ],
+      "knownDurationMs": 145000,
+      "uncertainty": "possible_delay",
+      "knownRisk": "公开路线更长，当前道路状况仍需判断。"
+    },
+    {
+      "sceneId": "E3",
+      "actionId": "E3_BRIDGE",
+      "label": "申请主桥通过",
+      "knownRouteIds": [
+        "R06",
+        "R07"
+      ],
+      "knownDurationMs": 105000,
+      "uncertainty": "possible_delay",
+      "knownRisk": "桥面外观与车辆许可需要分别核实。"
+    },
+    {
+      "sceneId": "E3",
+      "actionId": "E3_FORD",
+      "label": "经旧河床与转运区",
+      "knownRouteIds": [
+        "R08",
+        "R09",
+        "R10"
+      ],
+      "knownDurationMs": 200000,
+      "uncertainty": "possible_delay",
+      "knownRisk": "转运区办理未完成事项会增加耗时。"
+    }
+  ],
+  "waitDurationsMs": [
+    15000,
+    30000,
+    60000
+  ]
+}

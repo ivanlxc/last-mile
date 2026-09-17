@@ -1,0 +1,879 @@
+{
+  "scope": "authored-content schema and reference-plan checks; not game implementation/playtest",
+  "passed": 218,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "schema:policy",
+      "result": "PASS"
+    },
+    {
+      "name": "closed-schema:policy",
+      "result": "PASS"
+    },
+    {
+      "name": "schema:scenario",
+      "result": "PASS"
+    },
+    {
+      "name": "closed-schema:scenario",
+      "result": "PASS"
+    },
+    {
+      "name": "schema:public-map",
+      "result": "PASS"
+    },
+    {
+      "name": "closed-schema:public-map",
+      "result": "PASS"
+    },
+    {
+      "name": "schema:public-actions",
+      "result": "PASS"
+    },
+    {
+      "name": "closed-schema:public-actions",
+      "result": "PASS"
+    },
+    {
+      "name": "profile-binding",
+      "result": "PASS"
+    },
+    {
+      "name": "confirmed-session-resources",
+      "result": "PASS"
+    },
+    {
+      "name": "immutable-new-quota",
+      "result": "PASS"
+    },
+    {
+      "name": "review-not-approved",
+      "result": "PASS"
+    },
+    {
+      "name": "global-map-identity",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R00",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R00fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R00toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R01",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R01fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R01toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R02",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R02fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R02toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R03",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R03fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R03toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R04",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R04fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R04toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R05",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R05fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R05toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R06",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R06fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R06toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R07",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R07fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R07toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R08",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R08fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R08toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R09",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R09fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R09toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R10",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R10fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R10toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R11",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R11fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R11toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-endpoints:R12",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R12fromNode",
+      "result": "PASS"
+    },
+    {
+      "name": "route-geometry:R12toNode",
+      "result": "PASS"
+    },
+    {
+      "name": "p0-disabled-routes",
+      "result": "PASS"
+    },
+    {
+      "name": "private-plan-action-binding:A",
+      "result": "PASS"
+    },
+    {
+      "name": "unique-definitions:A",
+      "result": "PASS"
+    },
+    {
+      "name": "nine-author-observations:AE1",
+      "result": "PASS"
+    },
+    {
+      "name": "nine-author-observations:AE2",
+      "result": "PASS"
+    },
+    {
+      "name": "nine-author-observations:AE3",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_layout",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_operator",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_papers",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_queue",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Agate_queue",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Agate_queue",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "satellite-age-not-wait:Agate_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Agate_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Agate_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Agate_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Agate_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Agate_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Aservice_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_map",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_operator",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_broadcast",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Amarket_broadcast",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Amarket_broadcast",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_crowd",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Amarket_crowd",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Amarket_crowd",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "satellite-age-not-wait:Amarket_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Amarket_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Amarket_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Amarket_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Amarket_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Amarket_clearance",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_layout",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_archive",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_handoff",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Aford_local",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Aford_local",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Aford_local",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "satellite-age-not-wait:Abridge_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Abridge_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Abridge_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Abridge_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Abridge_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Abridge_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Aford_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:AE1_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:AE1_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:AE1_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:AE1_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:AE2_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:AE2_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:AE2_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:AE2_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:AE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:AE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_MAINE2_MAINE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_MAINE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:AE1_MAINE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_MAINE2_BYPASSE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_MAINE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:AE1_MAINE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_BYPASSE2_MAINE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_BYPASSE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:AE1_BYPASSE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_BYPASSE2_BYPASSE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:A:E1_BYPASSE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:AE1_BYPASSE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "reference-duration:A",
+      "result": "PASS"
+    },
+    {
+      "name": "private-plan-action-binding:B",
+      "result": "PASS"
+    },
+    {
+      "name": "unique-definitions:B",
+      "result": "PASS"
+    },
+    {
+      "name": "nine-author-observations:BE1",
+      "result": "PASS"
+    },
+    {
+      "name": "nine-author-observations:BE2",
+      "result": "PASS"
+    },
+    {
+      "name": "nine-author-observations:BE3",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_layout",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_operator",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_papers",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_queue",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bgate_queue",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bgate_queue",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "satellite-age-not-wait:Bgate_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bgate_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bgate_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bgate_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bgate_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bgate_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bservice_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_map",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_operator",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_broadcast",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bmarket_broadcast",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bmarket_broadcast",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_crowd",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bmarket_crowd",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bmarket_crowd",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "satellite-age-not-wait:Bmarket_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bmarket_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bmarket_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bmarket_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bmarket_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bmarket_clearance",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_layout",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_archive",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_handoff",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bford_local",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bford_local",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bford_local",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "satellite-age-not-wait:Bbridge_satellite",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bbridge_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bbridge_agency",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bbridge_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-channel:Bbridge_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "trace-refs:Bbridge_witness",
+      "result": "PASS"
+    },
+    {
+      "name": "channel-role:Bford_drone",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:BE1_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:BE1_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:BE1_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:BE1_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:BE2_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:BE2_MAIN",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:BE2_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "next-scene-node:BE2_BYPASS",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:BE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "connected-plan:BE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_MAINE2_MAINE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_MAINE2_MAINE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_MAINE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_MAINE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_MAINE2_BYPASSE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_MAINE2_BYPASSE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_MAINE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_MAINE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_BYPASSE2_MAINE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_BYPASSE2_MAINE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_BYPASSE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_BYPASSE2_MAINE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_BYPASSE2_BYPASSE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_BYPASSE2_BYPASSE3_BRIDGE",
+      "result": "PASS"
+    },
+    {
+      "name": "complete-route:B:E1_BYPASSE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "completed-yard-clears-flags:BE1_BYPASSE2_BYPASSE3_FORD",
+      "result": "PASS"
+    },
+    {
+      "name": "reference-duration:B",
+      "result": "PASS"
+    },
+    {
+      "name": "same-public-targets-across-cases",
+      "result": "PASS"
+    },
+    {
+      "name": "no-private-keys:public-map.json",
+      "result": "PASS"
+    },
+    {
+      "name": "no-private-keys:public-actions.json",
+      "result": "PASS"
+    },
+    {
+      "name": "reject-teleport-mutant",
+      "result": "PASS"
+    },
+    {
+      "name": "reject-resource-reset-mutant",
+      "result": "PASS"
+    }
+  ]
+}

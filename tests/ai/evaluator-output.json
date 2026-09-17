@@ -1,0 +1,59 @@
+{
+  "sessionId": "00000000-0000-0000-0000-000000000001",
+  "sealedHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "rubricVersion": "observable-rubric-0.5-review",
+  "summary": "本局在不同情境记录到多种行为迹象，可并存，不能作为人格判断。",
+  "overallPattern": "mixed",
+  "dimensions": {
+    "complacency": {
+      "supportLevel": "observed_once",
+      "eligibleOpportunities": 1,
+      "supportContextRefs": ["00000000-0000-0000-0000-00000000012d"],
+      "supportFactRefs": ["00000000-0000-0000-0000-000000000191"],
+      "counterevidenceRefs": [],
+      "explanation": "该情境的一项明确记录与本维度迹象相符。",
+      "uncertainties": ["自报理由不证明真实动机，单次记录不代表稳定倾向。"]
+    },
+    "distrust": {
+      "supportLevel": "observed_once",
+      "eligibleOpportunities": 1,
+      "supportContextRefs": ["00000000-0000-0000-0000-00000000012e"],
+      "supportFactRefs": ["00000000-0000-0000-0000-000000000192"],
+      "counterevidenceRefs": [],
+      "explanation": "该情境的一项明确记录与本维度迹象相符。",
+      "uncertainties": ["自报理由不证明真实动机，单次记录不代表稳定倾向。"]
+    },
+    "overCaution": {
+      "supportLevel": "observed_once",
+      "eligibleOpportunities": 1,
+      "supportContextRefs": ["00000000-0000-0000-0000-00000000012f"],
+      "supportFactRefs": ["00000000-0000-0000-0000-000000000193"],
+      "counterevidenceRefs": [],
+      "explanation": "该情境的一项明确记录与本维度迹象相符。",
+      "uncertainties": ["自报理由不证明真实动机，单次记录不代表稳定倾向。"]
+    },
+    "calibratedTrust": {
+      "supportLevel": "observed_once",
+      "eligibleOpportunities": 1,
+      "supportContextRefs": ["00000000-0000-0000-0000-000000000130"],
+      "supportFactRefs": ["00000000-0000-0000-0000-000000000194"],
+      "counterevidenceRefs": [],
+      "explanation": "该情境的一项明确记录与本维度迹象相符。",
+      "uncertainties": ["自报理由不证明真实动机，单次记录不代表稳定倾向。"]
+    }
+  },
+  "keyMoments": [
+    {
+      "contextId": "00000000-0000-0000-0000-000000000130",
+      "factRefs": ["00000000-0000-0000-0000-000000000194"],
+      "explanation": "这一幕记录了依据和限制，结局不参与该判断。"
+    }
+  ],
+  "nextAttempts": [
+    {
+      "suggestion": "下一次明确记下仍未解决的问题与可承担检查。",
+      "basisRefs": ["00000000-0000-0000-0000-000000000191"]
+    }
+  ],
+  "limitations": ["规则未经过心理测量验证；例子不验证自然语言推断质量。"]
+}

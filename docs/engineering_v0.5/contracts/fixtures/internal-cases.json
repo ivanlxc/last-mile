@@ -1,0 +1,988 @@
+{
+  "description": "内部event payload封闭结构样例；不是公开SSE。",
+  "cases": [
+    {
+      "name": "valid_EventSessionCreated",
+      "schema": "internal.schema.json#/$defs/EventSessionCreated",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "session.created",
+        "data": {
+          "profileId": "SINGLE_PLAYER_REFERENCE",
+          "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "contentVersionId": "11111111-1111-4111-8111-111111111111",
+          "privateCaseId": "REFERENCE",
+          "seedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "valid_EventSessionStarted",
+      "schema": "internal.schema.json#/$defs/EventSessionStarted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "session.started",
+        "data": {
+          "missionDeadlineMs": 600000,
+          "startedAt": "2026-09-16T12:00:00Z"
+        }
+      }
+    },
+    {
+      "name": "valid_EventSceneEntered",
+      "schema": "internal.schema.json#/$defs/EventSceneEntered",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "scene.entered",
+        "data": {
+          "sceneId": "E1",
+          "location": {
+            "nodeId": "N00",
+            "routeId": null,
+            "progressPermille": 0
+          }
+        }
+      }
+    },
+    {
+      "name": "valid_EventTaskAccepted",
+      "schema": "internal.schema.json#/$defs/EventTaskAccepted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "task.accepted",
+        "data": {
+          "taskId": "11111111-1111-4111-8111-111111111111",
+          "targetRole": "analyst",
+          "taskKind": "investigate_and_report",
+          "topicId": "REFERENCE",
+          "reservationLedgerId": "11111111-1111-4111-8111-111111111111",
+          "investigationId": null,
+          "reasonAnnotation": null
+        }
+      }
+    },
+    {
+      "name": "valid_EventInvestigationStarted",
+      "schema": "internal.schema.json#/$defs/EventInvestigationStarted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "investigation.started",
+        "data": {
+          "investigationId": "11111111-1111-4111-8111-111111111111",
+          "taskId": "11111111-1111-4111-8111-111111111111",
+          "channel": "satellite",
+          "targetId": "REFERENCE",
+          "dueAtMissionMs": 0,
+          "spendLedgerId": "11111111-1111-4111-8111-111111111111"
+        }
+      }
+    },
+    {
+      "name": "valid_EventInvestigationCompleted",
+      "schema": "internal.schema.json#/$defs/EventInvestigationCompleted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "investigation.completed",
+        "data": {
+          "investigationId": "11111111-1111-4111-8111-111111111111",
+          "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+          "revision": 1
+        }
+      }
+    },
+    {
+      "name": "valid_EventInvestigationCancelled",
+      "schema": "internal.schema.json#/$defs/EventInvestigationCancelled",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "investigation.cancelled",
+        "data": {
+          "investigationId": "11111111-1111-4111-8111-111111111111",
+          "reason": "scene_left",
+          "releaseLedgerId": null
+        }
+      }
+    },
+    {
+      "name": "valid_EventInvestigationFailed",
+      "schema": "internal.schema.json#/$defs/EventInvestigationFailed",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "investigation.failed",
+        "data": {
+          "investigationId": "11111111-1111-4111-8111-111111111111",
+          "reason": "technical_failure",
+          "refundLedgerId": "11111111-1111-4111-8111-111111111111",
+          "releaseLedgerId": "11111111-1111-4111-8111-111111111111"
+        }
+      }
+    },
+    {
+      "name": "valid_EventEvidenceAcquired",
+      "schema": "internal.schema.json#/$defs/EventEvidenceAcquired",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "evidence.acquired",
+        "data": {
+          "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+          "ownerRole": "analyst",
+          "revision": 1,
+          "definitionId": "REFERENCE",
+          "payloadHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      }
+    },
+    {
+      "name": "valid_EventReportCreated",
+      "schema": "internal.schema.json#/$defs/EventReportCreated",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "report.created",
+        "data": {
+          "reportId": "11111111-1111-4111-8111-111111111111",
+          "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+          "revision": 1,
+          "sourceRole": "analyst",
+          "spendLedgerId": "11111111-1111-4111-8111-111111111111",
+          "selectionRule": "public_topic_priority_then_acquisition"
+        }
+      }
+    },
+    {
+      "name": "valid_EventProvenanceDisclosed",
+      "schema": "internal.schema.json#/$defs/EventProvenanceDisclosed",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "provenance.disclosed",
+        "data": {
+          "disclosureId": "11111111-1111-4111-8111-111111111111",
+          "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+          "privateEdgeDefinitionIds": [
+            "REFERENCE"
+          ]
+        }
+      }
+    },
+    {
+      "name": "valid_EventUploadCreated",
+      "schema": "internal.schema.json#/$defs/EventUploadCreated",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "upload.created",
+        "data": {
+          "uploadId": "11111111-1111-4111-8111-111111111111",
+          "reportId": "11111111-1111-4111-8111-111111111111",
+          "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+          "revision": 1,
+          "inboxVersion": 1,
+          "assistantContextVersion": 1,
+          "spendLedgerId": "11111111-1111-4111-8111-111111111111"
+        }
+      }
+    },
+    {
+      "name": "valid_EventPlayerStatementCreated",
+      "schema": "internal.schema.json#/$defs/EventPlayerStatementCreated",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "player_statement.created",
+        "data": {
+          "statementId": "11111111-1111-4111-8111-111111111111",
+          "sceneId": "E1",
+          "text": "REFERENCE",
+          "assistantContextVersion": 1
+        }
+      }
+    },
+    {
+      "name": "valid_EventAgentJobQueued",
+      "schema": "internal.schema.json#/$defs/EventAgentJobQueued",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "agent.job_queued",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "advisor",
+          "inputManifestId": "11111111-1111-4111-8111-111111111111",
+          "sealedHash": null,
+          "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputVersion": 1
+        }
+      }
+    },
+    {
+      "name": "valid_EventAgentAttemptStarted",
+      "schema": "internal.schema.json#/$defs/EventAgentAttemptStarted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "agent.attempt_started",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "advisor",
+          "attemptId": "11111111-1111-4111-8111-111111111111",
+          "attemptNumber": 1,
+          "spendLedgerId": "11111111-1111-4111-8111-111111111111"
+        }
+      }
+    },
+    {
+      "name": "valid_EventAgentJobFinished",
+      "schema": "internal.schema.json#/$defs/EventAgentJobFinished",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "agent.job_finished",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "advisor",
+          "status": "succeeded",
+          "outputHash": null
+        }
+      }
+    },
+    {
+      "name": "valid_EventDisplayReceived",
+      "schema": "internal.schema.json#/$defs/EventDisplayReceived",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "display.received",
+        "data": {
+          "receiptId": "11111111-1111-4111-8111-111111111111",
+          "observedStateVersion": 0,
+          "observedSceneId": null,
+          "displayKind": "report_opened",
+          "reportId": null,
+          "jobId": null,
+          "operationId": null
+        }
+      }
+    },
+    {
+      "name": "valid_EventActionCommitted",
+      "schema": "internal.schema.json#/$defs/EventActionCommitted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "action.committed",
+        "data": {
+          "decisionId": "11111111-1111-4111-8111-111111111111",
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "sceneId": "E1",
+          "actionId": "REFERENCE",
+          "reason": "REFERENCE",
+          "reasonAnnotation": null,
+          "referencedReportIds": [],
+          "basedOnAdviceJobId": null,
+          "cancelledInvestigationIds": []
+        }
+      }
+    },
+    {
+      "name": "valid_EventOperationSegmentCompleted",
+      "schema": "internal.schema.json#/$defs/EventOperationSegmentCompleted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "operation.segment_completed",
+        "data": {
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "segmentId": "11111111-1111-4111-8111-111111111111",
+          "location": {
+            "nodeId": "N00",
+            "routeId": null,
+            "progressPermille": 0
+          },
+          "actualDurationMs": 0,
+          "releasedEvidenceIds": []
+        }
+      }
+    },
+    {
+      "name": "valid_EventOperationFinished",
+      "schema": "internal.schema.json#/$defs/EventOperationFinished",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "operation.finished",
+        "data": {
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "status": "completed",
+          "reason": "normal"
+        }
+      }
+    },
+    {
+      "name": "valid_EventQuotaChanged",
+      "schema": "internal.schema.json#/$defs/EventQuotaChanged",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "quota.changed",
+        "data": {
+          "ledgerId": "11111111-1111-4111-8111-111111111111",
+          "accountId": "11111111-1111-4111-8111-111111111111",
+          "unit": "investigation",
+          "entryKind": "reserve",
+          "quantity": 1,
+          "remainingAfter": 0,
+          "reservedAfter": 0,
+          "causationId": "11111111-1111-4111-8111-111111111111"
+        }
+      }
+    },
+    {
+      "name": "valid_EventHandoffTaskCompleted",
+      "schema": "internal.schema.json#/$defs/EventHandoffTaskCompleted",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "handoff.task_completed",
+        "data": {
+          "task": "manifest",
+          "nodeId": "N10",
+          "operationId": "11111111-1111-4111-8111-111111111111"
+        }
+      }
+    },
+    {
+      "name": "valid_EventMedicalTargetMissed",
+      "schema": "internal.schema.json#/$defs/EventMedicalTargetMissed",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "medical.target_missed",
+        "data": {
+          "targetAtMissionMs": 0,
+          "stateAfter": "target_missed"
+        }
+      }
+    },
+    {
+      "name": "valid_EventSessionSealed",
+      "schema": "internal.schema.json#/$defs/EventSessionSealed",
+      "valid": true,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "session.sealed",
+        "data": {
+          "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outcome": {
+            "sessionId": "11111111-1111-4111-8111-111111111111",
+            "runEpoch": "11111111-1111-4111-8111-111111111111",
+            "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "sealedAt": "2026-09-16T12:00:00Z",
+            "sealedAtMissionMs": 0,
+            "taskSuccess": false,
+            "terminationReason": "arrived",
+            "arrivedAtMissionMs": null,
+            "handoffCompletedAtMissionMs": null,
+            "pendingTasks": {
+              "manifest": "notRequired",
+              "inspection": "notRequired"
+            },
+            "finalLocation": {
+              "nodeId": "N00",
+              "routeId": null,
+              "progressPermille": 0
+            },
+            "civilianCount": 20,
+            "medical": {
+              "status": "stable",
+              "targetAtMissionMs": null,
+              "note": "REFERENCE"
+            },
+            "routeIdsTaken": [],
+            "summary": "REFERENCE"
+          }
+        }
+      }
+    },
+    {
+      "name": "valid_AuditBehaviorFactsBuilt",
+      "schema": "internal.schema.json#/$defs/AuditBehaviorFactsBuilt",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "behavior.facts_built",
+        "data": {
+          "factSetHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "factIds": [],
+          "evaluationConfigId": "EVALUATION_REFERENCE_V1"
+        }
+      }
+    },
+    {
+      "name": "valid_AuditEvaluatorJobQueued",
+      "schema": "internal.schema.json#/$defs/AuditEvaluatorJobQueued",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "evaluator.job_queued",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputVersion": 1,
+          "evaluationConfigId": "EVALUATION_REFERENCE_V1"
+        }
+      }
+    },
+    {
+      "name": "valid_AuditEvaluatorAttemptStarted",
+      "schema": "internal.schema.json#/$defs/AuditEvaluatorAttemptStarted",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "evaluator.attempt_started",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "attemptId": "11111111-1111-4111-8111-111111111111",
+          "attemptNumber": 1
+        }
+      }
+    },
+    {
+      "name": "valid_AuditEvaluatorAttemptFinished",
+      "schema": "internal.schema.json#/$defs/AuditEvaluatorAttemptFinished",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "evaluator.attempt_finished",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "attemptId": "11111111-1111-4111-8111-111111111111",
+          "attemptNumber": 1,
+          "status": "succeeded",
+          "inputTokens": null,
+          "outputTokens": null,
+          "providerRequestId": null,
+          "errorCode": null
+        }
+      }
+    },
+    {
+      "name": "valid_AuditEvaluatorJobFinished",
+      "schema": "internal.schema.json#/$defs/AuditEvaluatorJobFinished",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "evaluator.job_finished",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "status": "succeeded",
+          "outputHash": null
+        }
+      }
+    },
+    {
+      "name": "valid_AuditExportQueued",
+      "schema": "internal.schema.json#/$defs/AuditExportQueued",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "export.queued",
+        "data": {
+          "exportId": "11111111-1111-4111-8111-111111111111",
+          "includePlayerStatements": false
+        }
+      }
+    },
+    {
+      "name": "valid_AuditExportFinished",
+      "schema": "internal.schema.json#/$defs/AuditExportFinished",
+      "valid": true,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "export.finished",
+        "data": {
+          "exportId": "11111111-1111-4111-8111-111111111111",
+          "status": "succeeded",
+          "artifactHash": null,
+          "errorCode": null
+        }
+      }
+    },
+    {
+      "name": "internal_unknown_payload_key",
+      "schema": "internal.schema.json#/$defs/EventSessionCreated",
+      "valid": false,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "session.created",
+        "data": {
+          "profileId": "SINGLE_PLAYER_REFERENCE",
+          "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "contentVersionId": "11111111-1111-4111-8111-111111111111",
+          "privateCaseId": "REFERENCE",
+          "seedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "unexpected": true
+        }
+      }
+    },
+    {
+      "name": "reject_postgame_in_gameplay_AuditBehaviorFactsBuilt",
+      "schema": "internal.schema.json#/$defs/InternalEvent",
+      "valid": false,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "behavior.facts_built",
+        "data": {
+          "factSetHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "factIds": [],
+          "evaluationConfigId": "EVALUATION_REFERENCE_V1"
+        }
+      }
+    },
+    {
+      "name": "reject_postgame_in_gameplay_AuditExportQueued",
+      "schema": "internal.schema.json#/$defs/InternalEvent",
+      "valid": false,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "export.queued",
+        "data": {
+          "exportId": "11111111-1111-4111-8111-111111111111",
+          "includePlayerStatements": false
+        }
+      }
+    },
+    {
+      "name": "reject_postgame_in_gameplay_AuditExportFinished",
+      "schema": "internal.schema.json#/$defs/InternalEvent",
+      "valid": false,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "export.finished",
+        "data": {
+          "exportId": "11111111-1111-4111-8111-111111111111",
+          "status": "succeeded",
+          "artifactHash": null,
+          "errorCode": null
+        }
+      }
+    },
+    {
+      "name": "reject_postgame_in_gameplay_AuditEvaluatorJobQueued",
+      "schema": "internal.schema.json#/$defs/InternalEvent",
+      "valid": false,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "evaluator.job_queued",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputVersion": 1,
+          "evaluationConfigId": "EVALUATION_REFERENCE_V1"
+        }
+      }
+    },
+    {
+      "name": "reject_evaluator_lifecycle_in_gameplay",
+      "schema": "internal.schema.json#/$defs/InternalEvent",
+      "valid": false,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "agent.job_queued",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "inputManifestId": "11111111-1111-4111-8111-111111111111",
+          "sealedHash": null,
+          "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputVersion": 1
+        }
+      }
+    },
+    {
+      "name": "reject_gameplay_sequence_in_postgame_audit",
+      "schema": "internal.schema.json#/$defs/PostgameAuditEvent",
+      "valid": false,
+      "instance": {
+        "auditId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "createdAt": "2026-09-16T12:00:00Z",
+        "eventType": "evaluator.job_queued",
+        "data": {
+          "jobId": "11111111-1111-4111-8111-111111111111",
+          "agentRole": "evaluator",
+          "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "inputVersion": 1,
+          "evaluationConfigId": "EVALUATION_REFERENCE_V1"
+        },
+        "seq": 99,
+        "missionTimeMs": 600000
+      }
+    },
+    {
+      "name": "reject_gameplay_event_in_postgame",
+      "schema": "internal.schema.json#/$defs/PostgameAuditEvent",
+      "valid": false,
+      "instance": {
+        "eventId": "11111111-1111-4111-8111-111111111111",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "seq": 1,
+        "missionTimeMs": 0,
+        "recordedAt": "2026-09-16T12:00:00Z",
+        "actor": {
+          "kind": "human",
+          "actorId": null,
+          "role": null
+        },
+        "requestId": null,
+        "causationEventId": null,
+        "eventType": "action.committed",
+        "data": {
+          "decisionId": "11111111-1111-4111-8111-111111111111",
+          "operationId": "11111111-1111-4111-8111-111111111111",
+          "sceneId": "E1",
+          "actionId": "REFERENCE",
+          "reason": "REFERENCE",
+          "reasonAnnotation": null,
+          "referencedReportIds": [],
+          "basedOnAdviceJobId": null,
+          "cancelledInvestigationIds": []
+        }
+      }
+    }
+  ]
+}

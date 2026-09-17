@@ -1,0 +1,58 @@
+{
+  "generatedAt": "2026-09-16T10:46:45.683518+00:00",
+  "scope": "Design contract/reference validation; not implemented game acceptance",
+  "liveModelCalls": 0,
+  "checks": [
+    {
+      "check": "SQLite constraints and transactions",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "al_requires_settled_work) ... ok\ntest_23_seal_must_activate_session_in_same_transaction (__main__.DatabaseDesignTests.test_23_seal_must_activate_session_in_same_transaction) ... ok\ntest_24_terminal_barrier_and_resource_release (__main__.DatabaseDesignTests.test_24_terminal_barrier_and_resource_release) ... ok\ntest_25_evaluator_requires_own_seal (__main__.DatabaseDesignTests.test_25_evaluator_requires_own_seal) ... ok\ntest_26_event_and_public_cursor_are_separate (__main__.DatabaseDesignTests.test_26_event_and_public_cursor_are_separate) ... ok\ntest_27_command_idempotency_key_is_unique_per_session (__main__.DatabaseDesignTests.test_27_command_idempotency_key_is_unique_per_session) ... ok\ntest_28_late_attempt_diagnostic_cannot_change_seal (__main__.DatabaseDesignTests.test_28_late_attempt_diagnostic_cannot_change_seal) ... ok\ntest_29_display_receipt_requires_visible_record (__main__.DatabaseDesignTests.test_29_display_receipt_requires_visible_record) ... ok\ntest_30_catchup_commit_survives_failed_command (__main__.DatabaseDesignTests.test_30_catchup_commit_survives_failed_command) ... ok\ntest_31_all_task_kinds_share_active_role_slot (__main__.DatabaseDesignTests.test_31_all_task_kinds_share_active_role_slot) ... ok\ntest_32_named_accept_and_complete_investigation (__main__.DatabaseDesignTests.test_32_named_accept_and_complete_investigation) ... ok\ntest_33_named_upload_batch_atomic_and_per_card_events (__main__.DatabaseDesignTests.test_33_named_upload_batch_atomic_and_per_card_events) ... ok\ntest_34_named_template_stale_precondition_has_no_effect (__main__.DatabaseDesignTests.test_34_named_template_stale_precondition_has_no_effect) ... ok\ntest_35_named_wait_preserves_investigation (__main__.DatabaseDesignTests.test_35_named_wait_preserves_investigation) ... ok\ntest_36_named_leave_cancels_without_channel_refund (__main__.DatabaseDesignTests.test_36_named_leave_cancels_without_channel_refund) ... ok\ntest_37_named_seal_settles_two_roles_and_freezes (__main__.DatabaseDesignTests.test_37_named_seal_settles_two_roles_and_freezes) ... ok\ntest_38_named_claim_budget_reserved_before_network (__main__.DatabaseDesignTests.test_38_named_claim_budget_reserved_before_network) ... ok\ntest_39_named_report_request_has_due_time (__main__.DatabaseDesignTests.test_39_named_report_request_has_due_time) ... ok\ntest_40_named_queries_and_reconciliation (__main__.DatabaseDesignTests.test_40_named_queries_and_reconciliation) ... ok\ntest_41_new_launch_can_read_history_not_resume_gameplay (__main__.DatabaseDesignTests.test_41_new_launch_can_read_history_not_resume_gameplay) ... ok\ntest_42_postgame_audit_requires_exact_active_seal (__main__.DatabaseDesignTests.test_42_postgame_audit_requires_exact_active_seal) ... ok\ntest_43_content_version_uuid_mapping_is_required_unique_immutable (__main__.DatabaseDesignTests.test_43_content_version_uuid_mapping_is_required_unique_immutable) ... ok\n\n----------------------------------------------------------------------\nRan 43 tests in 0.222s\n\nOK\n"
+    },
+    {
+      "check": "Authored content and route plans",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "PASS: 218 authored-content checks\n",
+      "stderr": ""
+    },
+    {
+      "check": "OpenAPI and JSON contracts",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "{\n  \"scope\": \"Static schemas, closed shapes, local refs, OpenAPI, request/response/SSE examples only. NOT runtime game/API tests.\",\n  \"results\": [\n    {\n      \"check\": \"schema_closed_and_refs\",\n      \"file\": \"contracts/public.schema.json\",\n      \"passed\": true\n    },\n    {\n      \"check\": \"schema_closed_and_refs\",\n      \"file\": \"contracts/internal.schema.json\",\n      \"passed\": true\n    },\n    {\n      \"check\": \"schema_closed_and_refs\",\n      \"file\": \"agents/contracts.schema.json\",\n      \"passed\": true\n    },\n    {\n      \"check\": \"openapi_spec_validator\",\n      \"version\": \"3.1.1\",\n      \"passed\": true\n    },\n    {\n      \"check\": \"fixture_schema_validity\",\n      \"cases\": 121,\n      \"negative\": 25,\n      \"passed\": true\n    },\n    {\n      \"check\": \"endpoint_auth_idempotency_and_examples\",\n      \"operations\": 23,\n      \"examples\": 186,\n      \"passed\": true\n    }\n  ]\n}\n",
+      "stderr": ""
+    },
+    {
+      "check": "Agent guards and observation rules",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "{\"passed\": 42, \"failed\": 0, \"liveModelCalls\": 0}\n",
+      "stderr": ""
+    },
+    {
+      "check": "Generated TypeScript freshness",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "TS contract types verified\n",
+      "stderr": ""
+    },
+    {
+      "check": "ModelAdapter offline mock",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "{\"mockCall\":\"PASS\",\"nonTLSRemoteRejected\":\"PASS\",\"liveNetworkCalls\":0,\"typescriptStaticTypecheck\":\"NOT_RUN\"}\n",
+      "stderr": "(node:55812) ExperimentalWarning: Transform Types is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+    },
+    {
+      "check": "Strict TypeScript including ModelAdapter",
+      "status": "PASS",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "failed": 0,
+  "notRun": 0
+}

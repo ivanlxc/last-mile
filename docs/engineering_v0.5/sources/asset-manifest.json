@@ -1,0 +1,48 @@
+{
+  "asOf": "2026-09-16",
+  "assetsUnmodified": true,
+  "assets": [
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/CORE_GAMEPLAY.md",
+      "bytes": 25861,
+      "sha256": "c067582a61e54d86cb19e62a7145ef526610d2455bd72e4bc0dd25ab8a476867",
+      "copiedIntoDesignPackage": true
+    },
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/repos/last_mile/LAST_MILE_v2/LAST_MILE_Master.blend",
+      "bytes": 2980305,
+      "sha256": "e6fec36d2466ecbe6e523b94d0731c5c4053a8f7670dfdba52674ddaa7b380ad",
+      "copiedIntoDesignPackage": false
+    },
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/repos/last_mile/LAST_MILE_v2/LAST_MILE_GameMap.glb",
+      "bytes": 13244640,
+      "sha256": "b001731c4f533c4c17149391fedef02dc2edbd869571908b58c038670ebaff70",
+      "copiedIntoDesignPackage": false
+    },
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/repos/last_mile/LAST_MILE_v2/last_mile_map.json",
+      "bytes": 42023,
+      "sha256": "29996bf6892949649d78dc9363dc8b373202e2043cbf0f29374f2408e096e061",
+      "copiedIntoDesignPackage": false
+    },
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/repos/last_mile/LAST_MILE_v2/SERVER_ONLY_events.json",
+      "bytes": 75915,
+      "sha256": "da8e7c198d434c62cdcb9ec6c168d4fb69c588bf79a198b700a02af365558a53",
+      "copiedIntoDesignPackage": false
+    },
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/repos/last_mile/LAST_MILE_v2/LAST_MILE_故事与游戏设计.md",
+      "bytes": 43450,
+      "sha256": "4e570cedfb13408b6abe31619b19c17be662e1e182e03289e461c3ebe21c28f8",
+      "copiedIntoDesignPackage": false
+    },
+    {
+      "sourcePath": "/Users/xingchenliu/Desktop/repos/last_mile/LAST_MILE_v2/比赛对齐与48小时计划.md",
+      "bytes": 7815,
+      "sha256": "1fff70175e8261b007acf9ad741a149ef86e2dd4191bbc7dd1b3aa6170f3ba05",
+      "copiedIntoDesignPackage": false
+    }
+  ]
+}

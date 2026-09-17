@@ -1,0 +1,56 @@
+{
+  "launchId": "090ea2fa-a518-5662-accc-2baf608239e2",
+  "contentHash": "e37d99c4333c3c5de63538fa158e9f30630efe835454ba788b08b79d09fa89bc",
+  "contentVersionId": "be2e8928-68f6-54b7-b7f8-bc657baff6e6",
+  "policyHash": "5525ef8e285da340e0a43232522adca84352269aff9056eed1be0fcfdf1e223a",
+  "sessions": {
+    "s1": {
+      "sessionId": "fdf5e98a-b4b9-5b6a-a517-4bc7c80fc5ae",
+      "runEpoch": "0ffb4b2c-8ad9-5b34-ad83-4e33fc5e8093",
+      "actors": {
+        "commander": "d3119af8-ddce-51b8-878d-68af512bca59",
+        "analyst": "5f1d5341-8b78-578d-8b46-a493f288c42c",
+        "liaison": "f9e7039f-b98e-5dbb-b9d6-c49c96b1fdf1"
+      },
+      "accounts": {
+        "satellite": "364c5d88-0e59-5759-9c9b-653d5d2591b4",
+        "drone": "72320efa-30df-55e3-9f66-25a148328137",
+        "localAgency": "eec4860e-cb6d-5180-9d8e-1785f9a68371",
+        "witness": "3b2621dd-4d12-5609-b247-ee6822689883",
+        "E1:analyst:report": "a075d9af-5abf-5e42-9e9b-7f14e61c7a55",
+        "E1:liaison:report": "b697d769-294b-57cc-b003-0578c1c726fb",
+        "E1:commander:upload": "bc3772f1-1ab0-5e0c-8748-23101c3fe7b8",
+        "E2:analyst:report": "65eebdde-d512-5536-aa37-9a750798ebc7",
+        "E2:liaison:report": "c6c18886-14ed-5e54-8f2a-8fd7afea25a3",
+        "E2:commander:upload": "949df343-de32-5e4b-b615-049d290ea89c",
+        "E3:analyst:report": "a4b80c51-a0a1-52d2-9809-87f515a5824e",
+        "E3:liaison:report": "9688efa1-f863-5c24-9821-9e574482f100",
+        "E3:commander:upload": "98328175-c12f-53cf-8cb6-3f0110fb732e"
+      }
+    },
+    "s2": {
+      "sessionId": "72c25220-5608-57c8-9714-65551afcb181",
+      "runEpoch": "7d4dd566-71a7-55b8-9c3d-197751db43fd",
+      "actors": {
+        "commander": "a40b1852-7d50-567b-82b5-4174c7d0fa3b",
+        "analyst": "a1e0ef32-7135-5d4c-b78c-c3a4451b90a7",
+        "liaison": "f9234d69-ea23-5f1e-844b-542c937fc172"
+      },
+      "accounts": {
+        "satellite": "f64f6c2a-7246-5875-83c2-2c8da60f20fa",
+        "drone": "cdc02118-18ea-56e1-8cb6-afbeb0fb472a",
+        "localAgency": "5c20ee89-b6b6-5cd9-ade4-3c40bdfd040b",
+        "witness": "190d0850-1cfc-5739-b43f-cfd77d20012b",
+        "E1:analyst:report": "5ea7bfc5-7a7d-5411-9bc6-d70691325c06",
+        "E1:liaison:report": "5a02efad-6416-5147-b546-661942144fdc",
+        "E1:commander:upload": "e16462af-c037-5a36-bad8-0b434e06a592",
+        "E2:analyst:report": "d5add7c4-6d5e-5bd7-85dc-95f2938f060e",
+        "E2:liaison:report": "aa069b77-59ad-5ad6-8a31-4089481ddc4a",
+        "E2:commander:upload": "36ab67e7-58a7-528a-acda-0e4f46c6f8a5",
+        "E3:analyst:report": "b467b100-1e0f-5029-afd2-44fed687cc9c",
+        "E3:liaison:report": "d574afa6-c557-51ca-8e72-64c497be32dc",
+        "E3:commander:upload": "ca60dd88-b4ee-5f7e-86a4-e310e3f4b1b3"
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:last-mile:public-actions:0.5",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "actions",
+    "waitDurationsMs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sceneId",
+          "actionId",
+          "label",
+          "knownRouteIds",
+          "knownDurationMs",
+          "uncertainty",
+          "knownRisk"
+        ],
+        "properties": {
+          "sceneId": {
+            "enum": [
+              "E1",
+              "E2",
+              "E3"
+            ]
+          },
+          "actionId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "knownRouteIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "knownDurationMs": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "uncertainty": {
+            "const": "possible_delay"
+          },
+          "knownRisk": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "waitDurationsMs": {
+      "type": "array",
+      "items": {
+        "enum": [
+          15000,
+          30000,
+          60000
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true
+    }
+  }
+}

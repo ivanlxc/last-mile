@@ -1,0 +1,45 @@
+{
+  "rubricVersion": "observable-rubric-0.5-review",
+  "status": "unvalidated_game_observation_rules",
+  "contextCap": "one_support_per_dimension_per_scene",
+  "globalExclusions": ["controllerKind != human", "technicalIssue == true", "coverageComplete != true"],
+  "rules": [
+    {
+      "dimension": "complacency", "ruleId": "CHECK-01",
+      "eligible": "route_decision AND adviceShownBefore AND adviceHasAction AND recommendationLegal AND visibleGapPresent AND availableRelevantCheckCount > 0 AND checkKnownAffordable",
+      "support": "chosenMatchesAdvice AND reasonCodes contains ai_said_so AND NOT accepted_uncertainty_for_time",
+      "counterevidence": "reasonCodes contains accepted_uncertainty_for_time OR usedEvidenceInReason",
+      "exclusions": ["unobservedCommunication", "reasonCodes contains no_reason"],
+      "description": "已呈现缺口、存在可承担检查时，记录到直接采纳并以AI说了算作为显式理由。不是仅按无调查判盲信。"
+    },
+    {
+      "dimension": "distrust", "ruleId": "REJECT-01",
+      "eligible": "route_decision AND adviceShownBefore AND adviceHasAction AND recommendationLegal AND adequateVisibleAdviceSupport",
+      "support": "NOT chosenMatchesAdvice AND reasonCodes contains prior_ai_error_only AND NOT visibleCurrentCounterEvidence",
+      "counterevidence": "visibleCurrentCounterEvidence OR reasonCodes contains accepted_uncertainty_for_time OR reasonCodes contains evidence_supported",
+      "exclusions": ["unobservedCommunication", "reasonCodes contains no_reason"],
+      "description": "当前支持依据已实际显示而拒绝理由仅记录过去错误；当前矛盾、预算取舍或未知沟通排除归责。"
+    },
+    {
+      "dimension": "overCaution", "ruleId": "CHECK-COST-01",
+      "eligible": "investigation_request_or_wait AND costDisplayed AND checkKnownAffordable AND checkLowValueByPublicRule",
+      "support": "reasonCodes contains no_new_question",
+      "counterevidence": "reasonCodes contains new_question OR checkRefreshesExpiredEvidence",
+      "exclusions": ["unobservedCommunication", "checkRefreshesExpiredEvidence", "reasonCodes contains no_reason"],
+      "description": "只在公开判定表证明本次已知问题已被新鲜记录回答或渠道无法回答时观察；耗时多、阅读慢本身不算。"
+    },
+    {
+      "dimension": "calibratedTrust", "ruleId": "CALIBRATE-01",
+      "eligible": "route_decision AND usedEvidenceInReason AND acknowledgedLimitation AND comparedKnownCosts",
+      "support": "reasonCodes contains evidence_supported OR reasonCodes contains accepted_uncertainty_for_time",
+      "counterevidence": "reasonCodes contains ai_said_so OR reasonCodes contains prior_ai_error_only",
+      "exclusions": ["reasonCodes contains no_reason"],
+      "description": "引用当时已看见资料、承认限制并比较已知成本；不要求选择与AI相同或按特定关卡答案行动。"
+    }
+  ],
+  "publicValueRules": [
+    {"id":"PV-01","when":"request.questionKey equals priorReport.answeredQuestionKey; priorReport was displayed and remains fresh; no new visible contradiction or changed scope; requested observationTimeWindow equals prior report window","result":"low_value","notWhen":"refresh requested or observation target/time changed"},
+    {"id":"PV-02","when":"requested.questionKey is explicitly listed in the displayed channelCapability.cannotConfirmKeys","result":"cannot_resolve_this_question","notWhen":"the user also declared a different question this channel can resolve"},
+    {"id":"PV-03","when":"no public rule matches, provenance independence unknown, question unspecified, or TTL/target uncertain","result":"unknown","effect":"checkLowValueByPublicRule=false; never infer from hidden truth or eventual result"}
+  ]
+}

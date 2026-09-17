@@ -1,0 +1,26 @@
+{
+  "scope": "Derived TypeScript consistency and strict noEmit compile; no implementation/runtime test.",
+  "compiler": "Version 5.8.3",
+  "coveredSourceFiles": [
+    "contracts/agent-derived.types.ts",
+    "contracts/content-derived.types.ts",
+    "contracts/public.types.ts",
+    "contracts/internal.types.ts",
+    "agents/modelAdapter.ts",
+    "contracts/ports.ts"
+  ],
+  "checks": [
+    {
+      "name": "schema_derived_types_current",
+      "passed": true
+    },
+    {
+      "name": "shared_ports_strict_compile",
+      "passed": true
+    },
+    {
+      "name": "canonical_model_adapter_strict_compile",
+      "passed": true
+    }
+  ]
+}

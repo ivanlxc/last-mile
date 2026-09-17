@@ -1,0 +1,16 @@
+{
+  "provider": "mock",
+  "endpoint": null,
+  "advisorModel": "CONFIGURE_BEFORE_LIVE_RUN",
+  "evaluatorModel": "CONFIGURE_BEFORE_LIVE_RUN",
+  "apiKeyEnvName": "LAST_MILE_MODEL_API_KEY",
+  "promptVersion": "0.5",
+  "schemaVersion": "0.5",
+  "locale": "zh-CN",
+  "advisorTimeoutMs": 8000,
+  "evaluatorTimeoutMs": 20000,
+  "advisorMaxOutputTokens": 1200,
+  "evaluatorMaxOutputTokens": 3000,
+  "supportsIdempotency": false,
+  "configurationId": "SINGLE_PLAYER_REFERENCE_REVIEW_ONLY"
+}

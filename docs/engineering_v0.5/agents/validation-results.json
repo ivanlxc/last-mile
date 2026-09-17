@@ -1,0 +1,180 @@
+{
+  "suite": "agent-contract-and-rule-reference",
+  "checks": [
+    {
+      "name": "metaschema_contracts.schema.json",
+      "status": "PASS"
+    },
+    {
+      "name": "metaschema_tools.schema.json",
+      "status": "PASS"
+    },
+    {
+      "name": "valid_advisor-input",
+      "status": "PASS"
+    },
+    {
+      "name": "valid_advisor-output",
+      "status": "PASS"
+    },
+    {
+      "name": "valid_evaluator-input",
+      "status": "PASS"
+    },
+    {
+      "name": "valid_evaluator-output",
+      "status": "PASS"
+    },
+    {
+      "name": "advice_context_guards",
+      "status": "PASS"
+    },
+    {
+      "name": "evaluation_context_guards",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_private_time_in_advisor",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_root_source_leak",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_invented_evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_future_fact",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_later_context_evidence",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_future_advice",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_npc_subject",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_invented_opportunity",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_wrong_seal",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_support_without_context",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_truth_to_evaluator",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_unapproved_confidence_number",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_evidence_claim_cannot_cite_statement",
+      "status": "PASS"
+    },
+    {
+      "name": "reject_unknown_claim_reference",
+      "status": "PASS"
+    },
+    {
+      "name": "advisor_fallback_schema",
+      "status": "PASS"
+    },
+    {
+      "name": "evaluator_fallback_schema",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_explicit_reliance_with_affordable_check",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_npc_is_not_player",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_no_display_receipt",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_time_tradeoff",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_unknown_oral_knowledge",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_current_counterevidence",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_prior_error_only",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_refresh_is_not_overcaution",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_declared_redundant_check",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_evidence_and_limits",
+      "status": "PASS"
+    },
+    {
+      "name": "same_scene_clicks_not_repetition",
+      "status": "PASS"
+    },
+    {
+      "name": "context_hash_and_immutable_copy",
+      "status": "PASS"
+    },
+    {
+      "name": "malicious_statement_stays_unverified_data",
+      "status": "PASS"
+    },
+    {
+      "name": "provenance_requires_uploaded_finding_type",
+      "status": "PASS"
+    },
+    {
+      "name": "fact_catalog_matches_visible_content",
+      "status": "PASS"
+    },
+    {
+      "name": "readonly_tools_permission_and_contract",
+      "status": "PASS"
+    },
+    {
+      "name": "job_retry_success_stale_and_session_budgets",
+      "status": "PASS"
+    },
+    {
+      "name": "success_requires_role_specific_result",
+      "status": "PASS"
+    }
+  ],
+  "passed": 42,
+  "failed": 0,
+  "liveModelCalls": 0,
+  "notTested": [
+    "Natural-language factual accuracy, prompt-injection robustness and psychological validity require separate empirical evaluation.",
+    "No running API/worker/game or provider integration is implemented by these reference checks."
+  ]
+}

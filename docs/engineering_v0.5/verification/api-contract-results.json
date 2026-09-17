@@ -1,0 +1,37 @@
+{
+  "scope": "Static schemas, closed shapes, local refs, OpenAPI, request/response/SSE examples only. NOT runtime game/API tests.",
+  "results": [
+    {
+      "check": "schema_closed_and_refs",
+      "file": "contracts/public.schema.json",
+      "passed": true
+    },
+    {
+      "check": "schema_closed_and_refs",
+      "file": "contracts/internal.schema.json",
+      "passed": true
+    },
+    {
+      "check": "schema_closed_and_refs",
+      "file": "agents/contracts.schema.json",
+      "passed": true
+    },
+    {
+      "check": "openapi_spec_validator",
+      "version": "3.1.1",
+      "passed": true
+    },
+    {
+      "check": "fixture_schema_validity",
+      "cases": 121,
+      "negative": 25,
+      "passed": true
+    },
+    {
+      "check": "endpoint_auth_idempotency_and_examples",
+      "operations": 23,
+      "examples": 186,
+      "passed": true
+    }
+  ]
+}

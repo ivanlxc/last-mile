@@ -1,0 +1,13 @@
+node_modules
+dist
+assets/authoring
+archive
+.local-artifacts
+docs/releases
+docs/repository-audit
+docs/engineering_v0.5
+docs/*.md
+.last-mile
+test-results
+client/public
+pnpm-lock.yaml

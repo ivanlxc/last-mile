@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "readUploadedEvidenceInput": {
+      "type": "object",
+      "properties": {
+        "evidenceRef": {
+          "$ref": "contracts.schema.json#/$defs/EvidenceRef"
+        }
+      },
+      "required": [
+        "evidenceRef"
+      ],
+      "additionalProperties": false
+    },
+    "readUploadedEvidenceOutput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "value": {
+              "$ref": "contracts.schema.json#/$defs/Evidence"
+            }
+          },
+          "required": [
+            "ok",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": false
+            },
+            "code": {
+              "enum": [
+                "REFERENCE_NOT_AUTHORIZED",
+                "STALE_JOB",
+                "TOOL_BUDGET_EXHAUSTED"
+              ]
+            }
+          },
+          "required": [
+            "ok",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "readBackgroundRecordInput": {
+      "type": "object",
+      "properties": {
+        "backgroundId": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "backgroundId",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "readBackgroundRecordOutput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "value": {
+              "$ref": "contracts.schema.json#/$defs/Background"
+            }
+          },
+          "required": [
+            "ok",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": false
+            },
+            "code": {
+              "enum": [
+                "REFERENCE_NOT_AUTHORIZED",
+                "STALE_JOB",
+                "TOOL_BUDGET_EXHAUSTED"
+              ]
+            }
+          },
+          "required": [
+            "ok",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "listPublicActionsInput": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "listPublicActionsOutput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "contracts.schema.json#/$defs/PublicAction"
+              },
+              "minItems": 1,
+              "maxItems": 12
+            }
+          },
+          "required": [
+            "ok",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": false
+            },
+            "code": {
+              "enum": [
+                "REFERENCE_NOT_AUTHORIZED",
+                "STALE_JOB",
+                "TOOL_BUDGET_EXHAUSTED"
+              ]
+            }
+          },
+          "required": [
+            "ok",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "listChannelCapabilitiesInput": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "listChannelCapabilitiesOutput": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "contracts.schema.json#/$defs/ChannelCapability"
+              },
+              "minItems": 1,
+              "maxItems": 4
+            }
+          },
+          "required": [
+            "ok",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ok": {
+              "const": false
+            },
+            "code": {
+              "enum": [
+                "REFERENCE_NOT_AUTHORIZED",
+                "STALE_JOB",
+                "TOOL_BUDGET_EXHAUSTED"
+              ]
+            }
+          },
+          "required": [
+            "ok",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

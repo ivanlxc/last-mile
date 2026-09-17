@@ -1,0 +1,329 @@
+{
+  "date": "2026-09-16",
+  "scope": "Local real-model smoke and deterministic regression; not a full browser campaign or SLA",
+  "model": "gpt-5.6-luna",
+  "provider": "openai",
+  "finalProfile": {
+    "reasoningEffort": "low",
+    "advisorTimeoutMs": 30000,
+    "evaluatorTimeoutMs": 45000,
+    "advisorMaxOutputTokens": 2500,
+    "evaluatorMaxOutputTokens": 5000
+  },
+  "totalGenerationSends": 15,
+  "finalProfileSuccessfulSends": 6,
+  "knownLimitations": [
+    "Some early runs predated language guard; 03 English protocol pass was Chinese prose and is not accepted English verification.",
+    "05 failure reason was generic MODEL_INVALID_OUTPUT; discarded output was not retained.",
+    "Two timed out requests have no returned usage and may still be billable.",
+    "Runtime test uses internal clock and synthetic display receipts; not browser UI or full campaign."
+  ],
+  "runs": [
+    {
+      "run": "01-baseline-en.json",
+      "liveCalls": 2,
+      "locale": "en-US",
+      "reasoningEffort": null,
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": false,
+          "mode": "offline_template",
+          "elapsedMs": 8023,
+          "attempts": [
+            {
+              "status": "timeout",
+              "errorCode": "MODEL_TIMEOUT",
+              "inputTokens": null,
+              "outputTokens": null
+            }
+          ]
+        },
+        {
+          "role": "evaluator",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 12456,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 4946,
+              "outputTokens": 1462
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "02-tuned-en.json",
+      "liveCalls": 2,
+      "locale": "en-US",
+      "reasoningEffort": null,
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": false,
+          "mode": "offline_template",
+          "elapsedMs": 15019,
+          "attempts": [
+            {
+              "status": "timeout",
+              "errorCode": "MODEL_TIMEOUT",
+              "inputTokens": null,
+              "outputTokens": null
+            }
+          ]
+        },
+        {
+          "role": "evaluator",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 11828,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 4946,
+              "outputTokens": 1331
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "03-advisor-none-en.json",
+      "liveCalls": 1,
+      "locale": "en-US",
+      "reasoningEffort": "none",
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 9678,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 2235,
+              "outputTokens": 771
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "04-tuned-zh.json",
+      "liveCalls": 2,
+      "locale": "zh-CN",
+      "reasoningEffort": "none",
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 7775,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 2238,
+              "outputTokens": 686
+            }
+          ]
+        },
+        {
+          "role": "evaluator",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 25104,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 4949,
+              "outputTokens": 1382
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "05-language-en.json",
+      "liveCalls": 2,
+      "locale": "en-US",
+      "reasoningEffort": "none",
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": false,
+          "mode": "offline_template",
+          "elapsedMs": 19118,
+          "attempts": [
+            {
+              "status": "failed",
+              "errorCode": "MODEL_INVALID_OUTPUT",
+              "inputTokens": 2281,
+              "outputTokens": 681
+            },
+            {
+              "status": "failed",
+              "errorCode": "MODEL_INVALID_OUTPUT",
+              "inputTokens": 2339,
+              "outputTokens": 656
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "06-diagnostic-low-en.json",
+      "liveCalls": 1,
+      "locale": "en-US",
+      "reasoningEffort": "low",
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 7794,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 2281,
+              "outputTokens": 738
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "run": "07-final-zh.json",
+      "liveCalls": 2,
+      "locale": "zh-CN",
+      "reasoningEffort": "low",
+      "jobs": [
+        {
+          "role": "advisor",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 7085,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 2284,
+              "outputTokens": 840
+            }
+          ]
+        },
+        {
+          "role": "evaluator",
+          "passedAutomatedGuards": true,
+          "mode": "live_model",
+          "elapsedMs": 13166,
+          "attempts": [
+            {
+              "status": "succeeded",
+              "errorCode": null,
+              "inputTokens": 4995,
+              "outputTokens": 1411
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "runtimeSmoke": {
+    "testKind": "live_domain_smoke",
+    "status": "passed",
+    "stage": "completed",
+    "failureCode": null,
+    "elapsedMs": 26239,
+    "sendCount": 3,
+    "networkSendCount": 3,
+    "hardSendLimit": 6,
+    "blockedSends": 0,
+    "jobs": [
+      {
+        "role": "advisor",
+        "status": "succeeded",
+        "mode": "live_model",
+        "elapsedMs": 7727,
+        "outputPresent": true,
+        "attempts": [
+          {
+            "status": "succeeded",
+            "usage": {
+              "inputTokens": 2771,
+              "outputTokens": 758
+            }
+          }
+        ]
+      },
+      {
+        "role": "advisor",
+        "status": "succeeded",
+        "mode": "live_model",
+        "elapsedMs": 7733,
+        "outputPresent": true,
+        "attempts": [
+          {
+            "status": "succeeded",
+            "usage": {
+              "inputTokens": 2900,
+              "outputTokens": 856
+            }
+          }
+        ]
+      },
+      {
+        "role": "evaluator",
+        "status": "succeeded",
+        "mode": "live_model",
+        "elapsedMs": 10684,
+        "outputPresent": true,
+        "attempts": [
+          {
+            "status": "succeeded",
+            "usage": {
+              "inputTokens": 5527,
+              "outputTokens": 988
+            }
+          }
+        ]
+      }
+    ],
+    "boundaries": {
+      "database": "isolated :memory: SQLite; no player saves accessed; committed ledger checked before close",
+      "clock": "injected internal clock; exactly 31000ms mission time; NOT a real-time player test",
+      "receipts": "synthetic fixtures; NOT proof of actual screen visibility or player reading",
+      "coverage": "English E1 domain lifecycle, uploaded evidence, real-provider jobs in live mode, immutable seal and evaluation",
+      "excluded": "browser UI, HTTP/SSE, full three-scene campaign, genuine participant behavior, paid cost verification",
+      "selfTestMeaning": "mock transport can produce live_model job labels; self-test is NEVER evidence of a real model call"
+    }
+  },
+  "regression": {
+    "testFiles": 13,
+    "testsPassed": 192,
+    "testsFailed": 0,
+    "productionBuild": "passed",
+    "additionalRealModelCalls": 0
+  },
+  "productionChecks": {
+    "homeHttp": 200,
+    "health": {
+      "status": "ok",
+      "modelConfigured": true,
+      "storageReady": true
+    },
+    "activeSessionsBeforeRestart": 0
+  },
+  "gitExclusionsVerified": [
+    ".env",
+    ".local-artifacts/ai-live/07-final-zh.json",
+    ".last-mile/game.sqlite"
+  ]
+}

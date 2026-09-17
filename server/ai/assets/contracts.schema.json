@@ -1,0 +1,1712 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LAST MILE Agent contracts 0.5 review reference",
+  "$comment": "Runtime contextual guards are required in addition to JSON Schema. No hidden world content or commander private state is accepted by AdvisorInput.",
+  "$defs": {
+    "EvidenceRef": {
+      "type": "object",
+      "properties": {
+        "instanceId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      },
+      "required": ["instanceId", "revision"],
+      "additionalProperties": false
+    },
+    "Citation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": ["evidence", "background", "statement"]
+        },
+        "refId": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        }
+      },
+      "required": ["kind", "refId", "revision"],
+      "additionalProperties": false
+    },
+    "KnownSourceEdge": {
+      "type": "object",
+      "properties": {
+        "fromRef": {
+          "$ref": "#/$defs/EvidenceRef"
+        },
+        "toRef": {
+          "$ref": "#/$defs/EvidenceRef"
+        },
+        "relation": {
+          "enum": ["reported_from", "same_source_confirmed", "possibly_related"]
+        },
+        "findingRef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EvidenceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": ["fromRef", "toRef", "relation", "findingRef"],
+      "additionalProperties": false
+    },
+    "Evidence": {
+      "type": "object",
+      "properties": {
+        "instanceId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "sceneId": {
+          "enum": ["E1", "E2", "E3"]
+        },
+        "observationType": {
+          "enum": [
+            "direct_observation",
+            "official_statement",
+            "witness_statement",
+            "provenance_finding",
+            "correction",
+            "historical_image"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2200,
+          "minLength": 1
+        },
+        "sourceLabel": {
+          "type": "string",
+          "maxLength": 160,
+          "minLength": 1
+        },
+        "observationAgeMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31536000000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "enum": ["current", "historical", "superseded", "unknown"]
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "knownSourceEdges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnownSourceEdge"
+          },
+          "minItems": 0,
+          "maxItems": 12
+        }
+      },
+      "required": [
+        "instanceId",
+        "revision",
+        "sceneId",
+        "observationType",
+        "text",
+        "sourceLabel",
+        "observationAgeMs",
+        "freshness",
+        "scope",
+        "limitations",
+        "knownSourceEdges"
+      ],
+      "additionalProperties": false
+    },
+    "Background": {
+      "type": "object",
+      "properties": {
+        "backgroundId": {
+          "type": "string",
+          "maxLength": 100,
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "fictional": {
+          "const": true
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1600,
+          "minLength": 1
+        },
+        "sourceLabel": {
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "period": {
+          "type": "string",
+          "maxLength": 160,
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string",
+          "maxLength": 400,
+          "minLength": 1
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "backgroundId",
+        "revision",
+        "fictional",
+        "text",
+        "sourceLabel",
+        "period",
+        "scope",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "PlayerStatement": {
+      "type": "object",
+      "properties": {
+        "statementId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "revision": {
+          "const": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1600,
+          "minLength": 1
+        },
+        "verification": {
+          "const": "unverified"
+        }
+      },
+      "required": ["statementId", "revision", "text", "verification"],
+      "additionalProperties": false
+    },
+    "PublicAction": {
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "maxLength": 80,
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 160,
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 600,
+          "minLength": 1
+        },
+        "knownDurationMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "durationQualifier": {
+          "enum": ["base_only", "range_unknown", "fixed"]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "actionId",
+        "label",
+        "description",
+        "knownDurationMs",
+        "durationQualifier",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "ChannelCapability": {
+      "type": "object",
+      "properties": {
+        "channel": {
+          "enum": ["satellite", "drone", "localAgency", "witness"]
+        },
+        "publicTargetIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "canObserve": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 8
+        },
+        "cannotConfirm": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": ["channel", "publicTargetIds", "canObserve", "cannotConfirm"],
+      "additionalProperties": false
+    },
+    "Question": {
+      "type": "object",
+      "properties": {
+        "questionId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "kind": {
+          "enum": [
+            "automatic",
+            "why",
+            "compare",
+            "uncertainties",
+            "next_check",
+            "free_text"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1600
+        },
+        "selectedEvidenceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        }
+      },
+      "required": ["questionId", "kind", "text", "selectedEvidenceRefs"],
+      "additionalProperties": false
+    },
+    "AdvisorInput": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.5"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "enum": ["E1", "E2", "E3"]
+        },
+        "inputHash": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "contextVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "publicTask": {
+          "type": "object",
+          "properties": {
+            "objective": {
+              "type": "string",
+              "maxLength": 600,
+              "minLength": 1
+            },
+            "currentNodeId": {
+              "type": "string",
+              "maxLength": 20,
+              "minLength": 1
+            },
+            "actions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PublicAction"
+              },
+              "minItems": 1,
+              "maxItems": 12
+            },
+            "channelCapabilities": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ChannelCapability"
+              },
+              "minItems": 1,
+              "maxItems": 4
+            }
+          },
+          "required": [
+            "objective",
+            "currentNodeId",
+            "actions",
+            "channelCapabilities"
+          ],
+          "additionalProperties": false
+        },
+        "backgrounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Background"
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "statements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlayerStatement"
+          },
+          "minItems": 0,
+          "maxItems": 12
+        },
+        "question": {
+          "$ref": "#/$defs/Question"
+        },
+        "priorAnalysis": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "summary": {
+                  "type": "string",
+                  "maxLength": 800
+                },
+                "citations": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Citation"
+                  },
+                  "minItems": 0,
+                  "maxItems": 16,
+                  "uniqueItems": true
+                }
+              },
+              "required": ["summary", "citations"],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "sessionId",
+        "sceneId",
+        "inputHash",
+        "contextVersion",
+        "publicTask",
+        "backgrounds",
+        "evidence",
+        "statements",
+        "question",
+        "priorAnalysis"
+      ],
+      "additionalProperties": false
+    },
+    "Claim": {
+      "type": "object",
+      "properties": {
+        "claimId": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^claim-[1-9][0-9]{0,2}$"
+        },
+        "kind": {
+          "enum": [
+            "evidenceObservation",
+            "backgroundRecord",
+            "playerStatement",
+            "inference"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 700,
+          "minLength": 1
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        }
+      },
+      "required": ["claimId", "kind", "text", "citations"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "evidenceObservation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "const": "evidence"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "backgroundRecord"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "const": "background"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "playerStatement"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "citations": {
+                "minItems": 1,
+                "items": {
+                  "properties": {
+                    "kind": {
+                      "const": "statement"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Recommendation": {
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 80,
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "maxLength": 900,
+          "minLength": 1
+        },
+        "claimRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40,
+            "pattern": "^claim-[1-9][0-9]{0,2}$"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": ["actionId", "rationale", "claimRefs", "conditions"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "actionId": {
+                "type": "string"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "claimRefs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AdvisorOutput": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "inputHash": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 1000,
+          "minLength": 1
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Claim"
+          },
+          "minItems": 0,
+          "maxItems": 16
+        },
+        "recommendation": {
+          "$ref": "#/$defs/Recommendation"
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 400,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "investigationSuggestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "channel": {
+                "enum": ["satellite", "drone", "localAgency", "witness"]
+              },
+              "publicTargetId": {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              "questionToResolve": {
+                "type": "string",
+                "maxLength": 400,
+                "minLength": 1
+              },
+              "claimRefs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 40,
+                  "pattern": "^claim-[1-9][0-9]{0,2}$"
+                },
+                "minItems": 0,
+                "maxItems": 16,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "channel",
+              "publicTargetId",
+              "questionToResolve",
+              "claimRefs"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 2
+        },
+        "changeSummary": {
+          "type": "string",
+          "maxLength": 600
+        }
+      },
+      "required": [
+        "sessionId",
+        "inputHash",
+        "summary",
+        "claims",
+        "recommendation",
+        "uncertainties",
+        "investigationSuggestions",
+        "changeSummary"
+      ],
+      "additionalProperties": false
+    },
+    "BehaviorFact": {
+      "type": "object",
+      "properties": {
+        "factId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "contextId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "ruleId": {
+          "type": "string",
+          "maxLength": 80,
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "observation",
+            "opportunity",
+            "support",
+            "counterevidence",
+            "exclusion",
+            "coverage"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 700,
+          "minLength": 1
+        },
+        "sourceEventIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "availableAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "cutoffMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      },
+      "required": [
+        "factId",
+        "contextId",
+        "ruleId",
+        "kind",
+        "text",
+        "sourceEventIds",
+        "evidenceRefs",
+        "availableAtMissionMs",
+        "cutoffMissionMs"
+      ],
+      "additionalProperties": false
+    },
+    "BehaviorContext": {
+      "type": "object",
+      "properties": {
+        "contextId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "enum": ["E1", "E2", "E3"]
+        },
+        "subjectBindingId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "controllerKind": {
+          "const": "human"
+        },
+        "kind": {
+          "enum": ["route_decision", "investigation_request", "wait"]
+        },
+        "cutoffMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "factRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 48,
+          "uniqueItems": true
+        },
+        "playerVisibleRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "advisorUploadedRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EvidenceRef"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "displayedAdviceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "displayedAdviceAtMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "chosenActionId": {
+          "type": "string",
+          "maxLength": 80,
+          "minLength": 1
+        },
+        "legalActionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "visibleCostSummary": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "reasonCodes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "evidence_supported",
+              "current_conflict",
+              "accepted_uncertainty_for_time",
+              "ai_said_so",
+              "prior_ai_error_only",
+              "new_question",
+              "no_new_question",
+              "no_reason"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "reasonText": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "oralKnowledgeStatus": {
+          "enum": ["not_collected", "self_reported", "not_applicable"]
+        },
+        "technicalLimitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "minItems": 0,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "contextId",
+        "sceneId",
+        "subjectBindingId",
+        "controllerKind",
+        "kind",
+        "cutoffMissionMs",
+        "factRefs",
+        "playerVisibleRefs",
+        "advisorUploadedRefs",
+        "displayedAdviceId",
+        "displayedAdviceAtMs",
+        "chosenActionId",
+        "legalActionIds",
+        "visibleCostSummary",
+        "reasonCodes",
+        "reasonText",
+        "oralKnowledgeStatus",
+        "technicalLimitations"
+      ],
+      "additionalProperties": false
+    },
+    "DimensionBound": {
+      "type": "object",
+      "properties": {
+        "eligibleOpportunities": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "eligibleContextRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "supportCandidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "contextId": {
+                "type": "string",
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "factRefs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                "minItems": 1,
+                "maxItems": 16,
+                "uniqueItems": true
+              }
+            },
+            "required": ["contextId", "factRefs"],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "counterevidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "exclusionRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "allowedSupportLevels": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "not_assessable",
+              "not_observed",
+              "observed_once",
+              "repeated_observation"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "eligibleOpportunities",
+        "eligibleContextRefs",
+        "supportCandidates",
+        "counterevidenceRefs",
+        "exclusionRefs",
+        "allowedSupportLevels"
+      ],
+      "additionalProperties": false
+    },
+    "EvaluatorInput": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "const": "0.5"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rubricVersion": {
+          "const": "observable-rubric-0.5-review"
+        },
+        "subjectBindingId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BehaviorContext"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BehaviorFact"
+          },
+          "minItems": 0,
+          "maxItems": 768
+        },
+        "bounds": {
+          "type": "object",
+          "properties": {
+            "complacency": {
+              "$ref": "#/$defs/DimensionBound"
+            },
+            "distrust": {
+              "$ref": "#/$defs/DimensionBound"
+            },
+            "overCaution": {
+              "$ref": "#/$defs/DimensionBound"
+            },
+            "calibratedTrust": {
+              "$ref": "#/$defs/DimensionBound"
+            }
+          },
+          "required": [
+            "complacency",
+            "distrust",
+            "overCaution",
+            "calibratedTrust"
+          ],
+          "additionalProperties": false
+        },
+        "allowedOverallPatterns": {
+          "type": "array",
+          "items": {
+            "enum": ["mixed", "limited_pattern", "insufficient_evidence"]
+          },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "coverage": {
+          "type": "object",
+          "properties": {
+            "scenesObserved": {
+              "type": "array",
+              "items": {
+                "enum": ["E1", "E2", "E3"]
+              },
+              "minItems": 0,
+              "maxItems": 3,
+              "uniqueItems": true
+            },
+            "terminalKind": {
+              "enum": [
+                "normal_end",
+                "abandoned",
+                "technical_interruption",
+                "demo"
+              ]
+            },
+            "limitations": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              "minItems": 1,
+              "maxItems": 12
+            }
+          },
+          "required": ["scenesObserved", "terminalKind", "limitations"],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "sessionId",
+        "sealedHash",
+        "rubricVersion",
+        "subjectBindingId",
+        "contexts",
+        "facts",
+        "bounds",
+        "allowedOverallPatterns",
+        "coverage"
+      ],
+      "additionalProperties": false
+    },
+    "DimensionResult": {
+      "type": "object",
+      "properties": {
+        "supportLevel": {
+          "enum": [
+            "not_assessable",
+            "not_observed",
+            "observed_once",
+            "repeated_observation"
+          ]
+        },
+        "eligibleOpportunities": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64
+        },
+        "supportContextRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "supportFactRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "counterevidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "explanation": {
+          "type": "string",
+          "maxLength": 900,
+          "minLength": 1
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 8
+        }
+      },
+      "required": [
+        "supportLevel",
+        "eligibleOpportunities",
+        "supportContextRefs",
+        "supportFactRefs",
+        "counterevidenceRefs",
+        "explanation",
+        "uncertainties"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "supportLevel": {
+                "const": "not_assessable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "eligibleOpportunities": {
+                "const": 0
+              },
+              "supportContextRefs": {
+                "maxItems": 0
+              },
+              "supportFactRefs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportLevel": {
+                "const": "not_observed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "eligibleOpportunities": {
+                "minimum": 1
+              },
+              "supportContextRefs": {
+                "maxItems": 0
+              },
+              "supportFactRefs": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportLevel": {
+                "const": "observed_once"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "eligibleOpportunities": {
+                "minimum": 1
+              },
+              "supportContextRefs": {
+                "minItems": 1,
+                "maxItems": 1
+              },
+              "supportFactRefs": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportLevel": {
+                "const": "repeated_observation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "eligibleOpportunities": {
+                "minimum": 2
+              },
+              "supportContextRefs": {
+                "minItems": 2
+              },
+              "supportFactRefs": {
+                "minItems": 2
+              }
+            }
+          }
+        }
+      ]
+    },
+    "EvaluatorOutput": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rubricVersion": {
+          "const": "observable-rubric-0.5-review"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 1200,
+          "minLength": 1
+        },
+        "overallPattern": {
+          "enum": ["mixed", "limited_pattern", "insufficient_evidence"]
+        },
+        "dimensions": {
+          "type": "object",
+          "properties": {
+            "complacency": {
+              "$ref": "#/$defs/DimensionResult"
+            },
+            "distrust": {
+              "$ref": "#/$defs/DimensionResult"
+            },
+            "overCaution": {
+              "$ref": "#/$defs/DimensionResult"
+            },
+            "calibratedTrust": {
+              "$ref": "#/$defs/DimensionResult"
+            }
+          },
+          "required": [
+            "complacency",
+            "distrust",
+            "overCaution",
+            "calibratedTrust"
+          ],
+          "additionalProperties": false
+        },
+        "keyMoments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "contextId": {
+                "type": "string",
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "factRefs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                "minItems": 1,
+                "maxItems": 16,
+                "uniqueItems": true
+              },
+              "explanation": {
+                "type": "string",
+                "maxLength": 800,
+                "minLength": 1
+              }
+            },
+            "required": ["contextId", "factRefs", "explanation"],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 8
+        },
+        "nextAttempts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "suggestion": {
+                "type": "string",
+                "maxLength": 600,
+                "minLength": 1
+              },
+              "basisRefs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                "minItems": 1,
+                "maxItems": 16,
+                "uniqueItems": true
+              }
+            },
+            "required": ["suggestion", "basisRefs"],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 3
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 400,
+            "minLength": 1
+          },
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "required": [
+        "sessionId",
+        "sealedHash",
+        "rubricVersion",
+        "summary",
+        "overallPattern",
+        "dimensions",
+        "keyMoments",
+        "nextAttempts",
+        "limitations"
+      ],
+      "additionalProperties": false
+    },
+    "AgentJobView": {
+      "type": "object",
+      "properties": {
+        "jobId": {
+          "type": "string",
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "agentRole": {
+          "enum": ["advisor", "evaluator"]
+        },
+        "status": {
+          "enum": [
+            "queued",
+            "running",
+            "succeeded",
+            "fallback",
+            "failed",
+            "superseded",
+            "cancelled"
+          ]
+        },
+        "mode": {
+          "enum": ["live_model", "offline_template"]
+        },
+        "inputVersion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "attemptCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AdvisorOutput"
+            },
+            {
+              "$ref": "#/$defs/EvaluatorOutput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "enum": [
+                    "AGENT_INPUT_INVALID",
+                    "AGENT_INPUT_TOO_LARGE",
+                    "MODEL_NOT_CONFIGURED",
+                    "MODEL_TIMEOUT",
+                    "MODEL_TRANSPORT",
+                    "MODEL_RATE_LIMIT",
+                    "MODEL_INVALID_OUTPUT",
+                    "MODEL_BUDGET_EXHAUSTED",
+                    "CONTEXT_SUPERSEDED",
+                    "SESSION_TERMINAL"
+                  ]
+                },
+                "retryable": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["code", "retryable"],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "jobId",
+        "agentRole",
+        "status",
+        "mode",
+        "inputVersion",
+        "createdAt",
+        "attemptCount",
+        "result",
+        "error"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": ["succeeded", "fallback"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "result": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "agentRole": {
+                "const": "advisor"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AdvisorOutput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "result": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/EvaluatorOutput"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "fallback"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mode": {
+                "const": "offline_template"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "mode": {
+                "const": "live_model"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

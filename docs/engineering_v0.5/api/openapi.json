@@ -1,0 +1,2894 @@
+{
+  "openapi": "3.1.1",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "LAST MILE single-player command API",
+    "version": "0.5.0",
+    "description": "实现级设计契约，非已实现服务。SINGLE_PLAYER_REFERENCE为待审批参考profile；normalStartAllowed=false时只允许明确标识的design_preview。"
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "security": [
+    {
+      "LaunchBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "system"
+    },
+    {
+      "name": "session"
+    },
+    {
+      "name": "investigation"
+    },
+    {
+      "name": "information"
+    },
+    {
+      "name": "advisor"
+    },
+    {
+      "name": "action"
+    },
+    {
+      "name": "review"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "getHealth",
+        "tags": [
+          "system"
+        ],
+        "summary": "本机存活与依赖状态",
+        "description": "不泄露路径、密钥、模型名称或隐藏内容。仅此端点不需令牌。",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/HealthView"
+                },
+                "example": {
+                  "status": "ok",
+                  "apiVersion": "v1",
+                  "contractVersion": "0.5",
+                  "storageReady": false,
+                  "modelConfigured": false
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "public-health",
+        "x-idempotency": "safe-read",
+        "security": []
+      }
+    },
+    "/bootstrap": {
+      "get": {
+        "operationId": "getBootstrap",
+        "tags": [
+          "system"
+        ],
+        "summary": "授权能力、参考profile和版本",
+        "description": "不在正文回传bearer。review profile的normalStartAllowed=false。",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/BootstrapView"
+                },
+                "example": {
+                  "launchId": "11111111-1111-4111-8111-111111111111",
+                  "apiVersion": "v1",
+                  "contractVersion": "0.5",
+                  "capabilities": [
+                    "commander.read",
+                    "session.create",
+                    "session.command",
+                    "evaluation.request",
+                    "export.request"
+                  ],
+                  "profiles": [
+                    {
+                      "profileId": "SINGLE_PLAYER_REFERENCE",
+                      "status": "review",
+                      "mode": "single_player",
+                      "normalStartAllowed": false,
+                      "designPreviewAllowed": false,
+                      "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "contentVersionId": "11111111-1111-4111-8111-111111111111",
+                      "description": "REFERENCE"
+                    }
+                  ],
+                  "maximumRequestBytes": 65536,
+                  "sseReconnectMs": 2000
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions": {
+      "post": {
+        "operationId": "createSession",
+        "tags": [
+          "session"
+        ],
+        "summary": "创建会话与固定私有案卷",
+        "description": "create幂等范围为launchId。approved_play要求profile已批准，否则422 POLICY_NOT_APPROVED。design_preview显式标示试验。服务器分配随机种子/私有案卷，客户端不能选真相。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "Location": {
+                "description": "轮询或读取已创建资源；正文operationLocation/location相同。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^/api/v1/"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/SessionCreated"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "runEpoch": "11111111-1111-4111-8111-111111111111",
+                  "location": "/api/v1/sessions/11111111-1111-4111-8111-111111111111",
+                  "projection": {
+                    "sessionId": "11111111-1111-4111-8111-111111111111",
+                    "runEpoch": "11111111-1111-4111-8111-111111111111",
+                    "profileId": "SINGLE_PLAYER_REFERENCE",
+                    "runPurpose": "approved_play",
+                    "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "contentVersionId": "11111111-1111-4111-8111-111111111111",
+                    "stateVersion": 0,
+                    "lifecycle": "created",
+                    "phase": "briefing",
+                    "sceneId": null,
+                    "missionTimeMs": 0,
+                    "missionDeadlineMs": 600000,
+                    "serverNow": "2026-09-16T12:00:00Z",
+                    "location": {
+                      "nodeId": "N00",
+                      "routeId": null,
+                      "progressPermille": 0
+                    },
+                    "civilianCount": 20,
+                    "medical": {
+                      "status": "stable",
+                      "targetAtMissionMs": null,
+                      "note": "REFERENCE"
+                    },
+                    "pendingTasks": {
+                      "manifest": "notRequired",
+                      "inspection": "notRequired"
+                    },
+                    "resources": [
+                      {
+                        "role": "analyst",
+                        "channel": "satellite",
+                        "initial": 2,
+                        "remaining": 2,
+                        "spent": 0,
+                        "scope": "session"
+                      },
+                      {
+                        "role": "analyst",
+                        "channel": "drone",
+                        "initial": 3,
+                        "remaining": 3,
+                        "spent": 0,
+                        "scope": "session"
+                      },
+                      {
+                        "role": "liaison",
+                        "channel": "localAgency",
+                        "initial": 3,
+                        "remaining": 3,
+                        "spent": 0,
+                        "scope": "session"
+                      },
+                      {
+                        "role": "liaison",
+                        "channel": "witness",
+                        "initial": 2,
+                        "remaining": 2,
+                        "spent": 0,
+                        "scope": "session"
+                      }
+                    ],
+                    "reportQuotas": [
+                      {
+                        "role": "analyst",
+                        "sceneId": "E1",
+                        "limit": 3,
+                        "used": 0,
+                        "reserved": 0,
+                        "remaining": 3
+                      },
+                      {
+                        "role": "liaison",
+                        "sceneId": "E1",
+                        "limit": 3,
+                        "used": 0,
+                        "reserved": 0,
+                        "remaining": 3
+                      }
+                    ],
+                    "uploadQuota": null,
+                    "reports": [],
+                    "sceneUploads": [],
+                    "inboxVersion": 0,
+                    "assistantContextVersion": 0,
+                    "activeTasks": [],
+                    "activeOperation": null,
+                    "taskOptions": [],
+                    "actionOptions": [],
+                    "latestAdviceJob": null,
+                    "unuploadedReportIds": [],
+                    "lastViewCursor": "11111111-1111-4111-8111-111111111111:0",
+                    "sealedHash": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/CreateSessionRequest"
+              },
+              "example": {
+                "profileId": "SINGLE_PLAYER_REFERENCE",
+                "runPurpose": "design_preview",
+                "locale": "zh-CN",
+                "contentVersionId": "11111111-1111-4111-8111-111111111111"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}": {
+      "get": {
+        "operationId": "getSession",
+        "tags": [
+          "session"
+        ],
+        "summary": "取得指挥官公开投影",
+        "description": "只返回已解锁并上报的资料和允许的运行状态；不提供NPC原始库存。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/SessionProjection"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "runEpoch": "11111111-1111-4111-8111-111111111111",
+                  "profileId": "SINGLE_PLAYER_REFERENCE",
+                  "runPurpose": "approved_play",
+                  "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "contentVersionId": "11111111-1111-4111-8111-111111111111",
+                  "stateVersion": 0,
+                  "lifecycle": "created",
+                  "phase": "briefing",
+                  "sceneId": null,
+                  "missionTimeMs": 0,
+                  "missionDeadlineMs": 600000,
+                  "serverNow": "2026-09-16T12:00:00Z",
+                  "location": {
+                    "nodeId": "N00",
+                    "routeId": null,
+                    "progressPermille": 0
+                  },
+                  "civilianCount": 20,
+                  "medical": {
+                    "status": "stable",
+                    "targetAtMissionMs": null,
+                    "note": "REFERENCE"
+                  },
+                  "pendingTasks": {
+                    "manifest": "notRequired",
+                    "inspection": "notRequired"
+                  },
+                  "resources": [
+                    {
+                      "role": "analyst",
+                      "channel": "satellite",
+                      "initial": 2,
+                      "remaining": 2,
+                      "spent": 0,
+                      "scope": "session"
+                    },
+                    {
+                      "role": "analyst",
+                      "channel": "drone",
+                      "initial": 3,
+                      "remaining": 3,
+                      "spent": 0,
+                      "scope": "session"
+                    },
+                    {
+                      "role": "liaison",
+                      "channel": "localAgency",
+                      "initial": 3,
+                      "remaining": 3,
+                      "spent": 0,
+                      "scope": "session"
+                    },
+                    {
+                      "role": "liaison",
+                      "channel": "witness",
+                      "initial": 2,
+                      "remaining": 2,
+                      "spent": 0,
+                      "scope": "session"
+                    }
+                  ],
+                  "reportQuotas": [
+                    {
+                      "role": "analyst",
+                      "sceneId": "E1",
+                      "limit": 3,
+                      "used": 0,
+                      "reserved": 0,
+                      "remaining": 3
+                    },
+                    {
+                      "role": "liaison",
+                      "sceneId": "E1",
+                      "limit": 3,
+                      "used": 0,
+                      "reserved": 0,
+                      "remaining": 3
+                    }
+                  ],
+                  "uploadQuota": null,
+                  "reports": [],
+                  "sceneUploads": [],
+                  "inboxVersion": 0,
+                  "assistantContextVersion": 0,
+                  "activeTasks": [],
+                  "activeOperation": null,
+                  "taskOptions": [],
+                  "actionOptions": [],
+                  "latestAdviceJob": null,
+                  "unuploadedReportIds": [],
+                  "lastViewCursor": "11111111-1111-4111-8111-111111111111:0",
+                  "sealedHash": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/start": {
+      "post": {
+        "operationId": "startSession",
+        "tags": [
+          "session"
+        ],
+        "summary": "开始600秒参考任务",
+        "description": "仅created/briefing；expectedSceneId必须null。design_preview必须acknowledgeDesignPreview=true。提交开始事件并启动调度器；按内容到达E1，场景进入后生成初始建议job。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/SessionProjection"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "runEpoch": "11111111-1111-4111-8111-111111111111",
+                  "profileId": "SINGLE_PLAYER_REFERENCE",
+                  "runPurpose": "approved_play",
+                  "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "contentVersionId": "11111111-1111-4111-8111-111111111111",
+                  "stateVersion": 0,
+                  "lifecycle": "created",
+                  "phase": "briefing",
+                  "sceneId": null,
+                  "missionTimeMs": 0,
+                  "missionDeadlineMs": 600000,
+                  "serverNow": "2026-09-16T12:00:00Z",
+                  "location": {
+                    "nodeId": "N00",
+                    "routeId": null,
+                    "progressPermille": 0
+                  },
+                  "civilianCount": 20,
+                  "medical": {
+                    "status": "stable",
+                    "targetAtMissionMs": null,
+                    "note": "REFERENCE"
+                  },
+                  "pendingTasks": {
+                    "manifest": "notRequired",
+                    "inspection": "notRequired"
+                  },
+                  "resources": [
+                    {
+                      "role": "analyst",
+                      "channel": "satellite",
+                      "initial": 2,
+                      "remaining": 2,
+                      "spent": 0,
+                      "scope": "session"
+                    },
+                    {
+                      "role": "analyst",
+                      "channel": "drone",
+                      "initial": 3,
+                      "remaining": 3,
+                      "spent": 0,
+                      "scope": "session"
+                    },
+                    {
+                      "role": "liaison",
+                      "channel": "localAgency",
+                      "initial": 3,
+                      "remaining": 3,
+                      "spent": 0,
+                      "scope": "session"
+                    },
+                    {
+                      "role": "liaison",
+                      "channel": "witness",
+                      "initial": 2,
+                      "remaining": 2,
+                      "spent": 0,
+                      "scope": "session"
+                    }
+                  ],
+                  "reportQuotas": [
+                    {
+                      "role": "analyst",
+                      "sceneId": "E1",
+                      "limit": 3,
+                      "used": 0,
+                      "reserved": 0,
+                      "remaining": 3
+                    },
+                    {
+                      "role": "liaison",
+                      "sceneId": "E1",
+                      "limit": 3,
+                      "used": 0,
+                      "reserved": 0,
+                      "remaining": 3
+                    }
+                  ],
+                  "uploadQuota": null,
+                  "reports": [],
+                  "sceneUploads": [],
+                  "inboxVersion": 0,
+                  "assistantContextVersion": 0,
+                  "activeTasks": [],
+                  "activeOperation": null,
+                  "taskOptions": [],
+                  "actionOptions": [],
+                  "latestAdviceJob": null,
+                  "unuploadedReportIds": [],
+                  "lastViewCursor": "11111111-1111-4111-8111-111111111111:0",
+                  "sealedHash": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/StartRequest"
+              },
+              "example": {
+                "expectedStateVersion": 0,
+                "expectedSceneId": null,
+                "payload": {
+                  "acknowledgeDesignPreview": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/tasks": {
+      "post": {
+        "operationId": "createTask",
+        "tags": [
+          "investigation"
+        ],
+        "summary": "请求岗位调查并上报，或请求已有报告",
+        "description": "investigate_and_report原子预留1报告槽并消耗对应整局渠道1次；每岗位任意task最多1在途，两个岗位可并行。trace仅联络员、引用已上报且可追问的来源报告，扣私有模板指定且公开显示的traceCostChannel(localAgency或witness)，不能按card.channel=initial扣费。request_report只选已取得同topic条目，经1000ms交付，无观察即不得凭空生成；匹配后预留报告槽并占岗位活跃任务，无匹配时422 TARGET_NOT_AVAILABLE且不扣费/预留。离幕取消且不退已花资源；释放未用报告预留。完成技术失败按明确补偿事件退款。reasonAnnotation是可空的明确自报，不从自由理由推断心理。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "Location": {
+                "description": "轮询或读取已创建资源；正文operationLocation/location相同。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^/api/v1/"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/TaskAccepted"
+                },
+                "example": {
+                  "requestId": "11111111-1111-4111-8111-111111111111",
+                  "stateVersion": 0,
+                  "task": {
+                    "taskId": "11111111-1111-4111-8111-111111111111",
+                    "sessionId": "11111111-1111-4111-8111-111111111111",
+                    "sceneId": "E1",
+                    "targetRole": "analyst",
+                    "taskKind": "investigate_and_report",
+                    "topicId": "REFERENCE",
+                    "resourceChannel": null,
+                    "status": "accepted",
+                    "investigationId": null,
+                    "reportId": null,
+                    "createdAt": "2026-09-16T12:00:00Z",
+                    "completedAt": null,
+                    "failureCode": null
+                  },
+                  "operationLocation": "/api/v1/sessions/11111111-1111-4111-8111-111111111111/tasks/11111111-1111-4111-8111-111111111111",
+                  "reservedReportSlots": 0
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/TaskRequest"
+              },
+              "example": {
+                "expectedStateVersion": 0,
+                "expectedSceneId": "E1",
+                "payload": {
+                  "taskKind": "investigate_and_report",
+                  "targetRole": "analyst",
+                  "topicId": "REFERENCE",
+                  "targetId": "REFERENCE",
+                  "investigationKind": "satellite_scan",
+                  "sourceReportId": null,
+                  "reasonAnnotation": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/tasks/{taskId}": {
+      "get": {
+        "operationId": "getTask",
+        "tags": [
+          "investigation"
+        ],
+        "summary": "读取任务进度与实际上报ID",
+        "description": "不包含未上报的调查结果正文。reportId仅在实际上报后非null。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/taskId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/TaskView"
+                },
+                "example": {
+                  "taskId": "11111111-1111-4111-8111-111111111111",
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "sceneId": "E1",
+                  "targetRole": "analyst",
+                  "taskKind": "investigate_and_report",
+                  "topicId": "REFERENCE",
+                  "resourceChannel": null,
+                  "status": "accepted",
+                  "investigationId": null,
+                  "reportId": null,
+                  "createdAt": "2026-09-16T12:00:00Z",
+                  "completedAt": null,
+                  "failureCode": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/reports/{reportId}": {
+      "get": {
+        "operationId": "getReport",
+        "tags": [
+          "information"
+        ],
+        "summary": "读取已正式上报的不可变版本",
+        "description": "必须属于该会话且已报给指挥官；私有同ID视为404，不返回存在性提示。GET不代表玩家已查看；查看须display-receipt。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/reportId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ReportView"
+                },
+                "example": {
+                  "reportId": "11111111-1111-4111-8111-111111111111",
+                  "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+                  "revision": 1,
+                  "sourceRole": "analyst",
+                  "sceneId": "E1",
+                  "reportedAtMissionMs": 0,
+                  "card": {
+                    "evidenceInstanceId": "11111111-1111-4111-8111-111111111111",
+                    "definitionId": "REFERENCE",
+                    "revision": 1,
+                    "sceneId": "E1",
+                    "title": "REFERENCE",
+                    "body": "REFERENCE",
+                    "statementKind": "observation",
+                    "sourceLabel": "REFERENCE",
+                    "channel": "satellite",
+                    "observedAt": null,
+                    "receivedAtMissionMs": 0,
+                    "validUntilMissionMs": null,
+                    "freshness": "current",
+                    "observationScope": "REFERENCE",
+                    "provenanceStatus": "unverified",
+                    "supersedesEvidenceInstanceId": null
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/uploads": {
+      "post": {
+        "operationId": "uploadReports",
+        "tags": [
+          "information"
+        ],
+        "summary": "显式上传报告版本并自动重算",
+        "description": "整批原子；每个新evidenceInstanceId+revision占当前场景5额度之一。已上传同版本no-op；新revision独立占额。只接受当前场景已上报版本；后台从不可变正文构造模型快照，250ms合并新上传为一次最新分析；返回analysisJobId可先null。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/UploadView"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "stateVersion": 0,
+                  "inboxVersion": 0,
+                  "assistantContextVersion": 0,
+                  "added": [],
+                  "currentSceneUploads": [],
+                  "quota": {
+                    "sceneId": "E1",
+                    "mode": "cumulative",
+                    "limit": 5,
+                    "used": 0,
+                    "remaining": 0
+                  },
+                  "analysisJobId": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/UploadRequest"
+              },
+              "example": {
+                "expectedStateVersion": 0,
+                "expectedSceneId": "E1",
+                "payload": {
+                  "items": [
+                    {
+                      "reportId": "11111111-1111-4111-8111-111111111111",
+                      "expectedRevision": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/questions": {
+      "post": {
+        "operationId": "askAdvisor",
+        "tags": [
+          "advisor"
+        ],
+        "summary": "带可选上传的追问",
+        "description": "原子验证上传前expectedInboxVersion、整批额度、阶段和模型总预算；绑定上传后的manifest再建job。free_text最多2000字，作为未核验PlayerStatement；预设问题text可null。明确提问立即触发，吸收同版本未执行的250ms重算。模型调用只能aftercommit。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "Location": {
+                "description": "轮询或读取已创建资源；正文operationLocation/location相同。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^/api/v1/"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/QuestionAccepted"
+                },
+                "example": {
+                  "requestId": "11111111-1111-4111-8111-111111111111",
+                  "stateVersion": 0,
+                  "inboxVersion": 0,
+                  "assistantContextVersion": 0,
+                  "job": {
+                    "jobId": "11111111-1111-4111-8111-111111111111",
+                    "agentRole": "advisor",
+                    "status": "queued",
+                    "mode": "live_model",
+                    "inputVersion": 1,
+                    "createdAt": "2026-09-16T12:00:00Z",
+                    "attemptCount": 0,
+                    "result": null,
+                    "error": null
+                  },
+                  "operationLocation": "/api/v1/sessions/11111111-1111-4111-8111-111111111111/advice/11111111-1111-4111-8111-111111111111"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/QuestionRequest"
+              },
+              "example": {
+                "expectedStateVersion": 0,
+                "expectedSceneId": "E1",
+                "payload": {
+                  "questionKind": "explain_basis",
+                  "text": null,
+                  "expectedInboxVersion": 0,
+                  "uploadBatch": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/advice/{jobId}": {
+      "get": {
+        "operationId": "getAdvice",
+        "tags": [
+          "advisor"
+        ],
+        "summary": "读取建议异步任务",
+        "description": "仅advisor role；旧job可读且保留superseded状态，不成为当前建议。输入/prompt不返回。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/jobId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/AdvisorJobView"
+                },
+                "example": {
+                  "jobId": "11111111-1111-4111-8111-111111111111",
+                  "agentRole": "advisor",
+                  "status": "queued",
+                  "mode": "live_model",
+                  "inputVersion": 1,
+                  "createdAt": "2026-09-16T12:00:00Z",
+                  "attemptCount": 0,
+                  "result": null,
+                  "error": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/actions": {
+      "post": {
+        "operationId": "commitAction",
+        "tags": [
+          "action"
+        ],
+        "summary": "提交路线、终幕等待或有限WAIT",
+        "description": "actionId必须为当前公开动作。WAIT只等15/30/60s，不离场、不取消调查；路线动作离场且存在调查时cancelPendingInvestigations必须true，否则422。已提交行动拒绝第二行动。无玩家演出ack阻塞实时世界；只发生的后果投影。先catch-up，再验证，达到截止不能补提动作。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "Location": {
+                "description": "轮询或读取已创建资源；正文operationLocation/location相同。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^/api/v1/"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ActionAccepted"
+                },
+                "example": {
+                  "requestId": "11111111-1111-4111-8111-111111111111",
+                  "stateVersion": 0,
+                  "operation": {
+                    "operationId": "11111111-1111-4111-8111-111111111111",
+                    "sessionId": "11111111-1111-4111-8111-111111111111",
+                    "sceneId": "E1",
+                    "operationKind": "action",
+                    "actionId": "REFERENCE",
+                    "status": "accepted",
+                    "createdAt": "2026-09-16T12:00:00Z",
+                    "completedAt": null,
+                    "currentLocation": {
+                      "nodeId": "N00",
+                      "routeId": null,
+                      "progressPermille": 0
+                    },
+                    "publicProgressLabel": "REFERENCE",
+                    "failureCode": null
+                  },
+                  "operationLocation": "/api/v1/sessions/11111111-1111-4111-8111-111111111111/operations/11111111-1111-4111-8111-111111111111"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/ActionRequest"
+              },
+              "example": {
+                "expectedStateVersion": 0,
+                "expectedSceneId": "E1",
+                "payload": {
+                  "actionId": "E1_MAIN",
+                  "waitDurationMs": null,
+                  "reason": "REFERENCE",
+                  "reasonAnnotation": null,
+                  "basedOnAdviceJobId": null,
+                  "referencedReportIds": [],
+                  "cancelPendingInvestigations": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/operations/{operationId}": {
+      "get": {
+        "operationId": "getOperation",
+        "tags": [
+          "action"
+        ],
+        "summary": "读取已提交行动或等待进度",
+        "description": "不提前暴露隐藏受阻位置、未来执行段或完整真实ETA。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/operationId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/OperationView"
+                },
+                "example": {
+                  "operationId": "11111111-1111-4111-8111-111111111111",
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "sceneId": "E1",
+                  "operationKind": "action",
+                  "actionId": "REFERENCE",
+                  "status": "accepted",
+                  "createdAt": "2026-09-16T12:00:00Z",
+                  "completedAt": null,
+                  "currentLocation": {
+                    "nodeId": "N00",
+                    "routeId": null,
+                    "progressPermille": 0
+                  },
+                  "publicProgressLabel": "REFERENCE",
+                  "failureCode": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/display-receipts": {
+      "post": {
+        "operationId": "recordDisplay",
+        "tags": [
+          "information"
+        ],
+        "summary": "记录报告查看或建议实际显示",
+        "description": "不提升stateVersion；observedStateVersion/observedSceneId是呈现上下文，不是当前版本CAS。拒绝未来版本与未公开目标；旧版本本身不构成冲突。只表明界面呈现，不证明理解。report/job/operation必须匹配displayKind且属于该会话；context_displayed的三个ID全null，映射该版本已留存的公开briefing。terminal阶段只允许读取，不新记行为。只有服务端收到日志序早于决策才计入，不按客户端时间倒填；重复同目标不重复建立机会。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ReceiptView"
+                },
+                "example": {
+                  "receiptId": "11111111-1111-4111-8111-111111111111",
+                  "accepted": true,
+                  "stateVersion": 0
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/DisplayReceiptRequest"
+              },
+              "example": {
+                "observedStateVersion": 0,
+                "observedSceneId": null,
+                "payload": {
+                  "displayKind": "report_opened",
+                  "reportId": "11111111-1111-4111-8111-111111111111",
+                  "jobId": null,
+                  "operationId": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/provenance": {
+      "get": {
+        "operationId": "getProvenance",
+        "tags": [
+          "information"
+        ],
+        "summary": "读取指挥官已知来源图",
+        "description": "免费展开不是核验。确认边必须有已正式上报的disclosedByReportId；已取得但未上报的真实来源根不得出现。AI图另从已上传来源报告派生。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "name": "sceneId",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ProvenanceView"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "sceneId": "E1",
+                  "stateVersion": 0,
+                  "nodes": [],
+                  "edges": [],
+                  "notice": "REFERENCE"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/events": {
+      "get": {
+        "operationId": "streamEvents",
+        "tags": [
+          "session"
+        ],
+        "summary": "订阅限定视图的SSE事件",
+        "description": "fetch流携带Authorization；不使用URL令牌。Last-Event-ID与after只能二选一，格式epoch:viewSequence。游标绑定session/commander视图；过期410后GET投影恢复。保留本局全部已公开事件，进程跨重启从公开outbox恢复。15秒无数据发送注释keepalive。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "name": "Last-Event-ID",
+            "in": "header",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "minLength": 38,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f-]{36}:[0-9]+$"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "minLength": 38,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f-]{36}:[0-9]+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 1048576
+                },
+                "example": "id: 11111111-1111-4111-8111-111111111111:1\nevent: clock.sample\ndata: {\"eventType\":\"clock.sample\",\"sessionId\":\"11111111-1111-4111-8111-111111111111\",\"runEpoch\":\"11111111-1111-4111-8111-111111111111\",\"viewSequence\":1,\"stateVersion\":0,\"data\":{\"missionTimeMs\":0,\"serverNow\":\"2026-09-16T12:00:00Z\",\"missionDeadlineMs\":600000}}\n\n",
+                "x-event-schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/PublicSseEvent"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Error410"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/abandon": {
+      "post": {
+        "operationId": "abandonSession",
+        "tags": [
+          "session"
+        ],
+        "summary": "结束当前局并封存",
+        "description": "活动局取消在途任务/操作/模型job，封存abandoned结果；已封存的新命令422 ALREADY_TERMINAL，同幂等键仍回原成功。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/OutcomeView"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "runEpoch": "11111111-1111-4111-8111-111111111111",
+                  "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "sealedAt": "2026-09-16T12:00:00Z",
+                  "sealedAtMissionMs": 0,
+                  "taskSuccess": false,
+                  "terminationReason": "arrived",
+                  "arrivedAtMissionMs": null,
+                  "handoffCompletedAtMissionMs": null,
+                  "pendingTasks": {
+                    "manifest": "notRequired",
+                    "inspection": "notRequired"
+                  },
+                  "finalLocation": {
+                    "nodeId": "N00",
+                    "routeId": null,
+                    "progressPermille": 0
+                  },
+                  "civilianCount": 20,
+                  "medical": {
+                    "status": "stable",
+                    "targetAtMissionMs": null,
+                    "note": "REFERENCE"
+                  },
+                  "routeIdsTaken": [],
+                  "summary": "REFERENCE"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/AbandonRequest"
+              },
+              "example": {
+                "expectedStateVersion": 0,
+                "expectedSceneId": null,
+                "payload": {
+                  "reason": "player_exit"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/outcome": {
+      "get": {
+        "operationId": "getOutcome",
+        "tags": [
+          "review"
+        ],
+        "summary": "读取封存后的确定结果",
+        "description": "未终局422 NOT_TERMINAL。抵达成功立即封存，交接待办不继续执行、不虚构完成。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/OutcomeView"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "runEpoch": "11111111-1111-4111-8111-111111111111",
+                  "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "sealedAt": "2026-09-16T12:00:00Z",
+                  "sealedAtMissionMs": 0,
+                  "taskSuccess": false,
+                  "terminationReason": "arrived",
+                  "arrivedAtMissionMs": null,
+                  "handoffCompletedAtMissionMs": null,
+                  "pendingTasks": {
+                    "manifest": "notRequired",
+                    "inspection": "notRequired"
+                  },
+                  "finalLocation": {
+                    "nodeId": "N00",
+                    "routeId": null,
+                    "progressPermille": 0
+                  },
+                  "civilianCount": 20,
+                  "medical": {
+                    "status": "stable",
+                    "targetAtMissionMs": null,
+                    "note": "REFERENCE"
+                  },
+                  "routeIdsTaken": [],
+                  "summary": "REFERENCE"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/evaluations": {
+      "post": {
+        "operationId": "requestEvaluation",
+        "tags": [
+          "review"
+        ],
+        "summary": "基于封存行为包请求独立评价",
+        "description": "不接收expectedStateVersion，验证sealedHash。每seal+config复用一个logical job；成功返回缓存，不重新计模型调用。首次与最多一次恢复共享2次上限。评价不能写世界。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "Location": {
+                "description": "轮询或读取已创建资源；正文operationLocation/location相同。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^/api/v1/"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/EvaluationAccepted"
+                },
+                "example": {
+                  "requestId": "11111111-1111-4111-8111-111111111111",
+                  "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "job": {
+                    "jobId": "11111111-1111-4111-8111-111111111111",
+                    "agentRole": "evaluator",
+                    "status": "queued",
+                    "mode": "live_model",
+                    "inputVersion": 1,
+                    "createdAt": "2026-09-16T12:00:00Z",
+                    "attemptCount": 0,
+                    "result": null,
+                    "error": null
+                  },
+                  "operationLocation": "/api/v1/sessions/11111111-1111-4111-8111-111111111111/evaluations/11111111-1111-4111-8111-111111111111"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/EvaluationRequest"
+              },
+              "example": {
+                "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "evaluationConfigId": "EVALUATION_REFERENCE_V1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/evaluations/{jobId}": {
+      "get": {
+        "operationId": "getEvaluation",
+        "tags": [
+          "review"
+        ],
+        "summary": "读取独立评价任务",
+        "description": "必须agentRole=evaluator且绑定此seal；不返回私有输入或未公开真相。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/jobId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/EvaluationJobView"
+                },
+                "example": {
+                  "jobId": "11111111-1111-4111-8111-111111111111",
+                  "agentRole": "evaluator",
+                  "status": "queued",
+                  "mode": "live_model",
+                  "inputVersion": 1,
+                  "createdAt": "2026-09-16T12:00:00Z",
+                  "attemptCount": 0,
+                  "result": null,
+                  "error": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/replay": {
+      "get": {
+        "operationId": "getReplay",
+        "tags": [
+          "review"
+        ],
+        "summary": "分页读取封存时的公开决策记录",
+        "description": "仅terminal；每页最多25决定/200公开记录，nextCursor为服务端随机页令牌，绑定会话和seal。事件事实不反写旧知识。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ReplayView"
+                },
+                "example": {
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "decisions": [],
+                  "reports": [],
+                  "playerStatements": [],
+                  "publicLog": [],
+                  "nextCursor": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    },
+    "/sessions/{sessionId}/exports": {
+      "post": {
+        "operationId": "createExport",
+        "tags": [
+          "review"
+        ],
+        "summary": "构造本地可下载复盘JSON",
+        "description": "仅sealed；includePlayerStatements需明确选择。导出只含公开复盘/结果及获准评价，不含密钥、提示词、NPC未上报库存或案卷。不得以下载接口读取任意路径。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "$ref": "#/components/parameters/RunEpoch"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              },
+              "Idempotency-Replayed": {
+                "description": "缓存回执为true；新执行为false。",
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "Location": {
+                "description": "轮询或读取已创建资源；正文operationLocation/location相同。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "pattern": "^/api/v1/"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ExportAccepted"
+                },
+                "example": {
+                  "requestId": "11111111-1111-4111-8111-111111111111",
+                  "export": {
+                    "exportId": "11111111-1111-4111-8111-111111111111",
+                    "sessionId": "11111111-1111-4111-8111-111111111111",
+                    "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "status": "queued",
+                    "createdAt": "2026-09-16T12:00:00Z",
+                    "completedAt": null,
+                    "artifact": null,
+                    "errorCode": null
+                  },
+                  "operationLocation": "/api/v1/sessions/11111111-1111-4111-8111-111111111111/exports/11111111-1111-4111-8111-111111111111"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error409"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error413"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error422"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error429"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "required; unique key per launch/session; hash canonical body + method + path + runEpoch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "../contracts/public.schema.json#/$defs/ExportRequest"
+              },
+              "example": {
+                "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "format": "last-mile-review-json",
+                "includePlayerStatements": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionId}/exports/{exportId}": {
+      "get": {
+        "operationId": "getExport",
+        "tags": [
+          "review"
+        ],
+        "summary": "轮询导出并取得JSON工件",
+        "description": "succeeded时artifact非null，前端按JSON保存。最大2MiB，超限失败并标export_size_limit。无服务端文件路径参数。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/sessionId"
+          },
+          {
+            "$ref": "#/components/parameters/exportId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功；缓存幂等回执保留相同HTTP状态和正文。",
+            "headers": {
+              "X-Request-Id": {
+                "description": "请求关联ID；所有响应均返回。",
+                "schema": {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../contracts/public.schema.json#/$defs/ExportView"
+                },
+                "example": {
+                  "exportId": "11111111-1111-4111-8111-111111111111",
+                  "sessionId": "11111111-1111-4111-8111-111111111111",
+                  "sealedHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "status": "queued",
+                  "createdAt": "2026-09-16T12:00:00Z",
+                  "completedAt": null,
+                  "artifact": null,
+                  "errorCode": null
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error404"
+          },
+          "503": {
+            "$ref": "#/components/responses/Error503"
+          }
+        },
+        "x-authorization": "local-launch-bound-commander",
+        "x-idempotency": "safe-read"
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "LaunchBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "opaque-local-launch-token",
+        "description": "仅本机启动入口提供；绑定launch与commander能力。不得放URL、SSE query或日志。"
+      }
+    },
+    "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "UUID；创建范围为launch、其他范围为整个session。键在该范围唯一；hash覆盖method/path/runEpoch/body，相同请求重放原回执，任一不同返回409。",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "RunEpoch": {
+        "name": "X-Run-Epoch",
+        "in": "header",
+        "required": true,
+        "description": "必须与当前会话epoch匹配；不会从正文信任操作者身份。",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "sessionId": {
+        "name": "sessionId",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "taskId": {
+        "name": "taskId",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "reportId": {
+        "name": "reportId",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "jobId": {
+        "name": "jobId",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "operationId": {
+        "name": "operationId",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "exportId": {
+        "name": "exportId",
+        "in": "path",
+        "required": true,
+        "description": "",
+        "schema": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      }
+    },
+    "schemas": {
+      "PublicSseEvent": {
+        "$ref": "../contracts/public.schema.json#/$defs/PublicSseEvent"
+      }
+    },
+    "responses": {
+      "Error400": {
+        "description": "格式、参数或组合非法",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem400"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:invalid-request",
+              "title": "格式、参数或组合非法",
+              "status": 400,
+              "code": "INVALID_REQUEST",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "格式、参数或组合非法",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error401": {
+        "description": "本机启动令牌缺失或无效",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem401"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:unauthorized",
+              "title": "本机启动令牌缺失或无效",
+              "status": 401,
+              "code": "UNAUTHORIZED",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "本机启动令牌缺失或无效",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error403": {
+        "description": "授权会话、Origin或能力不允许",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem403"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:capability-denied",
+              "title": "授权会话、Origin或能力不允许",
+              "status": 403,
+              "code": "CAPABILITY_DENIED",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "授权会话、Origin或能力不允许",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error404": {
+        "description": "指定公开资源不存在或不属于会话",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem404"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:resource-not-found",
+              "title": "指定公开资源不存在或不属于会话",
+              "status": 404,
+              "code": "RESOURCE_NOT_FOUND",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "指定公开资源不存在或不属于会话",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error409": {
+        "description": "版本、场景、epoch或幂等键冲突",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem409"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:state-version-conflict",
+              "title": "版本、场景、epoch或幂等键冲突",
+              "status": 409,
+              "code": "STATE_VERSION_CONFLICT",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "版本、场景、epoch或幂等键冲突",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error410": {
+        "description": "当前视图游标已过期；重新获取投影",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem410"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:cursor-expired",
+              "title": "当前视图游标已过期；重新获取投影",
+              "status": 410,
+              "code": "CURSOR_EXPIRED",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "当前视图游标已过期；重新获取投影",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error413": {
+        "description": "请求体超过65536字节",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem413"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:body-too-large",
+              "title": "请求体超过65536字节",
+              "status": 413,
+              "code": "BODY_TOO_LARGE",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "请求体超过65536字节",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error422": {
+        "description": "合法JSON但阶段、额度或领域前置条件不成立",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem422"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:budget-exhausted",
+              "title": "合法JSON但阶段、额度或领域前置条件不成立",
+              "status": 422,
+              "code": "BUDGET_EXHAUSTED",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": false,
+              "currentStateVersion": null,
+              "detail": "合法JSON但阶段、额度或领域前置条件不成立",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error429": {
+        "description": "请求过快或模型预算达到上限",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "Retry-After": {
+            "description": "建议等待秒数；同逻辑请求保留Idempotency-Key。",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem429"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:rate-limited",
+              "title": "请求过快或模型预算达到上限",
+              "status": 429,
+              "code": "RATE_LIMITED",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": true,
+              "currentStateVersion": null,
+              "detail": "请求过快或模型预算达到上限",
+              "violations": []
+            }
+          }
+        }
+      },
+      "Error503": {
+        "description": "服务或持久化暂不可用",
+        "headers": {
+          "X-Request-Id": {
+            "description": "请求关联ID；所有响应均返回。",
+            "schema": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "Retry-After": {
+            "description": "建议等待秒数；同逻辑请求保留Idempotency-Key。",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "../contracts/public.schema.json#/$defs/Problem503"
+            },
+            "example": {
+              "type": "urn:last-mile:problem:service-unavailable",
+              "title": "服务或持久化暂不可用",
+              "status": 503,
+              "code": "SERVICE_UNAVAILABLE",
+              "requestId": "11111111-1111-4111-8111-111111111111",
+              "retryable": true,
+              "currentStateVersion": null,
+              "detail": "服务或持久化暂不可用",
+              "violations": []
+            }
+          }
+        }
+      }
+    }
+  }
+}

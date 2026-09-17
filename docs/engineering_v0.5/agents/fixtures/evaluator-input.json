@@ -1,0 +1,328 @@
+{
+  "schemaVersion": "0.5",
+  "sessionId": "00000000-0000-0000-0000-000000000001",
+  "sealedHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "rubricVersion": "observable-rubric-0.5-review",
+  "subjectBindingId": "00000000-0000-0000-0000-000000000002",
+  "contexts": [
+    {
+      "contextId": "00000000-0000-0000-0000-00000000012d",
+      "sceneId": "E1",
+      "subjectBindingId": "00000000-0000-0000-0000-000000000002",
+      "controllerKind": "human",
+      "kind": "route_decision",
+      "cutoffMissionMs": 100000,
+      "factRefs": [
+        "00000000-0000-0000-0000-000000000191"
+      ],
+      "playerVisibleRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f5",
+          "revision": 1
+        }
+      ],
+      "advisorUploadedRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f5",
+          "revision": 1
+        }
+      ],
+      "displayedAdviceId": "00000000-0000-0000-0000-000000000259",
+      "displayedAdviceAtMs": 95000,
+      "chosenActionId": "E1_MAIN",
+      "legalActionIds": [
+        "E1_MAIN",
+        "E1_BYPASS"
+      ],
+      "visibleCostSummary": "操作前已展示该项时间与资源成本。",
+      "reasonCodes": [
+        "ai_said_so"
+      ],
+      "reasonText": "玩家勾选的自报理由，仅用于本次行为观察。",
+      "oralKnowledgeStatus": "not_applicable",
+      "technicalLimitations": []
+    },
+    {
+      "contextId": "00000000-0000-0000-0000-00000000012e",
+      "sceneId": "E2",
+      "subjectBindingId": "00000000-0000-0000-0000-000000000002",
+      "controllerKind": "human",
+      "kind": "route_decision",
+      "cutoffMissionMs": 200000,
+      "factRefs": [
+        "00000000-0000-0000-0000-000000000192"
+      ],
+      "playerVisibleRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f6",
+          "revision": 1
+        }
+      ],
+      "advisorUploadedRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f6",
+          "revision": 1
+        }
+      ],
+      "displayedAdviceId": "00000000-0000-0000-0000-00000000025a",
+      "displayedAdviceAtMs": 195000,
+      "chosenActionId": "E2_MAIN",
+      "legalActionIds": [
+        "E2_MAIN",
+        "E2_BYPASS"
+      ],
+      "visibleCostSummary": "操作前已展示该项时间与资源成本。",
+      "reasonCodes": [
+        "prior_ai_error_only"
+      ],
+      "reasonText": "玩家勾选的自报理由，仅用于本次行为观察。",
+      "oralKnowledgeStatus": "not_applicable",
+      "technicalLimitations": []
+    },
+    {
+      "contextId": "00000000-0000-0000-0000-00000000012f",
+      "sceneId": "E2",
+      "subjectBindingId": "00000000-0000-0000-0000-000000000002",
+      "controllerKind": "human",
+      "kind": "investigation_request",
+      "cutoffMissionMs": 300000,
+      "factRefs": [
+        "00000000-0000-0000-0000-000000000193"
+      ],
+      "playerVisibleRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f7",
+          "revision": 1
+        }
+      ],
+      "advisorUploadedRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f7",
+          "revision": 1
+        }
+      ],
+      "displayedAdviceId": null,
+      "displayedAdviceAtMs": null,
+      "chosenActionId": "CHECK",
+      "legalActionIds": [
+        "CHECK"
+      ],
+      "visibleCostSummary": "操作前已展示该项时间与资源成本。",
+      "reasonCodes": [
+        "no_new_question"
+      ],
+      "reasonText": "玩家勾选的自报理由，仅用于本次行为观察。",
+      "oralKnowledgeStatus": "not_applicable",
+      "technicalLimitations": []
+    },
+    {
+      "contextId": "00000000-0000-0000-0000-000000000130",
+      "sceneId": "E3",
+      "subjectBindingId": "00000000-0000-0000-0000-000000000002",
+      "controllerKind": "human",
+      "kind": "route_decision",
+      "cutoffMissionMs": 400000,
+      "factRefs": [
+        "00000000-0000-0000-0000-000000000194"
+      ],
+      "playerVisibleRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f8",
+          "revision": 1
+        }
+      ],
+      "advisorUploadedRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f8",
+          "revision": 1
+        }
+      ],
+      "displayedAdviceId": "00000000-0000-0000-0000-00000000025c",
+      "displayedAdviceAtMs": 395000,
+      "chosenActionId": "E3_MAIN",
+      "legalActionIds": [
+        "E3_MAIN",
+        "E3_BYPASS"
+      ],
+      "visibleCostSummary": "操作前已展示该项时间与资源成本。",
+      "reasonCodes": [
+        "evidence_supported"
+      ],
+      "reasonText": "玩家勾选的自报理由，仅用于本次行为观察。",
+      "oralKnowledgeStatus": "not_applicable",
+      "technicalLimitations": []
+    }
+  ],
+  "facts": [
+    {
+      "factId": "00000000-0000-0000-0000-000000000191",
+      "contextId": "00000000-0000-0000-0000-00000000012d",
+      "ruleId": "CHECK-01",
+      "kind": "support",
+      "text": "已显示信息缺口且检查可用；玩家自报仅据AI选择行动。",
+      "sourceEventIds": [
+        "00000000-0000-0000-0000-0000000002bd"
+      ],
+      "evidenceRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f5",
+          "revision": 1
+        }
+      ],
+      "availableAtMissionMs": 100000,
+      "cutoffMissionMs": 100000
+    },
+    {
+      "factId": "00000000-0000-0000-0000-000000000192",
+      "contextId": "00000000-0000-0000-0000-00000000012e",
+      "ruleId": "REJECT-01",
+      "kind": "support",
+      "text": "当前展示资料支持建议，玩家自报仅因先前AI错误而拒绝。",
+      "sourceEventIds": [
+        "00000000-0000-0000-0000-0000000002be"
+      ],
+      "evidenceRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f6",
+          "revision": 1
+        }
+      ],
+      "availableAtMissionMs": 200000,
+      "cutoffMissionMs": 200000
+    },
+    {
+      "factId": "00000000-0000-0000-0000-000000000193",
+      "contextId": "00000000-0000-0000-0000-00000000012f",
+      "ruleId": "CHECK-COST-01",
+      "kind": "support",
+      "text": "公开规则显示该检查不能回答其所选问题；玩家自报没有新增问题。",
+      "sourceEventIds": [
+        "00000000-0000-0000-0000-0000000002bf"
+      ],
+      "evidenceRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f7",
+          "revision": 1
+        }
+      ],
+      "availableAtMissionMs": 300000,
+      "cutoffMissionMs": 300000
+    },
+    {
+      "factId": "00000000-0000-0000-0000-000000000194",
+      "contextId": "00000000-0000-0000-0000-000000000130",
+      "ruleId": "CALIBRATE-01",
+      "kind": "support",
+      "text": "玩家引用已看见资料，并自报比较成本、承认限制。",
+      "sourceEventIds": [
+        "00000000-0000-0000-0000-0000000002c0"
+      ],
+      "evidenceRefs": [
+        {
+          "instanceId": "00000000-0000-0000-0000-0000000001f8",
+          "revision": 1
+        }
+      ],
+      "availableAtMissionMs": 400000,
+      "cutoffMissionMs": 400000
+    }
+  ],
+  "bounds": {
+    "complacency": {
+      "eligibleOpportunities": 1,
+      "eligibleContextRefs": [
+        "00000000-0000-0000-0000-00000000012d"
+      ],
+      "supportCandidates": [
+        {
+          "contextId": "00000000-0000-0000-0000-00000000012d",
+          "factRefs": [
+            "00000000-0000-0000-0000-000000000191"
+          ]
+        }
+      ],
+      "counterevidenceRefs": [],
+      "exclusionRefs": [],
+      "allowedSupportLevels": [
+        "not_observed",
+        "observed_once"
+      ]
+    },
+    "distrust": {
+      "eligibleOpportunities": 1,
+      "eligibleContextRefs": [
+        "00000000-0000-0000-0000-00000000012e"
+      ],
+      "supportCandidates": [
+        {
+          "contextId": "00000000-0000-0000-0000-00000000012e",
+          "factRefs": [
+            "00000000-0000-0000-0000-000000000192"
+          ]
+        }
+      ],
+      "counterevidenceRefs": [],
+      "exclusionRefs": [],
+      "allowedSupportLevels": [
+        "not_observed",
+        "observed_once"
+      ]
+    },
+    "overCaution": {
+      "eligibleOpportunities": 1,
+      "eligibleContextRefs": [
+        "00000000-0000-0000-0000-00000000012f"
+      ],
+      "supportCandidates": [
+        {
+          "contextId": "00000000-0000-0000-0000-00000000012f",
+          "factRefs": [
+            "00000000-0000-0000-0000-000000000193"
+          ]
+        }
+      ],
+      "counterevidenceRefs": [],
+      "exclusionRefs": [],
+      "allowedSupportLevels": [
+        "not_observed",
+        "observed_once"
+      ]
+    },
+    "calibratedTrust": {
+      "eligibleOpportunities": 1,
+      "eligibleContextRefs": [
+        "00000000-0000-0000-0000-000000000130"
+      ],
+      "supportCandidates": [
+        {
+          "contextId": "00000000-0000-0000-0000-000000000130",
+          "factRefs": [
+            "00000000-0000-0000-0000-000000000194"
+          ]
+        }
+      ],
+      "counterevidenceRefs": [],
+      "exclusionRefs": [],
+      "allowedSupportLevels": [
+        "not_observed",
+        "observed_once"
+      ]
+    }
+  },
+  "allowedOverallPatterns": [
+    "mixed",
+    "limited_pattern",
+    "insufficient_evidence"
+  ],
+  "coverage": {
+    "scenesObserved": [
+      "E1",
+      "E2",
+      "E3"
+    ],
+    "terminalKind": "normal_end",
+    "limitations": [
+      "这是契约测试合成局，只说明格式与可观测规则。"
+    ]
+  }
+}

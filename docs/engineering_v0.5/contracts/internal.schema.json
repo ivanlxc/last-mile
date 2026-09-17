@@ -1,0 +1,4093 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private gameplay events and separate postgame management audits; never serve raw",
+  "$defs": {
+    "Actor": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "human",
+            "npc",
+            "rules",
+            "system"
+          ]
+        },
+        "actorId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "commander",
+                "analyst",
+                "liaison"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "actorId",
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "EventSessionCreated": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "session.created"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "profileId": {
+              "const": "SINGLE_PLAYER_REFERENCE"
+            },
+            "policyHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "contentVersionId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "privateCaseId": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "seedHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "profileId",
+            "policyHash",
+            "contentVersionId",
+            "privateCaseId",
+            "seedHash"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventSessionStarted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "session.started"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "missionDeadlineMs": {
+              "const": 600000
+            },
+            "startedAt": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 40,
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "missionDeadlineMs",
+            "startedAt"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventSceneEntered": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "scene.entered"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "sceneId": {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            "location": {
+              "$ref": "public.schema.json#/$defs/KnownLocation"
+            }
+          },
+          "required": [
+            "sceneId",
+            "location"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventTaskAccepted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "task.accepted"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "taskId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "targetRole": {
+              "type": "string",
+              "enum": [
+                "analyst",
+                "liaison"
+              ]
+            },
+            "taskKind": {
+              "type": "string",
+              "enum": [
+                "investigate_and_report",
+                "request_report"
+              ]
+            },
+            "topicId": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "reservationLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "investigationId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reasonAnnotation": {
+              "oneOf": [
+                {
+                  "$ref": "public.schema.json#/$defs/ReasonAnnotation"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "taskId",
+            "targetRole",
+            "taskKind",
+            "topicId",
+            "reservationLedgerId",
+            "investigationId",
+            "reasonAnnotation"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventInvestigationStarted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "investigation.started"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "investigationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "taskId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "channel": {
+              "type": "string",
+              "enum": [
+                "satellite",
+                "drone",
+                "localAgency",
+                "witness"
+              ]
+            },
+            "targetId": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "dueAtMissionMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "spendLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "investigationId",
+            "taskId",
+            "channel",
+            "targetId",
+            "dueAtMissionMs",
+            "spendLedgerId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventInvestigationCompleted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "investigation.completed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "investigationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "evidenceInstanceId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          },
+          "required": [
+            "investigationId",
+            "evidenceInstanceId",
+            "revision"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventInvestigationCancelled": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "investigation.cancelled"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "investigationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "reason": {
+              "type": "string",
+              "enum": [
+                "scene_left",
+                "session_terminated"
+              ]
+            },
+            "releaseLedgerId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "investigationId",
+            "reason",
+            "releaseLedgerId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventInvestigationFailed": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "investigation.failed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "investigationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "reason": {
+              "const": "technical_failure"
+            },
+            "refundLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "releaseLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "investigationId",
+            "reason",
+            "refundLedgerId",
+            "releaseLedgerId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventEvidenceAcquired": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "evidence.acquired"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "evidenceInstanceId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "ownerRole": {
+              "type": "string",
+              "enum": [
+                "analyst",
+                "liaison"
+              ]
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "definitionId": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "payloadHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "evidenceInstanceId",
+            "ownerRole",
+            "revision",
+            "definitionId",
+            "payloadHash"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventReportCreated": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "report.created"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "reportId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "evidenceInstanceId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "sourceRole": {
+              "type": "string",
+              "enum": [
+                "analyst",
+                "liaison"
+              ]
+            },
+            "spendLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "selectionRule": {
+              "const": "public_topic_priority_then_acquisition"
+            }
+          },
+          "required": [
+            "reportId",
+            "evidenceInstanceId",
+            "revision",
+            "sourceRole",
+            "spendLedgerId",
+            "selectionRule"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventProvenanceDisclosed": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "provenance.disclosed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "disclosureId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "evidenceInstanceId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "privateEdgeDefinitionIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 64,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "disclosureId",
+            "evidenceInstanceId",
+            "privateEdgeDefinitionIds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventUploadCreated": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "upload.created"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "uploadId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "reportId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "evidenceInstanceId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            },
+            "inboxVersion": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "assistantContextVersion": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "spendLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "uploadId",
+            "reportId",
+            "evidenceInstanceId",
+            "revision",
+            "inboxVersion",
+            "assistantContextVersion",
+            "spendLedgerId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventPlayerStatementCreated": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "player_statement.created"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "statementId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "sceneId": {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "assistantContextVersion": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "statementId",
+            "sceneId",
+            "text",
+            "assistantContextVersion"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventAgentJobQueued": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "agent.job_queued"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "advisor"
+            },
+            "inputManifestId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "sealedHash": {
+              "type": "null"
+            },
+            "inputHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "inputVersion": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "inputManifestId",
+            "sealedHash",
+            "inputHash",
+            "inputVersion"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventAgentAttemptStarted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "agent.attempt_started"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "advisor"
+            },
+            "attemptId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "attemptNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "spendLedgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "attemptId",
+            "attemptNumber",
+            "spendLedgerId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventAgentJobFinished": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "agent.job_finished"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "advisor"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "succeeded",
+                "fallback",
+                "failed",
+                "superseded",
+                "cancelled"
+              ]
+            },
+            "outputHash": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64,
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "status",
+            "outputHash"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventDisplayReceived": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "display.received"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "receiptId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "observedStateVersion": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "observedSceneId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "E1",
+                    "E2",
+                    "E3"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "displayKind": {
+              "type": "string",
+              "enum": [
+                "report_opened",
+                "advice_displayed",
+                "consequence_seen",
+                "context_displayed"
+              ]
+            },
+            "reportId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "jobId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "operationId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "receiptId",
+            "observedStateVersion",
+            "observedSceneId",
+            "displayKind",
+            "reportId",
+            "jobId",
+            "operationId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventActionCommitted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "action.committed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "decisionId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "operationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "sceneId": {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            "actionId": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1000
+            },
+            "reasonAnnotation": {
+              "oneOf": [
+                {
+                  "$ref": "public.schema.json#/$defs/ReasonAnnotation"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "referencedReportIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "minItems": 0,
+              "maxItems": 30,
+              "uniqueItems": true
+            },
+            "basedOnAdviceJobId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "cancelledInvestigationIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "minItems": 0,
+              "maxItems": 2,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "decisionId",
+            "operationId",
+            "sceneId",
+            "actionId",
+            "reason",
+            "reasonAnnotation",
+            "referencedReportIds",
+            "basedOnAdviceJobId",
+            "cancelledInvestigationIds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventOperationSegmentCompleted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "operation.segment_completed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "segmentId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "location": {
+              "$ref": "public.schema.json#/$defs/KnownLocation"
+            },
+            "actualDurationMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "releasedEvidenceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "minItems": 0,
+              "maxItems": 10,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "operationId",
+            "segmentId",
+            "location",
+            "actualDurationMs",
+            "releasedEvidenceIds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventOperationFinished": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "operation.finished"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "operationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "completed",
+                "cancelled",
+                "failed"
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "enum": [
+                "normal",
+                "mission_deadline",
+                "abandoned",
+                "technical_failure"
+              ]
+            }
+          },
+          "required": [
+            "operationId",
+            "status",
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventQuotaChanged": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "quota.changed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "ledgerId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "accountId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "investigation",
+                "report",
+                "upload",
+                "model_call"
+              ]
+            },
+            "entryKind": {
+              "type": "string",
+              "enum": [
+                "reserve",
+                "spend",
+                "release",
+                "refund"
+              ]
+            },
+            "quantity": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5
+            },
+            "remainingAfter": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30
+            },
+            "reservedAfter": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3
+            },
+            "causationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "ledgerId",
+            "accountId",
+            "unit",
+            "entryKind",
+            "quantity",
+            "remainingAfter",
+            "reservedAfter",
+            "causationId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventHandoffTaskCompleted": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "handoff.task_completed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "task": {
+              "type": "string",
+              "enum": [
+                "manifest",
+                "inspection"
+              ]
+            },
+            "nodeId": {
+              "type": "string",
+              "enum": [
+                "N10",
+                "N07"
+              ]
+            },
+            "operationId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "task",
+            "nodeId",
+            "operationId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventMedicalTargetMissed": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "medical.target_missed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "targetAtMissionMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "stateAfter": {
+              "const": "target_missed"
+            }
+          },
+          "required": [
+            "targetAtMissionMs",
+            "stateAfter"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "EventSessionSealed": {
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "recordedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "actor": {
+          "$ref": "#/$defs/Actor"
+        },
+        "requestId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causationEventId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eventType": {
+          "const": "session.sealed"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "sealedHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "outcome": {
+              "$ref": "public.schema.json#/$defs/OutcomeView"
+            }
+          },
+          "required": [
+            "sealedHash",
+            "outcome"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventId",
+        "sessionId",
+        "seq",
+        "missionTimeMs",
+        "recordedAt",
+        "actor",
+        "requestId",
+        "causationEventId",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "InternalEvent": {
+      "description": "Gameplay log only. Writer rejects after terminal seal; all agent events here are advisor-only. No postgame worker may append to this sequence.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/EventSessionCreated"
+        },
+        {
+          "$ref": "#/$defs/EventSessionStarted"
+        },
+        {
+          "$ref": "#/$defs/EventSceneEntered"
+        },
+        {
+          "$ref": "#/$defs/EventTaskAccepted"
+        },
+        {
+          "$ref": "#/$defs/EventInvestigationStarted"
+        },
+        {
+          "$ref": "#/$defs/EventInvestigationCompleted"
+        },
+        {
+          "$ref": "#/$defs/EventInvestigationCancelled"
+        },
+        {
+          "$ref": "#/$defs/EventInvestigationFailed"
+        },
+        {
+          "$ref": "#/$defs/EventEvidenceAcquired"
+        },
+        {
+          "$ref": "#/$defs/EventReportCreated"
+        },
+        {
+          "$ref": "#/$defs/EventProvenanceDisclosed"
+        },
+        {
+          "$ref": "#/$defs/EventUploadCreated"
+        },
+        {
+          "$ref": "#/$defs/EventPlayerStatementCreated"
+        },
+        {
+          "$ref": "#/$defs/EventAgentJobQueued"
+        },
+        {
+          "$ref": "#/$defs/EventAgentAttemptStarted"
+        },
+        {
+          "$ref": "#/$defs/EventAgentJobFinished"
+        },
+        {
+          "$ref": "#/$defs/EventDisplayReceived"
+        },
+        {
+          "$ref": "#/$defs/EventActionCommitted"
+        },
+        {
+          "$ref": "#/$defs/EventOperationSegmentCompleted"
+        },
+        {
+          "$ref": "#/$defs/EventOperationFinished"
+        },
+        {
+          "$ref": "#/$defs/EventQuotaChanged"
+        },
+        {
+          "$ref": "#/$defs/EventHandoffTaskCompleted"
+        },
+        {
+          "$ref": "#/$defs/EventMedicalTargetMissed"
+        },
+        {
+          "$ref": "#/$defs/EventSessionSealed"
+        }
+      ]
+    },
+    "AuditBehaviorFactsBuilt": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "behavior.facts_built"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "factSetHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "factIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "minItems": 0,
+              "maxItems": 768,
+              "uniqueItems": true
+            },
+            "evaluationConfigId": {
+              "const": "EVALUATION_REFERENCE_V1"
+            }
+          },
+          "required": [
+            "factSetHash",
+            "factIds",
+            "evaluationConfigId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "AuditEvaluatorJobQueued": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "evaluator.job_queued"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "evaluator"
+            },
+            "inputHash": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "inputVersion": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "evaluationConfigId": {
+              "const": "EVALUATION_REFERENCE_V1"
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "inputHash",
+            "inputVersion",
+            "evaluationConfigId"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "AuditEvaluatorAttemptStarted": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "evaluator.attempt_started"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "evaluator"
+            },
+            "attemptId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "attemptNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "attemptId",
+            "attemptNumber"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "AuditEvaluatorAttemptFinished": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "evaluator.attempt_finished"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "evaluator"
+            },
+            "attemptId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "attemptNumber": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "succeeded",
+                "failed",
+                "timeout",
+                "unknown"
+              ]
+            },
+            "inputTokens": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "outputTokens": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "providerRequestId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "errorCode": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "MODEL_TIMEOUT",
+                    "MODEL_TRANSPORT",
+                    "MODEL_RATE_LIMIT",
+                    "MODEL_INVALID_OUTPUT"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "attemptId",
+            "attemptNumber",
+            "status",
+            "inputTokens",
+            "outputTokens",
+            "providerRequestId",
+            "errorCode"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "AuditEvaluatorJobFinished": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "evaluator.job_finished"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "jobId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "agentRole": {
+              "const": "evaluator"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "succeeded",
+                "fallback",
+                "failed",
+                "cancelled"
+              ]
+            },
+            "outputHash": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64,
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "jobId",
+            "agentRole",
+            "status",
+            "outputHash"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "AuditExportQueued": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "export.queued"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "exportId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "includePlayerStatements": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "exportId",
+            "includePlayerStatements"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "AuditExportFinished": {
+      "type": "object",
+      "properties": {
+        "auditId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "eventType": {
+          "const": "export.finished"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "exportId": {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "succeeded",
+                "failed"
+              ]
+            },
+            "artifactHash": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 64,
+                  "maxLength": 64,
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "errorCode": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "storage_unavailable",
+                    "export_size_limit"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "exportId",
+            "status",
+            "artifactHash",
+            "errorCode"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "auditId",
+        "sessionId",
+        "sealedHash",
+        "createdAt",
+        "eventType",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "PostgameAuditEvent": {
+      "description": "Terminal management audit only. Validated against an existing seal and persisted separately from gameplay events, with no gameplay seq or missionTimeMs.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/AuditBehaviorFactsBuilt"
+        },
+        {
+          "$ref": "#/$defs/AuditEvaluatorJobQueued"
+        },
+        {
+          "$ref": "#/$defs/AuditEvaluatorAttemptStarted"
+        },
+        {
+          "$ref": "#/$defs/AuditEvaluatorAttemptFinished"
+        },
+        {
+          "$ref": "#/$defs/AuditEvaluatorJobFinished"
+        },
+        {
+          "$ref": "#/$defs/AuditExportQueued"
+        },
+        {
+          "$ref": "#/$defs/AuditExportFinished"
+        }
+      ]
+    },
+    "CommandRecord": {
+      "type": "object",
+      "properties": {
+        "commandId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "launchId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runEpoch": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "method": {
+          "const": "POST"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^/api/v1/"
+        },
+        "requestHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "completed",
+            "rejected"
+          ]
+        },
+        "httpStatus": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 599
+        },
+        "responseKind": {
+          "type": "string",
+          "enum": [
+            "session",
+            "task",
+            "upload",
+            "question",
+            "action",
+            "receipt",
+            "outcome",
+            "evaluation",
+            "export",
+            "problem"
+          ]
+        },
+        "responseJsonHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "committedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "commandId",
+        "requestId",
+        "launchId",
+        "sessionId",
+        "runEpoch",
+        "idempotencyKey",
+        "method",
+        "path",
+        "requestHash",
+        "status",
+        "httpStatus",
+        "responseKind",
+        "responseJsonHash",
+        "committedAt"
+      ],
+      "additionalProperties": false
+    },
+    "InvestigationRecord": {
+      "type": "object",
+      "properties": {
+        "investigationId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "taskId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "targetRole": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison"
+          ]
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "satellite",
+            "drone",
+            "localAgency",
+            "witness"
+          ]
+        },
+        "investigationKind": {
+          "type": "string",
+          "enum": [
+            "satellite_scan",
+            "drone_observe",
+            "agency_contact",
+            "witness_interview",
+            "provenance_trace"
+          ]
+        },
+        "targetId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "topicId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "sourceReportId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "running",
+            "completed",
+            "cancelled",
+            "failed"
+          ]
+        },
+        "acceptedAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "dueAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "completedAtMissionMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reservedReportLedgerId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "spendLedgerId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "resultEvidenceInstanceId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "investigationId",
+        "taskId",
+        "sessionId",
+        "sceneId",
+        "targetRole",
+        "channel",
+        "investigationKind",
+        "targetId",
+        "topicId",
+        "sourceReportId",
+        "status",
+        "acceptedAtMissionMs",
+        "dueAtMissionMs",
+        "completedAtMissionMs",
+        "reservedReportLedgerId",
+        "spendLedgerId",
+        "resultEvidenceInstanceId"
+      ],
+      "additionalProperties": false
+    },
+    "QuotaEntry": {
+      "type": "object",
+      "properties": {
+        "ledgerId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ownerRole": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison",
+            "commander",
+            "advisor",
+            "evaluator"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "investigation",
+            "report",
+            "upload",
+            "model_call"
+          ]
+        },
+        "channel": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "satellite",
+                "drone",
+                "localAgency",
+                "witness"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entryKind": {
+          "type": "string",
+          "enum": [
+            "reserve",
+            "spend",
+            "release",
+            "refund"
+          ]
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "causationId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "createdAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "ledgerId",
+        "sessionId",
+        "sceneId",
+        "ownerRole",
+        "unit",
+        "channel",
+        "entryKind",
+        "quantity",
+        "causationId",
+        "createdAtMissionMs"
+      ],
+      "additionalProperties": false
+    },
+    "CommandSuccess": {
+      "oneOf": [
+        {
+          "$ref": "public.schema.json#/$defs/SessionCreated"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/SessionProjection"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/TaskAccepted"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/UploadView"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/QuestionAccepted"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/ActionAccepted"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/ReceiptView"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/OutcomeView"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/EvaluationAccepted"
+        },
+        {
+          "$ref": "public.schema.json#/$defs/ExportAccepted"
+        }
+      ]
+    }
+  },
+  "$ref": "#/$defs/InternalEvent"
+}

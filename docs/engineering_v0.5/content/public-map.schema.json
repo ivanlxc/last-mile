@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:last-mile:public-map:0.5",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "mapId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coordinateSystem": {
+      "type": "string",
+      "enum": [
+        "glb_x_right_y_up_z_south"
+      ]
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "sceneId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "playable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nodeId",
+          "label",
+          "position",
+          "sceneId",
+          "playable"
+        ]
+      },
+      "minItems": 1
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "routeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fromNode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "toNode": {
+            "type": "string",
+            "minLength": 1
+          },
+          "durationMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bidirectional": {
+            "type": "boolean"
+          },
+          "waypoints": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "minItems": 2
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "routeId",
+          "fromNode",
+          "toNode",
+          "durationMs",
+          "bidirectional",
+          "waypoints",
+          "enabled"
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "mapId",
+    "coordinateSystem",
+    "nodes",
+    "routes"
+  ]
+}

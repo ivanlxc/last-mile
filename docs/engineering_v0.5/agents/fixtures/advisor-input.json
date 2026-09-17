@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "0.5",
+  "sessionId": "00000000-0000-0000-0000-000000000001",
+  "sceneId": "E1",
+  "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "contextVersion": 1,
+  "publicTask": {
+    "objective": "将20名平民送至N07，区分抵达和交接。",
+    "currentNodeId": "N01",
+    "actions": [
+      {
+        "actionId": "E1_MAIN",
+        "label": "主门登记",
+        "description": "经过主门后到市集。",
+        "knownDurationMs": 20000,
+        "durationQualifier": "base_only",
+        "limitations": [
+          "当前额外等候未知。"
+        ]
+      },
+      {
+        "actionId": "E1_BYPASS",
+        "label": "服务路绕行",
+        "description": "绕行后补录登记。",
+        "knownDurationMs": 5000,
+        "durationQualifier": "base_only",
+        "limitations": [
+          "后续补录耗时不在此数字中。"
+        ]
+      }
+    ],
+    "channelCapabilities": [
+      {
+        "channel": "drone",
+        "publicTargetIds": [
+          "gate_status"
+        ],
+        "canObserve": [
+          "可见车辆流动和标识。"
+        ],
+        "cannotConfirm": [
+          "不能保证登记系统恢复时间。"
+        ]
+      }
+    ]
+  },
+  "backgrounds": [
+    {
+      "backgroundId": "BG01",
+      "revision": 1,
+      "fictional": true,
+      "text": "历史图像不证明当前畅通。",
+      "sourceLabel": "演习背景资料",
+      "period": "一般性说明",
+      "scope": "图像时效",
+      "limitations": [
+        "不是当前实况。"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "instanceId": "00000000-0000-0000-0000-000000000065",
+      "revision": 1,
+      "sceneId": "E1",
+      "observationType": "historical_image",
+      "text": "十分钟前主路空闲；不能确认当前登记系统。",
+      "sourceLabel": "卫星历史帧",
+      "observationAgeMs": 600000,
+      "freshness": "historical",
+      "scope": "西门可见路面",
+      "limitations": [
+        "不能确认当前登记系统。"
+      ],
+      "knownSourceEdges": []
+    }
+  ],
+  "statements": [],
+  "question": {
+    "questionId": "00000000-0000-0000-0000-0000000000c9",
+    "kind": "automatic",
+    "text": "根据已上传资料分析。",
+    "selectedEvidenceRefs": []
+  },
+  "priorAnalysis": null
+}

@@ -1,0 +1,18 @@
+{
+  "master_objects": 1586,
+  "glb_import": "passed in Blender 5.2.1",
+  "imported_objects": 1443,
+  "world_min": [
+    -20.006332397460938,
+    -14.0,
+    0.26499998569488525
+  ],
+  "world_max": [
+    20.007667541503906,
+    14.0078706741333,
+    5.450726509094238
+  ],
+  "building_parent_transforms": "passed",
+  "gate_hinge_children": 5,
+  "fonts": "built-in only"
+}

@@ -1,0 +1,4294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LAST MILE public command and projection contracts v0.5",
+  "$defs": {
+    "Uuid": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "format": "uuid"
+    },
+    "Sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "SceneId": {
+      "type": "string",
+      "enum": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    "MissionMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "AdvisorJobView": {
+      "allOf": [
+        {
+          "$ref": "../agents/contracts.schema.json#/$defs/AgentJobView"
+        },
+        {
+          "properties": {
+            "agentRole": {
+              "const": "advisor"
+            }
+          }
+        }
+      ]
+    },
+    "EvaluationJobView": {
+      "allOf": [
+        {
+          "$ref": "../agents/contracts.schema.json#/$defs/AgentJobView"
+        },
+        {
+          "properties": {
+            "agentRole": {
+              "const": "evaluator"
+            }
+          }
+        }
+      ]
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "INVALID_REQUEST",
+        "UNAUTHORIZED",
+        "CAPABILITY_DENIED",
+        "RESOURCE_NOT_FOUND",
+        "STATE_VERSION_CONFLICT",
+        "SCENE_CONFLICT",
+        "RUN_EPOCH_CONFLICT",
+        "IDEMPOTENCY_KEY_REUSED",
+        "PHASE_NOT_ALLOWED",
+        "POLICY_NOT_APPROVED",
+        "BUDGET_EXHAUSTED",
+        "ROLE_BUSY",
+        "TARGET_NOT_AVAILABLE",
+        "REPORT_LIMIT",
+        "UPLOAD_LIMIT",
+        "REVISION_CONFLICT",
+        "NOT_REPORTED",
+        "ACTION_NOT_AVAILABLE",
+        "SEALED_HASH_MISMATCH",
+        "NOT_TERMINAL",
+        "ALREADY_TERMINAL",
+        "CURSOR_EXPIRED",
+        "CURSOR_SCOPE_MISMATCH",
+        "RATE_LIMITED",
+        "MODEL_BUDGET_EXHAUSTED",
+        "BODY_TOO_LARGE",
+        "STORAGE_UNAVAILABLE",
+        "SERVICE_UNAVAILABLE"
+      ]
+    },
+    "Problem": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "pattern": "^urn:last-mile:problem:[a-z-]+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 599
+        },
+        "code": {
+          "$ref": "#/$defs/ErrorCode"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "currentStateVersion": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "required",
+                  "format",
+                  "range",
+                  "unknown_property",
+                  "invalid_combination",
+                  "not_allowed"
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 20
+        }
+      },
+      "required": [
+        "type",
+        "title",
+        "status",
+        "code",
+        "requestId",
+        "retryable",
+        "currentStateVersion",
+        "detail",
+        "violations"
+      ],
+      "additionalProperties": false
+    },
+    "Problem400": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 400
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "INVALID_REQUEST"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem401": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 401
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "UNAUTHORIZED"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem403": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 403
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "CAPABILITY_DENIED",
+                "CURSOR_SCOPE_MISMATCH"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem404": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 404
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "RESOURCE_NOT_FOUND"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem409": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 409
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "STATE_VERSION_CONFLICT",
+                "SCENE_CONFLICT",
+                "RUN_EPOCH_CONFLICT",
+                "IDEMPOTENCY_KEY_REUSED",
+                "REVISION_CONFLICT"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem410": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 410
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "CURSOR_EXPIRED"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem413": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 413
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "BODY_TOO_LARGE"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem422": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 422
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "PHASE_NOT_ALLOWED",
+                "POLICY_NOT_APPROVED",
+                "BUDGET_EXHAUSTED",
+                "ROLE_BUSY",
+                "TARGET_NOT_AVAILABLE",
+                "REPORT_LIMIT",
+                "UPLOAD_LIMIT",
+                "NOT_REPORTED",
+                "ACTION_NOT_AVAILABLE",
+                "SEALED_HASH_MISMATCH",
+                "NOT_TERMINAL",
+                "ALREADY_TERMINAL"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem429": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 429
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "RATE_LIMITED",
+                "MODEL_BUDGET_EXHAUSTED"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Problem503": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Problem"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": 503
+            },
+            "code": {
+              "type": "string",
+              "enum": [
+                "STORAGE_UNAVAILABLE",
+                "SERVICE_UNAVAILABLE"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "HealthView": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "degraded"
+          ]
+        },
+        "apiVersion": {
+          "const": "v1"
+        },
+        "contractVersion": {
+          "const": "0.5"
+        },
+        "storageReady": {
+          "type": "boolean"
+        },
+        "modelConfigured": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "status",
+        "apiVersion",
+        "contractVersion",
+        "storageReady",
+        "modelConfigured"
+      ],
+      "additionalProperties": false
+    },
+    "ProfileSummary": {
+      "type": "object",
+      "properties": {
+        "profileId": {
+          "const": "SINGLE_PLAYER_REFERENCE"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "review",
+            "approved"
+          ]
+        },
+        "mode": {
+          "const": "single_player"
+        },
+        "normalStartAllowed": {
+          "type": "boolean"
+        },
+        "designPreviewAllowed": {
+          "type": "boolean"
+        },
+        "policyHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "contentVersionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "profileId",
+        "status",
+        "mode",
+        "normalStartAllowed",
+        "designPreviewAllowed",
+        "policyHash",
+        "contentVersionId",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "BootstrapView": {
+      "type": "object",
+      "properties": {
+        "launchId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "apiVersion": {
+          "const": "v1"
+        },
+        "contractVersion": {
+          "const": "0.5"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "commander.read",
+              "session.create",
+              "session.command",
+              "evaluation.request",
+              "export.request"
+            ]
+          },
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProfileSummary"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "maximumRequestBytes": {
+          "const": 65536
+        },
+        "sseReconnectMs": {
+          "const": 2000
+        },
+        "defaultLocale": {
+          "type": "string",
+          "enum": [
+            "en-US",
+            "zh-CN"
+          ]
+        },
+        "supportedLocales": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "en-US",
+              "zh-CN"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "launchId",
+        "apiVersion",
+        "contractVersion",
+        "capabilities",
+        "profiles",
+        "maximumRequestBytes",
+        "sseReconnectMs"
+      ],
+      "additionalProperties": false
+    },
+    "CreateSessionRequest": {
+      "type": "object",
+      "properties": {
+        "profileId": {
+          "const": "SINGLE_PLAYER_REFERENCE"
+        },
+        "runPurpose": {
+          "type": "string",
+          "enum": [
+            "approved_play",
+            "design_preview"
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "zh-CN",
+            "en-US"
+          ]
+        },
+        "contentVersionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "profileId",
+        "runPurpose",
+        "locale",
+        "contentVersionId"
+      ],
+      "additionalProperties": false
+    },
+    "KnownLocation": {
+      "type": "object",
+      "properties": {
+        "nodeId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 3,
+              "pattern": "^N(?:0[0-9]|10)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "routeId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 3,
+              "pattern": "^R(?:0[0-9]|1[0-2])$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "progressPermille": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        }
+      },
+      "required": [
+        "nodeId",
+        "routeId",
+        "progressPermille"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "nodeId": {
+                  "type": "string"
+                },
+                "routeId": {
+                  "type": "null"
+                },
+                "progressPermille": {
+                  "const": 0
+                }
+              }
+            },
+            {
+              "properties": {
+                "nodeId": {
+                  "type": "null"
+                },
+                "routeId": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "ResourceBalance": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison"
+          ]
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "satellite",
+            "drone",
+            "localAgency",
+            "witness"
+          ]
+        },
+        "initial": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "remaining": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "spent": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "scope": {
+          "const": "session"
+        }
+      },
+      "required": [
+        "role",
+        "channel",
+        "initial",
+        "remaining",
+        "spent",
+        "scope"
+      ],
+      "additionalProperties": false
+    },
+    "ReportQuota": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison"
+          ]
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "limit": {
+          "const": 3
+        },
+        "used": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "reserved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "remaining": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      },
+      "required": [
+        "role",
+        "sceneId",
+        "limit",
+        "used",
+        "reserved",
+        "remaining"
+      ],
+      "additionalProperties": false
+    },
+    "UploadQuota": {
+      "type": "object",
+      "properties": {
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "mode": {
+          "const": "cumulative"
+        },
+        "limit": {
+          "const": 5
+        },
+        "used": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "remaining": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      },
+      "required": [
+        "sceneId",
+        "mode",
+        "limit",
+        "used",
+        "remaining"
+      ],
+      "additionalProperties": false
+    },
+    "MedicalView": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "stable",
+            "support_needed",
+            "target_missed"
+          ]
+        },
+        "targetAtMissionMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "status",
+        "targetAtMissionMs",
+        "note"
+      ],
+      "additionalProperties": false
+    },
+    "PendingTasks": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "enum": [
+            "notRequired",
+            "pending",
+            "completed"
+          ]
+        },
+        "inspection": {
+          "type": "string",
+          "enum": [
+            "notRequired",
+            "pending",
+            "completed"
+          ]
+        }
+      },
+      "required": [
+        "manifest",
+        "inspection"
+      ],
+      "additionalProperties": false
+    },
+    "PublicCost": {
+      "type": "object",
+      "properties": {
+        "knownDurationMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uncertainty": {
+          "type": "string",
+          "enum": [
+            "none",
+            "possible_delay",
+            "duration_unknown"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "knownDurationMs",
+        "uncertainty",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "TaskOption": {
+      "type": "object",
+      "properties": {
+        "targetId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "topicId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "targetRole": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "investigationKind": {
+          "type": "string",
+          "enum": [
+            "satellite_scan",
+            "drone_observe",
+            "agency_contact",
+            "witness_interview",
+            "provenance_trace"
+          ]
+        },
+        "resourceChannel": {
+          "type": "string",
+          "enum": [
+            "satellite",
+            "drone",
+            "localAgency",
+            "witness"
+          ]
+        },
+        "cost": {
+          "$ref": "#/$defs/PublicCost"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "disabledReason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "no_resource",
+                "no_report_slot",
+                "role_busy",
+                "phase_locked",
+                "needs_report_reference"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "targetId",
+        "topicId",
+        "targetRole",
+        "label",
+        "investigationKind",
+        "resourceChannel",
+        "cost",
+        "available",
+        "disabledReason"
+      ],
+      "additionalProperties": false
+    },
+    "ReasonAnnotation": {
+      "type": "object",
+      "properties": {
+        "reasonCodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "evidence_supported",
+              "current_conflict",
+              "accepted_uncertainty_for_time",
+              "ai_said_so",
+              "prior_ai_error_only",
+              "new_question",
+              "no_new_question"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 7,
+          "uniqueItems": true
+        },
+        "acknowledgedLimitation": {
+          "type": "boolean"
+        },
+        "comparedKnownCosts": {
+          "type": "boolean"
+        },
+        "declaredQuestionKey": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "reasonCodes",
+        "acknowledgedLimitation",
+        "comparedKnownCosts",
+        "declaredQuestionKey"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "not": {
+            "properties": {
+              "reasonCodes": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "const": "new_question"
+                    }
+                  },
+                  {
+                    "contains": {
+                      "const": "no_new_question"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ActionOption": {
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "route",
+            "wait",
+            "terminal_wait"
+          ]
+        },
+        "knownRouteIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3,
+            "pattern": "^R(?:0[0-9]|1[0-2])$"
+          },
+          "minItems": 0,
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "cost": {
+          "$ref": "#/$defs/PublicCost"
+        },
+        "knownRisk": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "irreversibleNotice": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "disabledReason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "phase_locked",
+                "not_at_origin",
+                "already_selected",
+                "recovery_used"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "actionId",
+        "label",
+        "kind",
+        "knownRouteIds",
+        "cost",
+        "knownRisk",
+        "irreversibleNotice",
+        "available",
+        "disabledReason"
+      ],
+      "additionalProperties": false
+    },
+    "EvidenceCard": {
+      "type": "object",
+      "properties": {
+        "evidenceInstanceId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "definitionId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
+        },
+        "statementKind": {
+          "type": "string",
+          "enum": [
+            "observation",
+            "testimony",
+            "provenance",
+            "correction",
+            "brief"
+          ]
+        },
+        "sourceLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "satellite",
+            "drone",
+            "localAgency",
+            "witness",
+            "initial",
+            "route_observation"
+          ]
+        },
+        "observedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 40,
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receivedAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "validUntilMissionMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "freshness": {
+          "type": "string",
+          "enum": [
+            "current",
+            "historical",
+            "superseded",
+            "unknown"
+          ]
+        },
+        "observationScope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "provenanceStatus": {
+          "type": "string",
+          "enum": [
+            "unverified",
+            "partially_verified",
+            "verified"
+          ]
+        },
+        "supersedesEvidenceInstanceId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "evidenceInstanceId",
+        "definitionId",
+        "revision",
+        "sceneId",
+        "title",
+        "body",
+        "statementKind",
+        "sourceLabel",
+        "channel",
+        "observedAt",
+        "receivedAtMissionMs",
+        "validUntilMissionMs",
+        "freshness",
+        "observationScope",
+        "provenanceStatus",
+        "supersedesEvidenceInstanceId"
+      ],
+      "additionalProperties": false
+    },
+    "ReportView": {
+      "type": "object",
+      "properties": {
+        "reportId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "evidenceInstanceId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "sourceRole": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison"
+          ]
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "reportedAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "card": {
+          "$ref": "#/$defs/EvidenceCard"
+        }
+      },
+      "required": [
+        "reportId",
+        "evidenceInstanceId",
+        "revision",
+        "sourceRole",
+        "sceneId",
+        "reportedAtMissionMs",
+        "card"
+      ],
+      "additionalProperties": false
+    },
+    "UploadItem": {
+      "type": "object",
+      "properties": {
+        "reportId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        }
+      },
+      "required": [
+        "reportId",
+        "expectedRevision"
+      ],
+      "additionalProperties": false
+    },
+    "UploadSnapshot": {
+      "type": "object",
+      "properties": {
+        "uploadId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "reportId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "evidenceInstanceId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "uploadedAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "payloadHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "uploadId",
+        "reportId",
+        "evidenceInstanceId",
+        "revision",
+        "sceneId",
+        "uploadedAtMissionMs",
+        "payloadHash"
+      ],
+      "additionalProperties": false
+    },
+    "UploadView": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "inboxVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "assistantContextVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UploadSnapshot"
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "currentSceneUploads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UploadSnapshot"
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "quota": {
+          "$ref": "#/$defs/UploadQuota"
+        },
+        "analysisJobId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "stateVersion",
+        "inboxVersion",
+        "assistantContextVersion",
+        "added",
+        "currentSceneUploads",
+        "quota",
+        "analysisJobId"
+      ],
+      "additionalProperties": false
+    },
+    "TaskView": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "targetRole": {
+          "type": "string",
+          "enum": [
+            "analyst",
+            "liaison"
+          ]
+        },
+        "taskKind": {
+          "type": "string",
+          "enum": [
+            "investigate_and_report",
+            "request_report"
+          ]
+        },
+        "topicId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "resourceChannel": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "satellite",
+                "drone",
+                "localAgency",
+                "witness"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "running",
+            "completed",
+            "cancelled",
+            "failed"
+          ]
+        },
+        "investigationId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reportId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "completedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 40,
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failureCode": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "scene_left",
+                "session_terminated",
+                "technical_failure",
+                "no_matching_acquired_report"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "taskId",
+        "sessionId",
+        "sceneId",
+        "targetRole",
+        "taskKind",
+        "topicId",
+        "resourceChannel",
+        "status",
+        "investigationId",
+        "reportId",
+        "createdAt",
+        "completedAt",
+        "failureCode"
+      ],
+      "additionalProperties": false
+    },
+    "OperationView": {
+      "type": "object",
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "operationKind": {
+          "type": "string",
+          "enum": [
+            "action",
+            "wait"
+          ]
+        },
+        "actionId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "running",
+            "completed",
+            "cancelled",
+            "failed"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "completedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 40,
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentLocation": {
+          "$ref": "#/$defs/KnownLocation"
+        },
+        "publicProgressLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "failureCode": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "mission_deadline",
+                "abandoned",
+                "technical_failure"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "operationId",
+        "sessionId",
+        "sceneId",
+        "operationKind",
+        "actionId",
+        "status",
+        "createdAt",
+        "completedAt",
+        "currentLocation",
+        "publicProgressLabel",
+        "failureCode"
+      ],
+      "additionalProperties": false
+    },
+    "ReceiptView": {
+      "type": "object",
+      "properties": {
+        "receiptId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "accepted": {
+          "const": true
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "receiptId",
+        "accepted",
+        "stateVersion"
+      ],
+      "additionalProperties": false
+    },
+    "ProvenanceNode": {
+      "type": "object",
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "report",
+            "declared_source",
+            "verified_source"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "reportId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "nodeId",
+        "kind",
+        "label",
+        "reportId"
+      ],
+      "additionalProperties": false
+    },
+    "ProvenanceEdge": {
+      "type": "object",
+      "properties": {
+        "edgeId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "fromNodeId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "toNodeId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "relation": {
+          "type": "string",
+          "enum": [
+            "cites",
+            "reports",
+            "same_origin"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "claimed",
+            "hypothesized",
+            "verified"
+          ]
+        },
+        "disclosedByReportId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "edgeId",
+        "fromNodeId",
+        "toNodeId",
+        "relation",
+        "status",
+        "disclosedByReportId"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "verified"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "disclosedByReportId": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ProvenanceView": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProvenanceNode"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProvenanceEdge"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "notice": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "sessionId",
+        "sceneId",
+        "stateVersion",
+        "nodes",
+        "edges",
+        "notice"
+      ],
+      "additionalProperties": false
+    },
+    "OutcomeView": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sealedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "sealedAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "taskSuccess": {
+          "type": "boolean"
+        },
+        "terminationReason": {
+          "type": "string",
+          "enum": [
+            "arrived",
+            "mission_deadline",
+            "awaiting_transfer",
+            "abandoned",
+            "technical_interruption"
+          ]
+        },
+        "arrivedAtMissionMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "handoffCompletedAtMissionMs": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pendingTasks": {
+          "$ref": "#/$defs/PendingTasks"
+        },
+        "finalLocation": {
+          "$ref": "#/$defs/KnownLocation"
+        },
+        "civilianCount": {
+          "const": 20
+        },
+        "medical": {
+          "$ref": "#/$defs/MedicalView"
+        },
+        "routeIdsTaken": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3,
+            "pattern": "^R(?:0[0-9]|1[0-2])$"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "sessionId",
+        "runEpoch",
+        "sealedHash",
+        "sealedAt",
+        "sealedAtMissionMs",
+        "taskSuccess",
+        "terminationReason",
+        "arrivedAtMissionMs",
+        "handoffCompletedAtMissionMs",
+        "pendingTasks",
+        "finalLocation",
+        "civilianCount",
+        "medical",
+        "routeIdsTaken",
+        "summary"
+      ],
+      "additionalProperties": false
+    },
+    "PlayerStatementView": {
+      "type": "object",
+      "properties": {
+        "statementId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sentAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "trustStatus": {
+          "const": "unverified_player_statement"
+        }
+      },
+      "required": [
+        "statementId",
+        "sceneId",
+        "text",
+        "sentAtMissionMs",
+        "trustStatus"
+      ],
+      "additionalProperties": false
+    },
+    "PublicLogEntry": {
+      "type": "object",
+      "properties": {
+        "logId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "brief",
+            "task_requested",
+            "report_received",
+            "uploaded",
+            "advice_displayed",
+            "action_committed",
+            "consequence",
+            "sealed"
+          ]
+        },
+        "actor": {
+          "type": "string",
+          "enum": [
+            "player",
+            "npc",
+            "rules",
+            "assistant",
+            "system"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "reportIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 20,
+          "uniqueItems": true
+        },
+        "jobId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "logId",
+        "sequence",
+        "missionTimeMs",
+        "kind",
+        "actor",
+        "summary",
+        "reportIds",
+        "jobId"
+      ],
+      "additionalProperties": false
+    },
+    "DecisionReplay": {
+      "type": "object",
+      "properties": {
+        "decisionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "committedAtMissionMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "actionId": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1000
+        },
+        "reasonAnnotation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReasonAnnotation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "knownReportIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "viewedReportIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "uploadedIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 15,
+          "uniqueItems": true
+        },
+        "displayedAdviceJobIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "legalActionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+          },
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true
+        },
+        "knownCosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actionId": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 64,
+                "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+              },
+              "cost": {
+                "$ref": "#/$defs/PublicCost"
+              }
+            },
+            "required": [
+              "actionId",
+              "cost"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "resultSummary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "unobservedCommunication": {
+          "const": "not_observable"
+        }
+      },
+      "required": [
+        "decisionId",
+        "sceneId",
+        "committedAtMissionMs",
+        "actionId",
+        "reason",
+        "reasonAnnotation",
+        "knownReportIds",
+        "viewedReportIds",
+        "uploadedIds",
+        "displayedAdviceJobIds",
+        "legalActionIds",
+        "knownCosts",
+        "resultSummary",
+        "unobservedCommunication"
+      ],
+      "additionalProperties": false
+    },
+    "ReplayView": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DecisionReplay"
+          },
+          "minItems": 0,
+          "maxItems": 25
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReportView"
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "playerStatements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlayerStatementView"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "publicLog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PublicLogEntry"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "nextCursor": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 36,
+              "maxLength": 36,
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "sealedHash",
+        "decisions",
+        "reports",
+        "playerStatements",
+        "publicLog",
+        "nextCursor"
+      ],
+      "additionalProperties": false
+    },
+    "ExportArtifact": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "last-mile-review-json"
+        },
+        "formatVersion": {
+          "const": "0.5"
+        },
+        "outcome": {
+          "$ref": "#/$defs/OutcomeView"
+        },
+        "replayPages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReplayView"
+          },
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "includedPlayerStatements": {
+          "type": "boolean"
+        },
+        "generatedAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "evaluationJob": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/EvaluationJobView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "formatVersion",
+        "outcome",
+        "replayPages",
+        "includedPlayerStatements",
+        "generatedAt",
+        "evaluationJob"
+      ],
+      "additionalProperties": false
+    },
+    "ExportView": {
+      "type": "object",
+      "properties": {
+        "exportId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "running",
+            "succeeded",
+            "failed"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "completedAt": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 40,
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifact": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ExportArtifact"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errorCode": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "storage_unavailable",
+                "export_size_limit"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "exportId",
+        "sessionId",
+        "sealedHash",
+        "status",
+        "createdAt",
+        "completedAt",
+        "artifact",
+        "errorCode"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "artifact": {
+                "$ref": "#/$defs/ExportArtifact"
+              },
+              "errorCode": {
+                "type": "null"
+              },
+              "completedAt": {
+                "type": "string",
+                "minLength": 20,
+                "maxLength": 40,
+                "format": "date-time"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "artifact": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SessionProjection": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "profileId": {
+          "const": "SINGLE_PLAYER_REFERENCE"
+        },
+        "runPurpose": {
+          "type": "string",
+          "enum": [
+            "approved_play",
+            "design_preview"
+          ]
+        },
+        "policyHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "contentVersionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "created",
+            "active",
+            "sealed"
+          ]
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "briefing",
+            "scene",
+            "resolving",
+            "terminal"
+          ]
+        },
+        "sceneId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "missionDeadlineMs": {
+          "const": 600000
+        },
+        "serverNow": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 40,
+          "format": "date-time"
+        },
+        "location": {
+          "$ref": "#/$defs/KnownLocation"
+        },
+        "civilianCount": {
+          "const": 20
+        },
+        "medical": {
+          "$ref": "#/$defs/MedicalView"
+        },
+        "pendingTasks": {
+          "$ref": "#/$defs/PendingTasks"
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResourceBalance"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "reportQuotas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReportQuota"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "uploadQuota": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/UploadQuota"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ReportView"
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "sceneUploads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UploadSnapshot"
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "inboxVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "assistantContextVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "activeTasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TaskView"
+          },
+          "minItems": 0,
+          "maxItems": 2
+        },
+        "activeOperation": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/OperationView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "taskOptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TaskOption"
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "actionOptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ActionOption"
+          },
+          "minItems": 0,
+          "maxItems": 10
+        },
+        "latestAdviceJob": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/AdvisorJobView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unuploadedReportIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 36,
+            "maxLength": 36,
+            "format": "uuid"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "lastViewCursor": {
+          "type": "string",
+          "minLength": 38,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f-]{36}:[0-9]+$"
+        },
+        "sealedHash": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locale": {
+          "type": "string",
+          "enum": [
+            "en-US",
+            "zh-CN"
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "runEpoch",
+        "profileId",
+        "runPurpose",
+        "policyHash",
+        "contentVersionId",
+        "stateVersion",
+        "lifecycle",
+        "phase",
+        "sceneId",
+        "missionTimeMs",
+        "missionDeadlineMs",
+        "serverNow",
+        "location",
+        "civilianCount",
+        "medical",
+        "pendingTasks",
+        "resources",
+        "reportQuotas",
+        "uploadQuota",
+        "reports",
+        "sceneUploads",
+        "inboxVersion",
+        "assistantContextVersion",
+        "activeTasks",
+        "activeOperation",
+        "taskOptions",
+        "actionOptions",
+        "latestAdviceJob",
+        "unuploadedReportIds",
+        "lastViewCursor",
+        "sealedHash"
+      ],
+      "additionalProperties": false
+    },
+    "SessionCreated": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "location": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "pattern": "^/api/v1/sessions/"
+        },
+        "projection": {
+          "$ref": "#/$defs/SessionProjection"
+        }
+      },
+      "required": [
+        "sessionId",
+        "runEpoch",
+        "location",
+        "projection"
+      ],
+      "additionalProperties": false
+    },
+    "StartRequest": {
+      "type": "object",
+      "properties": {
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedSceneId": {
+          "type": "null"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "acknowledgeDesignPreview": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "acknowledgeDesignPreview"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "expectedStateVersion",
+        "expectedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "TaskRequest": {
+      "type": "object",
+      "properties": {
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedSceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "taskKind": {
+                  "const": "investigate_and_report"
+                },
+                "targetRole": {
+                  "type": "string",
+                  "enum": [
+                    "analyst",
+                    "liaison"
+                  ]
+                },
+                "topicId": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+                },
+                "targetId": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+                },
+                "investigationKind": {
+                  "type": "string",
+                  "enum": [
+                    "satellite_scan",
+                    "drone_observe",
+                    "agency_contact",
+                    "witness_interview",
+                    "provenance_trace"
+                  ]
+                },
+                "sourceReportId": {
+                  "oneOf": [
+                    {
+                      "type": "string",
+                      "minLength": 36,
+                      "maxLength": 36,
+                      "format": "uuid"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "reasonAnnotation": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/ReasonAnnotation"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "taskKind",
+                "targetRole",
+                "topicId",
+                "targetId",
+                "investigationKind",
+                "sourceReportId",
+                "reasonAnnotation"
+              ],
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "investigationKind": {
+                        "const": "provenance_trace"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "targetRole": {
+                        "const": "liaison"
+                      },
+                      "sourceReportId": {
+                        "type": "string",
+                        "minLength": 36,
+                        "maxLength": 36,
+                        "format": "uuid"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "sourceReportId": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "investigationKind": {
+                        "enum": [
+                          "satellite_scan",
+                          "drone_observe"
+                        ]
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "targetRole": {
+                        "const": "analyst"
+                      }
+                    }
+                  },
+                  "else": {
+                    "properties": {
+                      "targetRole": {
+                        "const": "liaison"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "taskKind": {
+                  "const": "request_report"
+                },
+                "targetRole": {
+                  "type": "string",
+                  "enum": [
+                    "analyst",
+                    "liaison"
+                  ]
+                },
+                "topicId": {
+                  "type": "string",
+                  "minLength": 2,
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+                }
+              },
+              "required": [
+                "taskKind",
+                "targetRole",
+                "topicId"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "expectedStateVersion",
+        "expectedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "UploadRequest": {
+      "type": "object",
+      "properties": {
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedSceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/UploadItem"
+              },
+              "minItems": 1,
+              "maxItems": 5,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "items"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "expectedStateVersion",
+        "expectedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionRequest": {
+      "type": "object",
+      "properties": {
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedSceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "questionKind": {
+              "type": "string",
+              "enum": [
+                "explain_basis",
+                "compare_routes",
+                "uncertainties",
+                "next_information",
+                "free_text"
+              ]
+            },
+            "text": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "expectedInboxVersion": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "uploadBatch": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/UploadItem"
+              },
+              "minItems": 0,
+              "maxItems": 5,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "questionKind",
+            "text",
+            "expectedInboxVersion",
+            "uploadBatch"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "questionKind": {
+                    "const": "free_text"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "expectedStateVersion",
+        "expectedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "ActionRequest": {
+      "type": "object",
+      "properties": {
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedSceneId": {
+          "type": "string",
+          "enum": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "actionId": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 64,
+              "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$"
+            },
+            "waitDurationMs": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "enum": [
+                    15000,
+                    30000,
+                    60000
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 0,
+              "maxLength": 1000
+            },
+            "reasonAnnotation": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/ReasonAnnotation"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "basedOnAdviceJobId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "referencedReportIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36,
+                "format": "uuid"
+              },
+              "minItems": 0,
+              "maxItems": 30,
+              "uniqueItems": true
+            },
+            "cancelPendingInvestigations": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "actionId",
+            "waitDurationMs",
+            "reason",
+            "reasonAnnotation",
+            "basedOnAdviceJobId",
+            "referencedReportIds",
+            "cancelPendingInvestigations"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "actionId": {
+                    "const": "WAIT"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "waitDurationMs": {
+                    "type": "integer",
+                    "enum": [
+                      15000,
+                      30000,
+                      60000
+                    ]
+                  },
+                  "cancelPendingInvestigations": {
+                    "const": false
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "waitDurationMs": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "expectedStateVersion",
+        "expectedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "DisplayReceiptRequest": {
+      "type": "object",
+      "properties": {
+        "observedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observedSceneId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "displayKind": {
+              "type": "string",
+              "enum": [
+                "report_opened",
+                "advice_displayed",
+                "consequence_seen",
+                "context_displayed"
+              ]
+            },
+            "reportId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "jobId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "operationId": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "minLength": 36,
+                  "maxLength": 36,
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "displayKind",
+            "reportId",
+            "jobId",
+            "operationId"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "oneOf": [
+                {
+                  "properties": {
+                    "displayKind": {
+                      "const": "report_opened"
+                    },
+                    "reportId": {
+                      "type": "string",
+                      "minLength": 36,
+                      "maxLength": 36,
+                      "format": "uuid"
+                    },
+                    "jobId": {
+                      "type": "null"
+                    },
+                    "operationId": {
+                      "type": "null"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "displayKind": {
+                      "const": "advice_displayed"
+                    },
+                    "reportId": {
+                      "type": "null"
+                    },
+                    "jobId": {
+                      "type": "string",
+                      "minLength": 36,
+                      "maxLength": 36,
+                      "format": "uuid"
+                    },
+                    "operationId": {
+                      "type": "null"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "displayKind": {
+                      "const": "consequence_seen"
+                    },
+                    "reportId": {
+                      "type": "null"
+                    },
+                    "jobId": {
+                      "type": "null"
+                    },
+                    "operationId": {
+                      "type": "string",
+                      "minLength": 36,
+                      "maxLength": 36,
+                      "format": "uuid"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "displayKind": {
+                      "const": "context_displayed"
+                    },
+                    "reportId": {
+                      "type": "null"
+                    },
+                    "jobId": {
+                      "type": "null"
+                    },
+                    "operationId": {
+                      "type": "null"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "observedStateVersion",
+        "observedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "AbandonRequest": {
+      "type": "object",
+      "properties": {
+        "expectedStateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expectedSceneId": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "E1",
+                "E2",
+                "E3"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "reason": {
+              "type": "string",
+              "enum": [
+                "player_exit",
+                "restart_requested"
+              ]
+            }
+          },
+          "required": [
+            "reason"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "expectedStateVersion",
+        "expectedSceneId",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "EvaluationRequest": {
+      "type": "object",
+      "properties": {
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evaluationConfigId": {
+          "const": "EVALUATION_REFERENCE_V1"
+        }
+      },
+      "required": [
+        "sealedHash",
+        "evaluationConfigId"
+      ],
+      "additionalProperties": false
+    },
+    "ExportRequest": {
+      "type": "object",
+      "properties": {
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "format": {
+          "const": "last-mile-review-json"
+        },
+        "includePlayerStatements": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sealedHash",
+        "format",
+        "includePlayerStatements"
+      ],
+      "additionalProperties": false
+    },
+    "TaskAccepted": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "task": {
+          "$ref": "#/$defs/TaskView"
+        },
+        "operationLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^/api/v1/sessions/.+/tasks/"
+        },
+        "reservedReportSlots": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "requestId",
+        "stateVersion",
+        "task",
+        "operationLocation",
+        "reservedReportSlots"
+      ],
+      "additionalProperties": false
+    },
+    "ActionAccepted": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "operation": {
+          "$ref": "#/$defs/OperationView"
+        },
+        "operationLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^/api/v1/sessions/.+/operations/"
+        }
+      },
+      "required": [
+        "requestId",
+        "stateVersion",
+        "operation",
+        "operationLocation"
+      ],
+      "additionalProperties": false
+    },
+    "QuestionAccepted": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "inboxVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "assistantContextVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "job": {
+          "$ref": "#/$defs/AdvisorJobView"
+        },
+        "operationLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^/api/v1/sessions/.+/advice/"
+        }
+      },
+      "required": [
+        "requestId",
+        "stateVersion",
+        "inboxVersion",
+        "assistantContextVersion",
+        "job",
+        "operationLocation"
+      ],
+      "additionalProperties": false
+    },
+    "EvaluationAccepted": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "sealedHash": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "job": {
+          "$ref": "#/$defs/EvaluationJobView"
+        },
+        "operationLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^/api/v1/sessions/.+/evaluations/"
+        }
+      },
+      "required": [
+        "requestId",
+        "sealedHash",
+        "job",
+        "operationLocation"
+      ],
+      "additionalProperties": false
+    },
+    "ExportAccepted": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "export": {
+          "$ref": "#/$defs/ExportView"
+        },
+        "operationLocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^/api/v1/sessions/.+/exports/"
+        }
+      },
+      "required": [
+        "requestId",
+        "export",
+        "operationLocation"
+      ],
+      "additionalProperties": false
+    },
+    "SseProjectionChanged": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "projection.changed"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/SessionProjection"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseTaskUpdated": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "task.updated"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/TaskView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseReportReceived": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "report.received"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/ReportView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseUploadsChanged": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "uploads.changed"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/UploadView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseAdviceUpdated": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "advice.updated"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/AdvisorJobView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseOperationUpdated": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "operation.updated"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/OperationView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseOutcomeSealed": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "outcome.sealed"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/OutcomeView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseEvaluationUpdated": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "evaluation.updated"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/EvaluationJobView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseExportUpdated": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "export.updated"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "$ref": "#/$defs/ExportView"
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "SseClockSample": {
+      "type": "object",
+      "properties": {
+        "eventType": {
+          "const": "clock.sample"
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "runEpoch": {
+          "type": "string",
+          "minLength": 36,
+          "maxLength": 36,
+          "format": "uuid"
+        },
+        "viewSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "missionTimeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "serverNow": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 40,
+              "format": "date-time"
+            },
+            "missionDeadlineMs": {
+              "const": 600000
+            }
+          },
+          "required": [
+            "missionTimeMs",
+            "serverNow",
+            "missionDeadlineMs"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "eventType",
+        "sessionId",
+        "runEpoch",
+        "viewSequence",
+        "stateVersion",
+        "data"
+      ],
+      "additionalProperties": false
+    },
+    "PublicSseEvent": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/SseProjectionChanged"
+        },
+        {
+          "$ref": "#/$defs/SseTaskUpdated"
+        },
+        {
+          "$ref": "#/$defs/SseReportReceived"
+        },
+        {
+          "$ref": "#/$defs/SseUploadsChanged"
+        },
+        {
+          "$ref": "#/$defs/SseAdviceUpdated"
+        },
+        {
+          "$ref": "#/$defs/SseOperationUpdated"
+        },
+        {
+          "$ref": "#/$defs/SseOutcomeSealed"
+        },
+        {
+          "$ref": "#/$defs/SseEvaluationUpdated"
+        },
+        {
+          "$ref": "#/$defs/SseExportUpdated"
+        },
+        {
+          "$ref": "#/$defs/SseClockSample"
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SessionProjection"
+    },
+    {
+      "$ref": "#/$defs/Problem"
+    },
+    {
+      "$ref": "#/$defs/PublicSseEvent"
+    }
+  ]
+}

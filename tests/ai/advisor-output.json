@@ -1,0 +1,35 @@
+{
+  "sessionId": "00000000-0000-0000-0000-000000000001",
+  "inputHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "summary": "历史画面不能消除当前登记状态的缺口。",
+  "claims": [
+    {
+      "claimId": "claim-1",
+      "kind": "evidenceObservation",
+      "text": "图像只显示十分钟前的路面。",
+      "citations": [
+        {
+          "kind": "evidence",
+          "refId": "00000000-0000-0000-0000-000000000065",
+          "revision": 1
+        }
+      ]
+    }
+  ],
+  "recommendation": {
+    "actionId": null,
+    "rationale": "当前登记状态未知，可先确认可见活动；时间和资源取舍需由指挥官判断。",
+    "claimRefs": ["claim-1"],
+    "conditions": ["当前现场观察可能改变建议。"]
+  },
+  "uncertainties": ["不知道当前登记系统状态及指挥官资源余额。"],
+  "investigationSuggestions": [
+    {
+      "channel": "drone",
+      "publicTargetId": "gate_status",
+      "questionToResolve": "目前有哪些可见登记活动？",
+      "claimRefs": ["claim-1"]
+    }
+  ],
+  "changeSummary": "首次分析。"
+}

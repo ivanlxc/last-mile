@@ -1,0 +1,14 @@
+{
+  "checks": "passed",
+  "glb_format": "2.0",
+  "glb_bytes": 13244640,
+  "glb_meshes": 1375,
+  "glb_nodes": 1443,
+  "glb_triangles": 344714,
+  "anchors_verified": 11,
+  "route_endpoints_verified": 26,
+  "evidence_cards": 28,
+  "policy_test_cases": 6,
+  "source_information_scope": "checked E2 four states and E3 initial/audited distinction",
+  "limitations": "Engine import, frame rate, final gameplay and human playtests have not been performed."
+}

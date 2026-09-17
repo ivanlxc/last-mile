@@ -1,0 +1,2886 @@
+{
+  "schema_version": "1.0.0",
+  "title_zh": "LAST MILE：最后一程",
+  "classification": "SERVER_ONLY_AUTHORING_DATA",
+  "do_not_ship_to_client": true,
+  "warning_zh": "含隐藏真相、未来证据、私有角色载荷与判定；不得完整发给浏览器或LLM。公开地图图结构另行导出。此文件是可实现的事件数据规格，不是完整游戏引擎。",
+  "canon_reference": "work/last_mile/canon.json",
+  "session": {
+    "briefing_seconds": 30,
+    "mission_deadline_seconds": 600,
+    "medical_soft_deadline_seconds": 480,
+    "debrief_seconds": 45,
+    "clock": "单一实时任务时钟，调查等待与移动只实际流逝一次；简报、教程、结算暂停"
+  },
+  "resources": {
+    "drone": {
+      "uses": 3,
+      "latency_seconds": 20
+    },
+    "satellite": {
+      "uses": 2,
+      "latency_seconds": 15,
+      "snapshot_age_seconds": 90
+    },
+    "local": {
+      "uses": 3,
+      "latency_seconds": 10
+    }
+  },
+  "public_map_reference": {
+    "nodes": [
+      {
+        "id": "N00",
+        "name": "安全集结院",
+        "en": "AID COMPOUND",
+        "xy": [
+          -16,
+          -9
+        ]
+      },
+      {
+        "id": "N01",
+        "name": "西门检查站",
+        "en": "WEST GATE",
+        "xy": [
+          -11,
+          -5
+        ]
+      },
+      {
+        "id": "N02",
+        "name": "旧市集",
+        "en": "OLD MARKET",
+        "xy": [
+          -4,
+          -1
+        ]
+      },
+      {
+        "id": "N03",
+        "name": "社区诊所",
+        "en": "CLINIC",
+        "xy": [
+          -8,
+          5
+        ]
+      },
+      {
+        "id": "N04",
+        "name": "山脊通信站",
+        "en": "RELAY",
+        "xy": [
+          -1,
+          9
+        ]
+      },
+      {
+        "id": "N05",
+        "name": "主桥西端",
+        "en": "BRIDGE WEST",
+        "xy": [
+          3,
+          1
+        ]
+      },
+      {
+        "id": "N06",
+        "name": "主桥东端",
+        "en": "BRIDGE EAST",
+        "xy": [
+          7,
+          1
+        ]
+      },
+      {
+        "id": "N07",
+        "name": "曙光撤离站",
+        "en": "DAWN TERMINAL",
+        "xy": [
+          15,
+          8
+        ]
+      },
+      {
+        "id": "N08",
+        "name": "南侧服务路",
+        "en": "SERVICE ROAD",
+        "xy": [
+          -1,
+          -8
+        ]
+      },
+      {
+        "id": "N09",
+        "name": "旧河床便道",
+        "en": "OLD FORD",
+        "xy": [
+          6,
+          -7
+        ]
+      },
+      {
+        "id": "N10",
+        "name": "仓储转运区",
+        "en": "LOGISTICS YARD",
+        "xy": [
+          12,
+          -2
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "R00",
+        "a": "N00",
+        "b": "N01",
+        "seconds": 30
+      },
+      {
+        "id": "R01",
+        "a": "N01",
+        "b": "N02",
+        "seconds": 45
+      },
+      {
+        "id": "R02",
+        "a": "N01",
+        "b": "N08",
+        "seconds": 75
+      },
+      {
+        "id": "R03",
+        "a": "N08",
+        "b": "N02",
+        "seconds": 50
+      },
+      {
+        "id": "R04",
+        "a": "N02",
+        "b": "N05",
+        "seconds": 50
+      },
+      {
+        "id": "R05",
+        "a": "N08",
+        "b": "N05",
+        "seconds": 95
+      },
+      {
+        "id": "R06",
+        "a": "N05",
+        "b": "N06",
+        "seconds": 35
+      },
+      {
+        "id": "R07",
+        "a": "N06",
+        "b": "N07",
+        "seconds": 50
+      },
+      {
+        "id": "R08",
+        "a": "N05",
+        "b": "N09",
+        "seconds": 70
+      },
+      {
+        "id": "R09",
+        "a": "N09",
+        "b": "N10",
+        "seconds": 70
+      },
+      {
+        "id": "R10",
+        "a": "N10",
+        "b": "N07",
+        "seconds": 60
+      },
+      {
+        "id": "R11",
+        "a": "N02",
+        "b": "N03",
+        "seconds": 40
+      },
+      {
+        "id": "R12",
+        "a": "N03",
+        "b": "N05",
+        "seconds": 65
+      }
+    ],
+    "coordinate_contract": "Blender uses xy for ground, z up; artistic scene units, not meters. GLB default export maps Blender (x,y,z) to (x,z,-y). N04 is a remote evidence hotspot, not a drivable node. N03 is optional stop/stretch feature. Routes bidirectional unless event locks; staged event triggers cannot be skipped by alternate routes."
+  },
+  "roster": [
+    {
+      "id": "P01",
+      "name_zh": "阿玛尔",
+      "age": 29,
+      "vehicle_id": "MEDICAL_4_PAX"
+    },
+    {
+      "id": "P02",
+      "name_zh": "莉娜",
+      "age": 31,
+      "vehicle_id": "MEDICAL_4_PAX"
+    },
+    {
+      "id": "P03",
+      "name_zh": "优素福",
+      "age": 67,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P04",
+      "name_zh": "玛丽亚姆",
+      "age": 64,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P05",
+      "name_zh": "哈娜",
+      "age": 35,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P06",
+      "name_zh": "萨拉",
+      "age": 9,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P07",
+      "name_zh": "伊德里斯",
+      "age": 11,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P08",
+      "name_zh": "拉尼娅",
+      "age": 42,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P09",
+      "name_zh": "法里德",
+      "age": 46,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P10",
+      "name_zh": "穆萨",
+      "age": 20,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P11",
+      "name_zh": "萨尔玛",
+      "age": 23,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P12",
+      "name_zh": "纳比勒",
+      "age": 72,
+      "vehicle_id": "MEDICAL_4_PAX"
+    },
+    {
+      "id": "P13",
+      "name_zh": "阿齐扎",
+      "age": 69,
+      "vehicle_id": "MEDICAL_4_PAX"
+    },
+    {
+      "id": "P14",
+      "name_zh": "达乌德",
+      "age": 54,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P15",
+      "name_zh": "阿米娜",
+      "age": 48,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P16",
+      "name_zh": "塔里克",
+      "age": 17,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P17",
+      "name_zh": "莉姆",
+      "age": 27,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P18",
+      "name_zh": "奥马尔",
+      "age": 33,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P19",
+      "name_zh": "娜迪娅",
+      "age": 38,
+      "vehicle_id": "BUS_16_PAX"
+    },
+    {
+      "id": "P20",
+      "name_zh": "巴希尔",
+      "age": 58,
+      "vehicle_id": "BUS_16_PAX"
+    }
+  ],
+  "crew_excluded_from_roster": true,
+  "clock_implementation": {
+    "authority": "one_monotonic_session_clock",
+    "running_states": [
+      "moving",
+      "event_discussion",
+      "investigation_pending",
+      "coordination_hold",
+      "ai_pending"
+    ],
+    "paused_states": [
+      "briefing",
+      "debrief"
+    ],
+    "never_subtract_duration_on_delivery": true,
+    "investigation_overlaps_reading_and_discussion": true,
+    "max_parallel_external_investigations": 1,
+    "route_commit_requires_no_pending_investigation": true,
+    "same_timestamp_priority": [
+      "investigation_delivery",
+      "route_arrival",
+      "medical_soft_threshold",
+      "mission_deadline"
+    ],
+    "medical_soft_threshold": {
+      "at_seconds": 480,
+      "unless": "arrived_N07",
+      "effect": {
+        "op": "set",
+        "path": "medical.handoff_status",
+        "value": "enhanced_support_needed"
+      },
+      "passenger_delta": 0,
+      "automatic_death": false
+    },
+    "hard_deadline": {
+      "at_seconds": 600,
+      "unless": "arrived_N07",
+      "effect": {
+        "op": "end_mission",
+        "ending_id": "D"
+      },
+      "preserve_current_position": true,
+      "teleport": false,
+      "automatic_death": false
+    },
+    "route_position": "edge_id + elapsed_in_segment / segment.duration_seconds"
+  },
+  "initial_state": {
+    "mission_state": "briefing",
+    "current_node": "N00",
+    "current_event_id": null,
+    "event_mode": "normal",
+    "completed_events": [],
+    "passengers_accounted": 20,
+    "medical": {
+      "handoff_status": "on_schedule",
+      "support_refreshed": false
+    },
+    "investigation_pending": false,
+    "action_in_progress": false
+  },
+  "start_action": {
+    "label_zh": "开始最后一程",
+    "op": "start_clock_and_route",
+    "sequence": [
+      {
+        "op": "traverse_edge",
+        "edge_id": "R00",
+        "from": "N00",
+        "to": "N01",
+        "duration_seconds": 30
+      }
+    ],
+    "on_arrival_event": "E1"
+  },
+  "stage_guards": [
+    {
+      "when": {
+        "eq": [
+          "current_node",
+          "N01"
+        ]
+      },
+      "required_completed": [],
+      "first_incomplete_event": "E1"
+    },
+    {
+      "when": {
+        "eq": [
+          "current_node",
+          "N02"
+        ]
+      },
+      "required_completed": [
+        "E1"
+      ],
+      "first_incomplete_event": "E2"
+    },
+    {
+      "when": {
+        "eq": [
+          "current_node",
+          "N05"
+        ]
+      },
+      "required_completed": [
+        "E1",
+        "E2"
+      ],
+      "first_incomplete_event": "E3"
+    }
+  ],
+  "route_validation": {
+    "mvp_free_node_click_driving": false,
+    "normal_actions_only": true,
+    "accept_movement_request": "action_id_only",
+    "reject_arbitrary_route_ids": true,
+    "forbidden_bypass": {
+      "edge_id": "R05",
+      "requires_committed_action_id": "E2_DETOUR",
+      "message_zh": "先在旧市集提交E2_DETOUR；不能自由点击R05跳过第二幕。"
+    },
+    "remote_recovery": {
+      "condition": {
+        "all": [
+          {
+            "eq": [
+              "current_node",
+              "N05"
+            ]
+          },
+          {
+            "not_event_completed": "E2"
+          },
+          {
+            "event_completed": "E1"
+          }
+        ]
+      },
+      "enter_event_id": "E2",
+      "event_mode": "remote_recovery",
+      "evidence_delivery_mode": "remote_reports",
+      "normal_route_actions_disabled": true,
+      "allowed_resolution_action_id": "E2_REMOTE_RESOLVE",
+      "next_event_after_resolution": "E3",
+      "mark_session_nonstandard": true,
+      "never_auto_complete_missing_event": true
+    },
+    "N04_drivable": false
+  },
+  "evidence": [
+    {
+      "id": "E1-SYS01",
+      "event_id": "E1",
+      "content_zh": "西门短时维护，许可车队可排队进入；协调放行需20秒。",
+      "source_label_zh": "西门官方值班状态",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -10
+      },
+      "freshness_ttl_seconds": 90,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": "AUTH-WEST-01",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "AUTH-WEST-01",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E1-CMD01",
+      "event_id": "E1",
+      "content_zh": "20人名单与有效转运许可；目标在480秒内完成医疗交接，600秒前抵达。",
+      "source_label_zh": "行动登记",
+      "initial_audience": "commander",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "mission_start",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "MISSION-MANIFEST",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "MISSION-MANIFEST",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E1-ANA01",
+      "event_id": "E1",
+      "content_zh": "入口配发影像显示维护设备正在撤离车道。",
+      "source_label_zh": "配发入口监视画面",
+      "initial_audience": "analyst",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -12
+      },
+      "freshness_ttl_seconds": 60,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "GATE-CAMERA-01",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "GATE-CAMERA-01",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E1-LIA01",
+      "event_id": "E1",
+      "content_zh": "值班员努尔口头报出的许可校验码与车队记录匹配。",
+      "source_label_zh": "值班员努尔",
+      "initial_audience": "liaison",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -6
+      },
+      "freshness_ttl_seconds": 120,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "WEST-GATE-RADIO",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "WEST-GATE-RADIO",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E1-DRN01",
+      "event_id": "E1",
+      "content_zh": "当前可见维护车辆向路侧移动，队列正在缩短；无法确认视野外情况。",
+      "source_label_zh": "无人机实拍",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "drone",
+        "recipient": "requesting_role",
+        "delay_seconds": 20
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": -5
+      },
+      "freshness_ttl_seconds": 60,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "DRONE-E1",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "DRONE-E1",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E1-SAT01",
+      "event_id": "E1",
+      "content_zh": "西门和南侧道路旧影像中未见大范围堵塞；不能保证眼下通行。",
+      "source_label_zh": "卫星影像档案",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "satellite",
+        "recipient": "requesting_role",
+        "delay_seconds": 15
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": -90
+      },
+      "freshness_ttl_seconds": 0,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "SAT-E1",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "SAT-E1",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E1-LOC01",
+      "event_id": "E1",
+      "content_zh": "回拨登记号码后确认许可有效，协调放行需20秒。",
+      "source_label_zh": "已核验西门值班联络",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "local",
+        "recipient": "requesting_role",
+        "delay_seconds": 10
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": 90,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "AUTH-WEST-CALL",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "AUTH-WEST-CALL",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-SYS01",
+      "event_id": "E2",
+      "content_zh": "市集方向出现闷响与淡烟；无法从这项观察判断原因。",
+      "source_label_zh": "车队现场记录",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -8
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": "CONVOY-SOUND-01",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "CONVOY-SOUND-01",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-REP01",
+      "event_id": "E2",
+      "content_zh": "一辆白车进入维修区后，有人听见响声。",
+      "source_label_zh": "目击者语音摘要",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -18
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": null,
+        "provenance_status": "unresolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "WIT-17",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": "E2-PROV01"
+      }
+    },
+    {
+      "id": "E2-REP02",
+      "event_id": "E2",
+      "content_zh": "现场报告出现一辆可疑白车。",
+      "source_label_zh": "地方信息摘要",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -12
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": null,
+        "provenance_status": "unresolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "WIT-17",
+        "parent_evidence_ids": [
+          "E2-REP01"
+        ],
+        "reveal_provenance_after_uploaded_id": "E2-PROV01"
+      }
+    },
+    {
+      "id": "E2-REP03",
+      "event_id": "E2",
+      "content_zh": "北侧存在可疑车辆活动。记录类型：无人机操作员文字备注；未附独立画面。",
+      "source_label_zh": "无人机操作员记录",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -6
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": null,
+        "provenance_status": "unresolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "WIT-17",
+        "parent_evidence_ids": [
+          "E2-REP02"
+        ],
+        "reveal_provenance_after_uploaded_id": "E2-PROV01"
+      }
+    },
+    {
+      "id": "E2-CMD01",
+      "event_id": "E2",
+      "content_zh": "主路需要排障协调；南侧绕行经N08抵达N05需145秒。",
+      "source_label_zh": "已知路线与调度卡",
+      "initial_audience": "commander",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "ROUTE-GRAPH",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "ROUTE-GRAPH",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-ANA01",
+      "event_id": "E2",
+      "content_zh": "REP03的导入类型是人工文字备注，媒体附件为0；不是一次独立无人机侦察。",
+      "source_label_zh": "导入字段元数据",
+      "initial_audience": "analyst",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "IMPORT-METADATA-E2",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "IMPORT-METADATA-E2",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-LIA01",
+      "event_id": "E2",
+      "content_zh": "目击者原话：我没看见车里的人；车从维修院出来，后来才听见响声。",
+      "source_label_zh": "未删节原始语音",
+      "initial_audience": "liaison",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -18
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "WIT-17",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "WIT-17",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-PROV01",
+      "event_id": "E2",
+      "content_zh": "导入链为REP01→REP02→REP03；三份报告共用根源WIT-17，并非三项独立观察。",
+      "source_label_zh": "已有导入链记录",
+      "initial_audience": "analyst",
+      "delivery": {
+        "mode": "ui_unlock"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -6
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "IMPORT-CHAIN-E2",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "IMPORT-CHAIN-E2",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-WIT02",
+      "event_id": "E2",
+      "content_zh": "优素福：蓝梯架是维修队的；事故发生时我在车上，我没看见。",
+      "source_label_zh": "乘员优素福",
+      "initial_audience": "liaison",
+      "delivery": {
+        "mode": "scheduled",
+        "delay_seconds_after_event_start": 15
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "P03-YUSUF",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "P03-YUSUF",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-DRN01",
+      "event_id": "E2",
+      "content_zh": "可见维修标记、隔离带与清理车道的人员；画面内未见持续冲突，无法单凭画面确认电力隔离完成。",
+      "source_label_zh": "无人机实拍",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "drone",
+        "recipient": "requesting_role",
+        "delay_seconds": 20
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": -5
+      },
+      "freshness_ttl_seconds": 60,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "DRONE-E2",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "DRONE-E2",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-SAT01",
+      "event_id": "E2",
+      "content_zh": "旧影像中维修区已有白车；不能解释刚发生的声响或确认目前通行。",
+      "source_label_zh": "卫星影像档案",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "satellite",
+        "recipient": "requesting_role",
+        "delay_seconds": 15
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": -90
+      },
+      "freshness_ttl_seconds": 0,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "SAT-E2",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "SAT-E2",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E2-LOC01",
+      "event_id": "E2",
+      "content_zh": "核验后的维修值班员确认设备事故已隔离，主路可在25秒协调后放行。",
+      "source_label_zh": "维修值班联络",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "local",
+        "recipient": "requesting_role",
+        "delay_seconds": 10
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": 90,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "AUTH-REPAIR-E2",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "AUTH-REPAIR-E2",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-SYS01",
+      "event_id": "E3",
+      "content_zh": "有效签名的桥区状态：桥梁开放，车队协调20秒后可通行。",
+      "source_label_zh": "桥区官方通行状态",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -15
+      },
+      "freshness_ttl_seconds": 90,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": "AUTH-BRIDGE-OPEN",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "AUTH-BRIDGE-OPEN",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-SYS02",
+      "event_id": "E3",
+      "content_zh": "当前交通缩略画面：桥头有人群，车道受工作人员控制；不能单凭聚集判断人群意图。",
+      "source_label_zh": "桥区交通摄像头",
+      "initial_audience": "shared_and_ai",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -25
+      },
+      "freshness_ttl_seconds": 60,
+      "initial_ai_upload": true,
+      "public_source_metadata": {
+        "root_source_id": "BRIDGE-CAMERA-01",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "BRIDGE-CAMERA-01",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-CMD01",
+      "event_id": "E3",
+      "content_zh": "主桥路线105秒，河床路线200秒；预计抵达时刻按任务当前时间更新，接驳截止600秒。",
+      "source_label_zh": "路线与撤离窗口",
+      "initial_audience": "commander",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "ROUTE-GRAPH",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "ROUTE-GRAPH",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-ANA01",
+      "event_id": "E3",
+      "content_zh": "通行单签名与桥区登记端点匹配；反复播放的关闭广播生成于入幕前300秒，不能代表当前状态。",
+      "source_label_zh": "签名核验与广播存档",
+      "initial_audience": "analyst",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": null,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "BRIDGE-RECORD-AUDIT",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "BRIDGE-RECORD-AUDIT",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-LIA01",
+      "event_id": "E3",
+      "content_zh": "登记员达莉娅提供步行转运队列编号，与桥头登记牌一致；这是另一队转运乘客。",
+      "source_label_zh": "桥区转运登记员",
+      "initial_audience": "liaison",
+      "delivery": {
+        "mode": "seed"
+      },
+      "observed_time": {
+        "basis": "event_start",
+        "offset_seconds": -12
+      },
+      "freshness_ttl_seconds": 90,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "AUTH-BRIDGE-ROSTER",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "AUTH-BRIDGE-ROSTER",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-WIT01",
+      "event_id": "E3",
+      "content_zh": "塔里克：他们举着名单，工作人员在让车一辆辆过去。",
+      "source_label_zh": "乘员塔里克",
+      "initial_audience": "liaison",
+      "delivery": {
+        "mode": "scheduled",
+        "delay_seconds_after_event_start": 10
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": 60,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "P16-TARIQ",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "P16-TARIQ",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-DRN01",
+      "event_id": "E3",
+      "content_zh": "当前桥面仍在分批通行，人行队列没有占用整个车道；不推断人群身份与意图。",
+      "source_label_zh": "无人机实拍",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "drone",
+        "recipient": "requesting_role",
+        "delay_seconds": 20
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": -5
+      },
+      "freshness_ttl_seconds": 60,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "DRONE-E3",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "DRONE-E3",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-SAT01",
+      "event_id": "E3",
+      "content_zh": "桥与河床的区域布局旧影像；不能确认眼下队列行为。",
+      "source_label_zh": "卫星影像档案",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "satellite",
+        "recipient": "requesting_role",
+        "delay_seconds": 15
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": -90
+      },
+      "freshness_ttl_seconds": 0,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "SAT-E3",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "SAT-E3",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    },
+    {
+      "id": "E3-LOC01",
+      "event_id": "E3",
+      "content_zh": "回拨桥区登记号码，确认人群是登记转运队列，目前实行人车交替通行。",
+      "source_label_zh": "已核验桥区登记联络",
+      "initial_audience": "requester",
+      "delivery": {
+        "mode": "investigation",
+        "resource": "local",
+        "recipient": "requesting_role",
+        "delay_seconds": 10
+      },
+      "observed_time": {
+        "basis": "delivery_time",
+        "offset_seconds": 0
+      },
+      "freshness_ttl_seconds": 90,
+      "initial_ai_upload": false,
+      "public_source_metadata": {
+        "root_source_id": "AUTH-BRIDGE-CALL",
+        "provenance_status": "resolved",
+        "parent_evidence_ids": []
+      },
+      "server_only": {
+        "root_source_id": "AUTH-BRIDGE-CALL",
+        "parent_evidence_ids": [],
+        "reveal_provenance_after_uploaded_id": null
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "E1_MAIN",
+      "label_zh": "核验并协调主路通行",
+      "event_id": "E1",
+      "kind": "commit_route",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E1"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E1"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N01"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 20,
+          "label_zh": "通行协调"
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R01",
+          "from": "N01",
+          "to": "N02",
+          "duration_seconds": 45
+        }
+      ],
+      "estimated_action_seconds": 65,
+      "arrive_node": "N02",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E1"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E1_DETOUR",
+      "label_zh": "绕南侧服务路，经N08返回N02",
+      "event_id": "E1",
+      "kind": "commit_route",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E1"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E1"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N01"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "traverse_edge",
+          "edge_id": "R02",
+          "from": "N01",
+          "to": "N08",
+          "duration_seconds": 75
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R03",
+          "from": "N08",
+          "to": "N02",
+          "duration_seconds": 50
+        }
+      ],
+      "estimated_action_seconds": 125,
+      "arrive_node": "N02",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E1"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E2_MAIN",
+      "label_zh": "等待排障协调后走主路",
+      "event_id": "E2",
+      "kind": "commit_route",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N02"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 25,
+          "label_zh": "排障协调"
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R04",
+          "from": "N02",
+          "to": "N05",
+          "duration_seconds": 50
+        }
+      ],
+      "estimated_action_seconds": 75,
+      "arrive_node": "N05",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E2"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E2_DETOUR",
+      "label_zh": "经N08绕行至主桥西端",
+      "event_id": "E2",
+      "kind": "commit_route",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N02"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "traverse_edge",
+          "edge_id": "R03",
+          "from": "N02",
+          "to": "N08",
+          "duration_seconds": 50
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R05",
+          "from": "N08",
+          "to": "N05",
+          "duration_seconds": 95
+        }
+      ],
+      "estimated_action_seconds": 145,
+      "arrive_node": "N05",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E2"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E2_CLINIC",
+      "label_zh": "经社区诊所补充医疗支持（扩展）",
+      "event_id": "E2",
+      "kind": "commit_route",
+      "mvp_enabled": false,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N02"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "traverse_edge",
+          "edge_id": "R11",
+          "from": "N02",
+          "to": "N03",
+          "duration_seconds": 40
+        },
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 30,
+          "label_zh": "补充医疗转运支持"
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R12",
+          "from": "N03",
+          "to": "N05",
+          "duration_seconds": 65
+        }
+      ],
+      "estimated_action_seconds": 135,
+      "arrive_node": "N05",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E2"
+        },
+        {
+          "op": "set",
+          "path": "medical.support_refreshed",
+          "value": true
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E3_BRIDGE",
+      "label_zh": "协调主桥通行",
+      "event_id": "E3",
+      "kind": "commit_route",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E3"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E3"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N05"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 20,
+          "label_zh": "通行协调"
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R06",
+          "from": "N05",
+          "to": "N06",
+          "duration_seconds": 35
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R07",
+          "from": "N06",
+          "to": "N07",
+          "duration_seconds": 50
+        }
+      ],
+      "estimated_action_seconds": 105,
+      "arrive_node": "N07",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E3"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E3_FORD",
+      "label_zh": "沿旧河床经仓储区绕行",
+      "event_id": "E3",
+      "kind": "commit_route",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E3"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "mission_state",
+          "value": "active"
+        },
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "normal"
+        },
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E3"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N05"
+        }
+      ],
+      "sequence": [
+        {
+          "op": "traverse_edge",
+          "edge_id": "R08",
+          "from": "N05",
+          "to": "N09",
+          "duration_seconds": 70
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R09",
+          "from": "N09",
+          "to": "N10",
+          "duration_seconds": 70
+        },
+        {
+          "op": "traverse_edge",
+          "edge_id": "R10",
+          "from": "N10",
+          "to": "N07",
+          "duration_seconds": 60
+        }
+      ],
+      "estimated_action_seconds": 200,
+      "arrive_node": "N07",
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "append_event",
+          "name": "route_committed"
+        },
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_arrival": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E3"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "passenger_delta": 0,
+      "automatic_injury": false,
+      "scoring_uses_hidden_truth": false
+    },
+    {
+      "id": "E1_WAIT20",
+      "label_zh": "原地等待20秒",
+      "event_id": "E1",
+      "kind": "hold",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "max_uses_per_event": 1,
+      "resource_cost": {},
+      "sequence": [
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 20
+        }
+      ],
+      "estimated_action_seconds": 20,
+      "guaranteed_new_evidence": [],
+      "event_completion": false,
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E1"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        }
+      ],
+      "on_commit": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_complete": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "E2_WAIT20",
+      "label_zh": "原地等待20秒",
+      "event_id": "E2",
+      "kind": "hold",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "max_uses_per_event": 1,
+      "resource_cost": {},
+      "sequence": [
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 20
+        }
+      ],
+      "estimated_action_seconds": 20,
+      "guaranteed_new_evidence": [],
+      "event_completion": false,
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E2"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        }
+      ],
+      "on_commit": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_complete": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "E3_WAIT20",
+      "label_zh": "原地等待20秒",
+      "event_id": "E3",
+      "kind": "hold",
+      "mvp_enabled": true,
+      "allowed_role": "commander",
+      "max_uses_per_event": 1,
+      "resource_cost": {},
+      "sequence": [
+        {
+          "op": "hold_at_current_node",
+          "duration_seconds": 20
+        }
+      ],
+      "estimated_action_seconds": 20,
+      "guaranteed_new_evidence": [],
+      "event_completion": false,
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "action_in_progress",
+          "value": false
+        },
+        {
+          "op": "eq",
+          "path": "current_event_id",
+          "value": "E3"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        }
+      ],
+      "on_commit": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": true
+        }
+      ],
+      "on_complete": [
+        {
+          "op": "set",
+          "path": "action_in_progress",
+          "value": false
+        }
+      ]
+    },
+    {
+      "id": "E2_TRACE",
+      "label_zh": "检查已有导入记录",
+      "event_id": "E2",
+      "kind": "inspect_existing_metadata",
+      "allowed_role": "analyst",
+      "mvp_enabled": true,
+      "duration_seconds": 0,
+      "resource_cost": {},
+      "max_uses_per_event": 1,
+      "unlocks_private_evidence": [
+        "E2-PROV01"
+      ],
+      "automatic_share": false,
+      "automatic_ai_upload": false
+    },
+    {
+      "id": "E2_REMOTE_RESOLVE",
+      "label_zh": "记录远程调查判断并继续",
+      "event_id": "E2",
+      "kind": "resolve_remote_event",
+      "allowed_role": "commander",
+      "mvp_enabled": false,
+      "enabled_in_recovery_mode": true,
+      "preconditions": [
+        {
+          "op": "eq",
+          "path": "event_mode",
+          "value": "remote_recovery"
+        },
+        {
+          "op": "eq",
+          "path": "current_node",
+          "value": "N05"
+        },
+        {
+          "op": "eq",
+          "path": "investigation_pending",
+          "value": false
+        },
+        {
+          "op": "nonempty",
+          "path": "decision_reason_tags"
+        },
+        {
+          "op": "nonempty",
+          "path": "decision_cited_visible_evidence_ids"
+        }
+      ],
+      "duration_seconds": 0,
+      "resource_cost": {},
+      "reroutes_vehicle": false,
+      "on_commit": [
+        {
+          "op": "snapshot_decision_knowledge"
+        },
+        {
+          "op": "mark_event_completed",
+          "event_id": "E2"
+        },
+        {
+          "op": "append_event",
+          "name": "remote_recovery_path"
+        },
+        {
+          "op": "evaluate_next_event_guard"
+        }
+      ],
+      "scoring_note_zh": "仅用于扩展或旧存档恢复，标记非标准局；不执行起点在N02的路线，不与标准局时长比较。"
+    }
+  ],
+  "events": [
+    {
+      "id": "E1",
+      "title_zh": "未关上的门",
+      "node_id": "N01",
+      "prerequisites": [],
+      "arc_zh": "AI基于一致且新鲜信息正确建议等待验证后走主路",
+      "server_only": {
+        "truth_zh": "西门只是短时维护，许可有效，20秒协调后可走主路；绕行也可行。",
+        "true_main_action_id": "E1_MAIN",
+        "automatic_casualties": false
+      },
+      "initial_dialogue": [
+        {
+          "speaker": "努尔",
+          "line_zh": "看到你们了，先别往前挤，我们在腾位置。"
+        }
+      ],
+      "beats": [
+        {
+          "trigger": "event_enter",
+          "operation": "present_seed_evidence"
+        },
+        {
+          "trigger": "action_commit:E1_MAIN",
+          "operation": "animate_barrier_open_after_hold"
+        },
+        {
+          "trigger": "route_depart",
+          "speaker": "努尔",
+          "line_zh": "下一辆，跟着前车。祝你们顺利。"
+        }
+      ],
+      "action_ids": [
+        "E1_MAIN",
+        "E1_DETOUR",
+        "E1_WAIT20"
+      ],
+      "normal_next_event_id": "E2",
+      "seed_evidence_ids": [
+        "E1-SYS01",
+        "E1-CMD01",
+        "E1-ANA01",
+        "E1-LIA01"
+      ],
+      "investigation_evidence_ids": {
+        "drone": "E1-DRN01",
+        "satellite": "E1-SAT01",
+        "local": "E1-LOC01"
+      }
+    },
+    {
+      "id": "E2",
+      "title_zh": "一条消息，三个回声",
+      "node_id": "N02",
+      "prerequisites": [
+        "E1"
+      ],
+      "arc_zh": "电力设备事故与同源转述误判；AI脚本化初始建议绕行，来源核验后纠正",
+      "server_only": {
+        "truth_zh": "设备事故已隔离；白车是抢修车辆；三份警示均源于WIT-17。主路25秒排障协调后可走。",
+        "true_main_action_id": "E2_MAIN",
+        "automatic_casualties": false
+      },
+      "initial_dialogue": [
+        {
+          "speaker": "车队电台",
+          "line_zh": "市集方向出现声响，原因尚未确认。"
+        }
+      ],
+      "beats": [
+        {
+          "trigger": "event_enter",
+          "operation": "present_seed_evidence"
+        },
+        {
+          "trigger": "event_elapsed:15",
+          "operation": "deliver_once",
+          "evidence_id": "E2-WIT02"
+        },
+        {
+          "trigger": "action:E2_TRACE",
+          "operation": "render_provenance_graph",
+          "roots": [
+            "WIT-17"
+          ],
+          "edges": [
+            [
+              "E2-REP01",
+              "E2-REP02"
+            ],
+            [
+              "E2-REP02",
+              "E2-REP03"
+            ]
+          ]
+        },
+        {
+          "trigger": "investigation_requested:local",
+          "speaker": "萨米拉",
+          "line_zh": "我能继续照护。请把这十秒用在你们最需要确定的地方。"
+        }
+      ],
+      "action_ids": [
+        "E2_MAIN",
+        "E2_DETOUR",
+        "E2_WAIT20",
+        "E2_TRACE",
+        "E2_CLINIC"
+      ],
+      "normal_next_event_id": "E3",
+      "seed_evidence_ids": [
+        "E2-SYS01",
+        "E2-REP01",
+        "E2-REP02",
+        "E2-REP03",
+        "E2-CMD01",
+        "E2-ANA01",
+        "E2-LIA01"
+      ],
+      "investigation_evidence_ids": {
+        "drone": "E2-DRN01",
+        "satellite": "E2-SAT01",
+        "local": "E2-LOC01"
+      }
+    },
+    {
+      "id": "E3",
+      "title_zh": "最后一班灯",
+      "node_id": "N05",
+      "prerequisites": [
+        "E1",
+        "E2"
+      ],
+      "arc_zh": "桥上人群是登记转运队列；在当前有效证据下AI正确建议协调主桥通行，避免因E2全盘拒绝",
+      "server_only": {
+        "truth_zh": "桥头人群是登记转运队列；旧关闭广播过时；桥梁当前开放，20秒协调后可通行。",
+        "true_main_action_id": "E3_BRIDGE",
+        "automatic_casualties": false
+      },
+      "initial_dialogue": [
+        {
+          "speaker": "旧广播",
+          "line_zh": "桥区暂时关闭。",
+          "must_show_timestamp_offset_seconds": -300,
+          "current_information": false
+        }
+      ],
+      "beats": [
+        {
+          "trigger": "event_enter",
+          "operation": "present_seed_evidence"
+        },
+        {
+          "trigger": "event_elapsed:10",
+          "operation": "deliver_once",
+          "evidence_id": "E3-WIT01"
+        },
+        {
+          "trigger": "action_commit:E3_BRIDGE",
+          "speaker": "达莉娅",
+          "line_zh": "名单核对完成。请跟随信号，车辆依次通过。"
+        }
+      ],
+      "action_ids": [
+        "E3_BRIDGE",
+        "E3_FORD",
+        "E3_WAIT20"
+      ],
+      "normal_next_event_id": null,
+      "seed_evidence_ids": [
+        "E3-SYS01",
+        "E3-SYS02",
+        "E3-CMD01",
+        "E3-ANA01",
+        "E3-LIA01"
+      ],
+      "investigation_evidence_ids": {
+        "drone": "E3-DRN01",
+        "satellite": "E3-SAT01",
+        "local": "E3-LOC01"
+      }
+    }
+  ],
+  "ai_scenario_policy": {
+    "evaluation": "first_matching_rule_per_event",
+    "percentage_confidence_enabled": false,
+    "evidence_age_at_evaluation": "mission_elapsed_seconds - evidence.observed_at_seconds",
+    "event_rules": {
+      "E1": [
+        {
+          "id": "E1_VALIDATED",
+          "when": {
+            "any": [
+              {
+                "op": "uploaded_and_fresh",
+                "evidence_id": "E1-LOC01"
+              },
+              {
+                "all": [
+                  {
+                    "op": "uploaded_and_fresh",
+                    "evidence_id": "E1-SYS01"
+                  },
+                  {
+                    "op": "uploaded_and_fresh",
+                    "evidence_id": "E1-LIA01"
+                  }
+                ]
+              }
+            ]
+          },
+          "recommendation_action_id": "E1_MAIN",
+          "citation_candidates": [
+            "E1-SYS01",
+            "E1-LIA01",
+            "E1-LOC01",
+            "E1-ANA01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "许可与当前通行记录相符。我建议协调主路，65秒抵达旧市集；南侧绕行需要125秒。",
+          "unknowns_zh": [
+            "其他路段状态不由本次记录保证。"
+          ]
+        },
+        {
+          "id": "E1_INITIAL",
+          "when": {
+            "op": "uploaded_and_fresh",
+            "evidence_id": "E1-SYS01"
+          },
+          "recommendation_action_id": "E1_MAIN",
+          "citation_candidates": [
+            "E1-SYS01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "值班状态显示短时维护。建议核对许可后协调主路；协调20秒，再行驶45秒。",
+          "unknowns_zh": [
+            "许可匹配信息可能仍在联络员面板，尚未上传。"
+          ]
+        },
+        {
+          "id": "E1_STALE",
+          "when": {
+            "always": true
+          },
+          "recommendation_action_id": null,
+          "citation_candidates": [
+            "E1-SYS01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "当前通行状态已经过时。请核对已有现场信息或请求当前联络，再决定是否接受绕行代价。",
+          "unknowns_zh": [
+            "缺少当前有效通行确认。"
+          ]
+        }
+      ],
+      "E2": [
+        {
+          "id": "E2_CORRECTED_CONFIRMED",
+          "when": {
+            "all": [
+              {
+                "op": "uploaded",
+                "evidence_id": "E2-PROV01"
+              },
+              {
+                "op": "uploaded_and_fresh",
+                "evidence_id": "E2-LOC01"
+              }
+            ]
+          },
+          "recommendation_action_id": "E2_MAIN",
+          "citation_candidates": [
+            "E2-PROV01",
+            "E2-LOC01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "我撤回多来源相互印证的依据。维修值班员确认隔离已完成，主路可在25秒协调后放行；我改为建议主路。",
+          "unknowns_zh": [
+            "事故完整原因不必在这里定案。"
+          ]
+        },
+        {
+          "id": "E2_CURRENT_CONFIRMATION",
+          "when": {
+            "op": "uploaded_and_fresh",
+            "evidence_id": "E2-LOC01"
+          },
+          "recommendation_action_id": "E2_MAIN",
+          "citation_candidates": [
+            "E2-LOC01",
+            "E2-REP01",
+            "E2-REP02",
+            "E2-REP03"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "当前职责内通行确认支持等待25秒协调后走主路；早前警示仍需检查是否同源。",
+          "unknowns_zh": [
+            "早前警示的来源独立性尚未解析。"
+          ]
+        },
+        {
+          "id": "E2_TRACE_WITH_IMAGE",
+          "when": {
+            "all": [
+              {
+                "op": "uploaded",
+                "evidence_id": "E2-PROV01"
+              },
+              {
+                "op": "uploaded_and_fresh",
+                "evidence_id": "E2-DRN01"
+              }
+            ]
+          },
+          "recommendation_action_id": null,
+          "citation_candidates": [
+            "E2-PROV01",
+            "E2-DRN01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "三份警示只有一个根源。新画面显示清理正在进行，但不能单凭画面确认电力隔离；最值得核实的是当前通行许可。",
+          "unknowns_zh": [
+            "缺少当前隔离与通行确认。"
+          ]
+        },
+        {
+          "id": "E2_TRACE_ONLY",
+          "when": {
+            "op": "uploaded",
+            "evidence_id": "E2-PROV01"
+          },
+          "recommendation_action_id": null,
+          "citation_candidates": [
+            "E2-PROV01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "我撤回多来源印证的依据。重复消息不能证明袭击，也不能证明可通行。若时间允许，请用一次当地联络确认当前车道状态。",
+          "unknowns_zh": [
+            "事故原因与当前车道状态仍不确定。"
+          ]
+        },
+        {
+          "id": "E2_SCENARIO_FAULTY_AGGREGATION",
+          "when": {
+            "always": true
+          },
+          "recommendation_action_id": "E2_DETOUR",
+          "citation_candidates": [
+            "E2-REP01",
+            "E2-REP02",
+            "E2-REP03"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "当前汇总有三条相关警示，情景策略建议南侧绕行。它们的独立性尚未核实，事故原因也未确认。",
+          "unknowns_zh": [
+            "来源独立性尚未核实。",
+            "事故原因与主路当前通行状态未确认。"
+          ]
+        }
+      ],
+      "E3": [
+        {
+          "id": "E3_VALIDATED",
+          "when": {
+            "op": "uploaded_and_fresh",
+            "evidence_id": "E3-LOC01"
+          },
+          "recommendation_action_id": "E3_BRIDGE",
+          "citation_candidates": [
+            "E3-LOC01",
+            "E3-SYS01",
+            "E3-LIA01",
+            "E3-DRN01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "当前桥区联络确认登记队列与交替通行安排。我建议协调主桥，105秒到达；河床绕行需200秒。",
+          "unknowns_zh": [
+            "本次确认只适用于桥区当前通行安排。"
+          ]
+        },
+        {
+          "id": "E3_BROADCAST_AUDITED",
+          "when": {
+            "all": [
+              {
+                "op": "uploaded_and_fresh",
+                "evidence_id": "E3-SYS01"
+              },
+              {
+                "op": "uploaded",
+                "evidence_id": "E3-ANA01"
+              }
+            ]
+          },
+          "recommendation_action_id": "E3_BRIDGE",
+          "citation_candidates": [
+            "E3-SYS01",
+            "E3-ANA01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "广播存档显示关闭通知早于当前开放记录；请依据当前有效状态协调主桥，勿将旧广播当作新命令。",
+          "unknowns_zh": [
+            "人群身份仅在相应现场记录上传后才可确认。"
+          ]
+        },
+        {
+          "id": "E3_INITIAL",
+          "when": {
+            "op": "uploaded_and_fresh",
+            "evidence_id": "E3-SYS01"
+          },
+          "recommendation_action_id": "E3_BRIDGE",
+          "citation_candidates": [
+            "E3-SYS01",
+            "E3-SYS02",
+            "E3-ANA01",
+            "E3-LIA01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "有效的当前开放状态支持协调主桥。桥头人群用途若尚未上传，请补充；此建议不推断未上传广播记录的时效。",
+          "unknowns_zh": [
+            "现场人群背景可能仍在联络员面板。"
+          ]
+        },
+        {
+          "id": "E3_STALE",
+          "when": {
+            "always": true
+          },
+          "recommendation_action_id": null,
+          "citation_candidates": [
+            "E3-SYS01"
+          ],
+          "citation_filter": "uploaded_only",
+          "template_zh": "开放状态已经超过有效时段，不能把过时记录当作当前保证。请更新桥区确认，或说明接受河床绕行成本的理由。",
+          "unknowns_zh": [
+            "当前有效通行状态需要更新。"
+          ]
+        }
+      ]
+    },
+    "scenario_fault_disclosure_zh": "E2默认推荐来自故意未去重的情景聚合策略，不是对真实LLM出错率的测试；LLM可以提出质疑。",
+    "explanation_adaptation": {
+      "allowed": [
+        "length",
+        "default_expansion"
+      ],
+      "must_always_display": [
+        "source",
+        "observed_time",
+        "material_unknowns",
+        "recommendation_history"
+      ],
+      "forbidden": [
+        "hide_uncertainty_after_compliance",
+        "invent_confidence_probability"
+      ]
+    }
+  },
+  "ai_interface": {
+    "allowed_input_fields": [
+      "uploaded_evidence_payloads",
+      "public_session_rules",
+      "mission_elapsed_seconds",
+      "resource_balance",
+      "current_available_action_summaries",
+      "predicted_arrival_seconds"
+    ],
+    "never_send": [
+      "server_only",
+      "unrevealed_provenance",
+      "other_role_private_evidence",
+      "future_event_evidence",
+      "hidden_ground_truth",
+      "ending_conditions"
+    ],
+    "allowed_buttons": [
+      "依据是什么",
+      "比较可行路线",
+      "最不确定的是什么",
+      "什么新证据会改变建议"
+    ],
+    "output_schema": {
+      "summary": "string",
+      "cited_evidence_ids": "array of uploaded evidence ids",
+      "uncertainties": "array of strings",
+      "suggested_next_check": "allowed action or resource id, or null"
+    },
+    "fallback_notice_seconds": 2,
+    "fallback_deadline_seconds": 4,
+    "on_timeout_or_invalid_reference": "use_deterministic_template",
+    "allow_llm_to_question_scenario_aggregator": true,
+    "on_policy_explanation_disagreement": "show_disagreement_and_use_rule_template_for_executable_action",
+    "world_write_tools": []
+  },
+  "delivery_security": {
+    "validate_fields": [
+      "session_id",
+      "authenticated_role",
+      "current_event_id",
+      "resource_type",
+      "idempotency_key"
+    ],
+    "deduct_resource_at": "request_accepted",
+    "refund_on_repeated_request": false,
+    "idempotent_request_and_delivery": true,
+    "max_same_resource_requests_per_event": 1,
+    "share_does_not_upload": true,
+    "ui_open_does_not_share": true,
+    "source_graph_reveal_only_after": "E2_TRACE",
+    "ai_provenance_update_only_after_uploaded": "E2-PROV01",
+    "client_projection_allowlist": [
+      "id",
+      "event_id",
+      "content_zh",
+      "source_label_zh",
+      "observed_at_seconds",
+      "received_at_seconds",
+      "authorized_public_source_metadata"
+    ],
+    "sensitive_metadata_projection": "Only resolved source metadata, or provenance explicitly unlocked for the requesting role; never copy server_only.",
+    "free_text_is_data_not_instructions": true,
+    "single_screen_mvp_claim": "Role UI demonstrates asymmetry but cannot provide secrecy against inspecting local code.",
+    "investigation_requests_only_during": "event_discussion",
+    "action_commit_requires_idempotency_key": true
+  },
+  "decision_scoring": {
+    "knowledge_snapshot": [
+      "commander_read_private_ids",
+      "shared_and_presented_ids",
+      "ai_uploaded_and_cited_ids",
+      "evidence_age",
+      "remaining_seconds",
+      "available_actions",
+      "reason_tags",
+      "oral_share_confirmed_ids"
+    ],
+    "hidden_truth_is_not_score_input": true,
+    "max_score": 12,
+    "per_event_checks": [
+      {
+        "id": "relevance",
+        "points": 1,
+        "rule": "chosen reason cites visible action-relevant evidence"
+      },
+      {
+        "id": "limits",
+        "points": 1,
+        "rule": "acknowledge a material limit or explain why remaining uncertainty would not change this action"
+      },
+      {
+        "id": "cost",
+        "points": 1,
+        "rule": "view route ETA comparison and select an accepted cost"
+      },
+      {
+        "id": "sharing",
+        "points": 1,
+        "rule": "share a material private card or explicitly confirm none available; upload only if used by AI"
+      }
+    ],
+    "outcomes_separate": [
+      "arrival_time",
+      "passengers_accounted",
+      "medical_handoff_status",
+      "resource_balance"
+    ],
+    "no_score_for_ai_acceptance_count": true,
+    "no_diagnosis_from_single_run": true,
+    "mvp_scoring_authority": "deterministic tags and logs; LLM narrative cannot alter score"
+  },
+  "endings": [
+    {
+      "id": "A",
+      "title_zh": "灯还亮着",
+      "when": {
+        "arrived_node": "N07",
+        "arrival_seconds_lte": 480
+      },
+      "line_zh": "二十个人，二十个名字，都到了。",
+      "passengers_accounted": 20
+    },
+    {
+      "id": "B",
+      "title_zh": "多出的那一分钟",
+      "when": {
+        "arrived_node": "N07",
+        "arrival_seconds_gt": 480,
+        "arrival_seconds_lte": 600
+      },
+      "line_zh": "已完成交接，需要后续观察。谢谢你们没有瞒着我们延迟的事。",
+      "passengers_accounted": 20
+    },
+    {
+      "id": "C",
+      "title_zh": "带着证据到达",
+      "kind": "overlay_on_A_or_B",
+      "requires_behavior_tags": [
+        "provenance_deduplicated",
+        "material_private_evidence_shared",
+        "E3_action_explained_from_current_evidence"
+      ],
+      "line_zh": "改变判断，不等于放弃判断。"
+    },
+    {
+      "id": "D",
+      "title_zh": "下一班灯",
+      "when": {
+        "mission_seconds_gte": 600,
+        "not_arrived_node": "N07"
+      },
+      "line_zh": "本班接驳已结束，后续接应流程已启动。保持人员清点，医护继续照护。",
+      "passengers_accounted": 20,
+      "position_preserved": true,
+      "does_not_claim_followup_completed": true
+    }
+  ],
+  "reference_run": {
+    "briefing_seconds": 30,
+    "decision_windows_seconds": {
+      "E1": 50,
+      "E2": 75,
+      "E3": 45
+    },
+    "investigations_inside_windows": {
+      "E1": [],
+      "E2": [
+        "drone",
+        "local"
+      ],
+      "E3": [
+        "drone",
+        "local"
+      ]
+    },
+    "action_ids": [
+      "E1_MAIN",
+      "E2_MAIN",
+      "E3_BRIDGE"
+    ],
+    "timeline": [
+      {
+        "name": "R00",
+        "start": 0,
+        "end": 30
+      },
+      {
+        "name": "E1_discussion",
+        "start": 30,
+        "end": 80
+      },
+      {
+        "name": "E1_MAIN",
+        "start": 80,
+        "end": 145
+      },
+      {
+        "name": "E2_discussion",
+        "start": 145,
+        "end": 220
+      },
+      {
+        "name": "E2_MAIN",
+        "start": 220,
+        "end": 295
+      },
+      {
+        "name": "E3_discussion",
+        "start": 295,
+        "end": 340
+      },
+      {
+        "name": "E3_BRIDGE",
+        "start": 340,
+        "end": 445
+      }
+    ],
+    "mission_seconds": 445,
+    "debrief_seconds": 45,
+    "total_experience_seconds": 520,
+    "resources_remaining": {
+      "drone": 1,
+      "satellite": 2,
+      "local": 1
+    },
+    "only_E1_detour_arrival_seconds": 505,
+    "only_E2_detour_arrival_seconds": 515,
+    "only_E3_detour_arrival_seconds": 540,
+    "E2_and_E3_detour_predicted_arrival_seconds": 610
+  },
+  "mvp_deferred": [
+    "real_network_multiplayer",
+    "free_driving",
+    "physical_collision",
+    "procedural_city",
+    "combat",
+    "random_truth_generation",
+    "E2_CLINIC",
+    "medical_simulation"
+  ],
+  "training_claim_zh": "来源追踪与信任校准为拟检验的体验目标；未经对照研究，不宣称提高真实维和能力。"
+}

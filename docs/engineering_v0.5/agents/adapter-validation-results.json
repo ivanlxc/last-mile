@@ -1,0 +1,7 @@
+{
+  "mockCall": "PASS",
+  "nonTLSRemoteRejected": "PASS",
+  "liveNetworkCalls": 0,
+  "typescriptStaticTypecheck": "PASS",
+  "typescriptEvidence": "verification/aggregate-results.json"
+}

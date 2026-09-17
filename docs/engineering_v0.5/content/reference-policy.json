@@ -1,0 +1,54 @@
+{
+  "profileId": "SINGLE_PLAYER_REFERENCE",
+  "version": "0.5.0",
+  "status": "review",
+  "mode": "single_player",
+  "sceneIds": [
+    "E1",
+    "E2",
+    "E3"
+  ],
+  "missionDurationMs": 600000,
+  "medicalSupportAtMs": 480000,
+  "civilianCount": 20,
+  "channelLimits": {
+    "satellite": 2,
+    "drone": 3,
+    "localAgency": 3,
+    "witness": 2
+  },
+  "channelScope": "session",
+  "reportLimitPerRolePerScene": 3,
+  "uploadLimitPerScene": 5,
+  "uploadPolicy": "cumulative_immutable",
+  "correctionConsumesNewQuota": true,
+  "investigationDurationMs": {
+    "satellite": 10000,
+    "drone": 30000,
+    "localAgency": 15000,
+    "witness": 20000,
+    "provenanceTrace": 15000
+  },
+  "satelliteObservationAgeMs": 600000,
+  "maxActiveInvestigationPerRole": 1,
+  "reportDeliveryMs": 1000,
+  "waitDurationsMs": [
+    15000,
+    30000,
+    60000
+  ],
+  "clockMode": "realtime",
+  "backgroundDuringWait": true,
+  "npcSelection": "topic_then_priority_then_acquisition",
+  "leaveSceneCostPolicy": "keep_channel_release_report_reservation",
+  "technicalFailureCostPolicy": "compensate_channel_release_report_reservation",
+  "roleAbilitiesAreActionGates": false,
+  "textInput": "unverified_statements",
+  "advisorMode": "live_with_labeled_fallback",
+  "confidencePresentation": "qualitative",
+  "evaluationProfile": "four_dimensions_mixed_or_insufficient",
+  "outcomeSuccess": "arrival_N07_before_or_at_deadline",
+  "bridgeRefusalRecoveryLimit": 1,
+  "normalLaunchAllowed": false,
+  "demoLaunchAllowed": true
+}

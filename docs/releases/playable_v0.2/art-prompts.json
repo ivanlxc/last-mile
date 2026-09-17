@@ -1,0 +1,23 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-09-16",
+  "style": "premium painted cinematic game environment concept art; landscape 16:9; no UI lettering watermark; atmospheric only, not intelligence",
+  "assets": [
+    {
+      "file": "client/public/assets/hero.png",
+      "prompt": "A quiet convoy of three white humanitarian minibuses approaches a small sandstone town in a fictional Middle Eastern river valley. Long winding road leading from foreground right toward town on horizon, distant low mountains, river glints. No weapons. No flags or real organizations. Time late golden hour before dusk, dust catching amber light. Very wide composition with dark quiet negative space across left third for an HTML game title. Atmospheric cinematic landscape, one bus quite near on right third, palm silhouettes, tiny human scale. No action combat."
+    },
+    {
+      "file": "client/public/assets/gate.png",
+      "prompt": "Eye-level wide cinematic view from a humanitarian convoy at the outskirts of a fictional Middle Eastern sandstone town. A small checkpoint kiosk and alternating cream/ochre road barrier, cables and forms on a table, palms, warm plaster architecture. A white minibus right foreground seen from rear side. Distant human figures rendered as small silhouettes. No readable signs, no visible open/closed traffic verdict, no indication whether an electronic terminal works. Quiet uncertainty. Dusk with last warm sunlight on sandy walls."
+    },
+    {
+      "file": "client/public/assets/market.png",
+      "prompt": "Eye-level wide cinematic view of a narrow bazaar street in a fictional Middle Eastern sandstone river town at dusk. Dusty fabric awnings, shuttered stalls, long cable shadows, a white humanitarian minibus partly visible at right foreground. Road bends out of sight, so viewers cannot tell whether it is passable. A few small distant civilians. No explosion, no fire, no armed people, no crowds obstructing road, no evidence of an attack. Atmospheric dust, ambiguity and humanity. Cool muted shadows and warm low sunlight."
+    },
+    {
+      "file": "client/public/assets/bridge.png",
+      "prompt": "Eye-level wide cinematic view from western approach of an old broad concrete bridge over a river in a fictional Middle Eastern sandstone town at twilight. Humanitarian minibus right foreground partly seen, folded striped road barrier on roadside that does not indicate permission, a tiny attendant booth. Bridge deck leads toward distant low-rise town and a warmly lit receiving station, but middle distance fades into mist so no obvious road verdict. Calm water, dusky teal shadows, copper glow on worn concrete. No damage or explosion, no readable signs or weapons."
+    }
+  ]
+}

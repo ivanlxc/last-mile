@@ -1,0 +1,122 @@
+{
+  "baseFeature": {
+    "adviceShownBefore": true,
+    "adviceHasAction": true,
+    "recommendationLegal": true,
+    "chosenMatchesAdvice": true,
+    "visibleGapPresent": true,
+    "checkKnownAffordable": true,
+    "adequateVisibleAdviceSupport": false,
+    "visibleCurrentCounterEvidence": false,
+    "costDisplayed": false,
+    "checkLowValueByPublicRule": false,
+    "checkRefreshesExpiredEvidence": false,
+    "usedEvidenceInReason": false,
+    "acknowledgedLimitation": false,
+    "comparedKnownCosts": false,
+    "technicalIssue": false,
+    "coverageComplete": true,
+    "unobservedCommunication": false,
+    "contextId": "00000000-0000-0000-0000-000000000321",
+    "sceneId": "E1",
+    "controllerKind": "human",
+    "kind": "route_decision",
+    "availableRelevantCheckCount": 1,
+    "reasonCodes": ["ai_said_so"]
+  },
+  "cases": [
+    {
+      "name": "explicit_reliance_with_affordable_check",
+      "patch": {},
+      "expectDimension": "complacency",
+      "expectSupport": true
+    },
+    {
+      "name": "npc_is_not_player",
+      "patch": {
+        "controllerKind": "npc"
+      },
+      "expectDimension": "complacency",
+      "expectSupport": false
+    },
+    {
+      "name": "no_display_receipt",
+      "patch": {
+        "adviceShownBefore": false
+      },
+      "expectDimension": "complacency",
+      "expectSupport": false
+    },
+    {
+      "name": "time_tradeoff",
+      "patch": {
+        "reasonCodes": ["accepted_uncertainty_for_time"]
+      },
+      "expectDimension": "complacency",
+      "expectSupport": false
+    },
+    {
+      "name": "unknown_oral_knowledge",
+      "patch": {
+        "unobservedCommunication": true
+      },
+      "expectDimension": "complacency",
+      "expectSupport": false
+    },
+    {
+      "name": "current_counterevidence",
+      "patch": {
+        "chosenMatchesAdvice": false,
+        "adequateVisibleAdviceSupport": true,
+        "visibleCurrentCounterEvidence": true,
+        "reasonCodes": ["prior_ai_error_only"]
+      },
+      "expectDimension": "distrust",
+      "expectSupport": false
+    },
+    {
+      "name": "prior_error_only",
+      "patch": {
+        "chosenMatchesAdvice": false,
+        "adequateVisibleAdviceSupport": true,
+        "reasonCodes": ["prior_ai_error_only"]
+      },
+      "expectDimension": "distrust",
+      "expectSupport": true
+    },
+    {
+      "name": "refresh_is_not_overcaution",
+      "patch": {
+        "kind": "investigation_request",
+        "costDisplayed": true,
+        "checkLowValueByPublicRule": true,
+        "checkRefreshesExpiredEvidence": true,
+        "reasonCodes": ["no_new_question"]
+      },
+      "expectDimension": "overCaution",
+      "expectSupport": false
+    },
+    {
+      "name": "declared_redundant_check",
+      "patch": {
+        "kind": "investigation_request",
+        "costDisplayed": true,
+        "checkLowValueByPublicRule": true,
+        "reasonCodes": ["no_new_question"]
+      },
+      "expectDimension": "overCaution",
+      "expectSupport": true
+    },
+    {
+      "name": "evidence_and_limits",
+      "patch": {
+        "usedEvidenceInReason": true,
+        "acknowledgedLimitation": true,
+        "comparedKnownCosts": true,
+        "reasonCodes": ["evidence_supported"]
+      },
+      "expectDimension": "calibratedTrust",
+      "expectSupport": true
+    }
+  ]
+}

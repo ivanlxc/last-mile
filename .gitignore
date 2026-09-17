@@ -1,0 +1,63 @@
+# Credentials and machine-local environment (only the empty template is public).
+.env*
+!.env.example
+.envrc
+.secrets/
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Installed dependencies, build products and local tool caches.
+node_modules/
+dist/
+.pnpm-store/
+.cache/
+.vite/
+*.tsbuildinfo
+coverage/
+test-results/
+playwright-report/
+
+# Runtime state, player saves and logs.
+data/
+.last-mile/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.log
+
+# Local exports, duplicate legacy files and organization working data.
+.local-artifacts/
+# Historical snapshots and machine-specific file-migration reports stay local.
+/archive/
+/docs/repository-audit/
+/assets/authoring/wadi07-output-variant/
+# Keep the Blender source and Markdown guide; these are duplicate exports.
+/assets/authoring/last-mile-v2/LAST_MILE_GameMap.glb
+/assets/authoring/last-mile-v2/地图设计与资产接入.pdf
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.bak
+*.tmp
+*.swp
+*.swo
+.DS_Store
+._*
+__pycache__/
+*.py[cod]
+*.blend[0-9]

@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-16",
+  "version": "0.2.0",
+  "defaultLocale": "en-US",
+  "supportedLocales": [
+    "en-US",
+    "zh-CN"
+  ],
+  "build": "passed",
+  "typecheck": "passed",
+  "automatedTests": {
+    "files": 10,
+    "passed": 158,
+    "failed": 0
+  },
+  "browserTests": {
+    "passed": 4,
+    "failed": 0,
+    "durationSeconds": 54.2,
+    "screenshots": 21,
+    "realTimeFlow": "Chinese, 30s entry + refresh + command loop",
+    "injectedClockFlows": [
+      "Chinese three-scene campaign",
+      "English three-scene campaign"
+    ],
+    "languagePreference": "English default and persisted switch verified"
+  },
+  "realPaidModelCalls": 0,
+  "deploymentStatus": "local only; researched Railway single-instance SQLite volume plan; cloud implementation and deployment pending",
+  "sourceArchive": "LAST_MILE_源代码_v0.2.zip",
+  "productionSmoke": {
+    "url": "http://127.0.0.1:3111/",
+    "defaultEnglishAndLanguageSwitch": "passed",
+    "pageErrors": 0
+  }
+}

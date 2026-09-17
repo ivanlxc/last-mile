@@ -1,0 +1,102 @@
+[
+  {
+    "name": "private_time_in_advisor",
+    "target": "advisor-input",
+    "path": ["missionTimeMs"],
+    "value": 5000,
+    "expect": "schema"
+  },
+  {
+    "name": "root_source_leak",
+    "target": "advisor-input",
+    "path": ["evidence", 0, "root_source"],
+    "value": "secret",
+    "expect": "schema"
+  },
+  {
+    "name": "invented_evidence",
+    "target": "advisor-output",
+    "path": ["claims", 0, "citations", 0, "refId"],
+    "value": "00000000-0000-0000-0000-0000000003e7",
+    "expect": "CITATION_NOT_IN_MANIFEST"
+  },
+  {
+    "name": "future_fact",
+    "target": "evaluator-input",
+    "path": ["facts", 0, "availableAtMissionMs"],
+    "value": 100001,
+    "expect": "FUTURE_FACT"
+  },
+  {
+    "name": "later_context_evidence",
+    "target": "evaluator-input",
+    "path": ["facts", 0, "evidenceRefs", 0, "instanceId"],
+    "value": "00000000-0000-0000-0000-0000000001f6",
+    "expect": "FACT_EVIDENCE_NOT_VISIBLE"
+  },
+  {
+    "name": "future_advice",
+    "target": "evaluator-input",
+    "path": ["contexts", 0, "displayedAdviceAtMs"],
+    "value": 100001,
+    "expect": "FUTURE_ADVICE"
+  },
+  {
+    "name": "npc_subject",
+    "target": "evaluator-input",
+    "path": ["contexts", 0, "controllerKind"],
+    "value": "npc",
+    "expect": "schema"
+  },
+  {
+    "name": "invented_opportunity",
+    "target": "evaluator-output",
+    "path": ["dimensions", "complacency", "eligibleOpportunities"],
+    "value": 2,
+    "expect": "OPPORTUNITY_COUNT_MISMATCH"
+  },
+  {
+    "name": "wrong_seal",
+    "target": "evaluator-output",
+    "path": ["sealedHash"],
+    "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "expect": "EVALUATION_INPUT_MISMATCH"
+  },
+  {
+    "name": "support_without_context",
+    "target": "evaluator-output",
+    "path": ["dimensions", "complacency", "supportContextRefs"],
+    "value": [],
+    "expect": "schema"
+  },
+  {
+    "name": "truth_to_evaluator",
+    "target": "evaluator-input",
+    "path": ["hiddenTruth"],
+    "value": {
+      "bridgeAllowed": true
+    },
+    "expect": "schema"
+  },
+  {
+    "name": "unapproved_confidence_number",
+    "target": "advisor-output",
+    "path": ["confidence"],
+    "value": 0.98,
+    "expect": "schema"
+  },
+  {
+    "name": "evidence_claim_cannot_cite_statement",
+    "target": "advisor-output",
+    "path": ["claims", 0, "citations", 0, "kind"],
+    "value": "statement",
+    "expect": "schema"
+  },
+  {
+    "name": "unknown_claim_reference",
+    "target": "advisor-output",
+    "path": ["recommendation", "claimRefs"],
+    "value": ["claim-99"],
+    "expect": "UNKNOWN_CLAIM_REF"
+  }
+]

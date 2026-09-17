@@ -1,0 +1,385 @@
+{
+  "version": "public-predicates-0.5",
+  "status": "review",
+  "lookup": "exact visible definitionId + SHA256(UTF8(body)); never privateCaseId or hiddenRootId",
+  "unmatched": "unknown; no positive blame-support feature",
+  "records": [
+    {
+      "definitionId": "gate_drone",
+      "bodySha256": "093997e8d67d950402c6b5c23e268695d2e5f34dace2056d92357fc29bedaeec",
+      "answeredQuestionKeys": [
+        "gate_activity"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "b642e3e062b1edd7a21098c375c301b2d5ccaa3729f5e40ebbd81bb598bbf912"
+      }
+    },
+    {
+      "definitionId": "gate_agency",
+      "bodySha256": "c9909d7f6bba72ddb773edafe3436ad744e44b9c8f3c21a0471b224afd020e6b",
+      "answeredQuestionKeys": [
+        "gate_registration"
+      ],
+      "positiveLocalActionSupport": [
+        "E1_MAIN"
+      ],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "aaf239fac148dd76b538aa31535e374fb94f8bfab9ec7f7c875c2e56178d7385"
+      }
+    },
+    {
+      "definitionId": "market_drone",
+      "bodySha256": "61c3047dc2a4e31365ae46f2c8e4af6ced2a53a15dba0fdcfa50dc53fc940c28",
+      "answeredQuestionKeys": [
+        "market_lane"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [
+        "E2_MAIN"
+      ],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "1d406569b00e347c7777b1be2f160ff36a18353d8fd7749244ee80fde8c18dfd"
+      }
+    },
+    {
+      "definitionId": "market_clearance",
+      "bodySha256": "9fcb6e57cfbb9bcc7af71de2c0628eef61e470ed1ccd2bfe7d6bdbc240144911",
+      "answeredQuestionKeys": [
+        "south_lane"
+      ],
+      "positiveLocalActionSupport": [
+        "E2_BYPASS"
+      ],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "abd857741d5db343999a8e870f7c202366d7d133839f38ced69befcb994c486d"
+      }
+    },
+    {
+      "definitionId": "bridge_drone",
+      "bodySha256": "2162d1f518d3d2138f7dd4755fdae1f0811c9deeac758180277384c3d120a435",
+      "answeredQuestionKeys": [
+        "bridge_signage"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "42d66d855a6f79a452155e4a25780bc3837b2b96c7791f607115f06a76f10da3"
+      }
+    },
+    {
+      "definitionId": "bridge_agency",
+      "bodySha256": "76499dae71488765d587eeedc3b463f59357e47529f0899e26fe1760e8c19d7b",
+      "answeredQuestionKeys": [
+        "bridge_permission"
+      ],
+      "positiveLocalActionSupport": [
+        "E3_BRIDGE"
+      ],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "d1a6fba551a3d2d2ad6e37e0f892d52db18cdd772b4e03a23b0f3f426ea1516f"
+      }
+    },
+    {
+      "definitionId": "ford_drone",
+      "bodySha256": "a4bdc130e55e3b8a3bf429fc0f468d21958d2f97e7e0fbc18a07602b232e6851",
+      "answeredQuestionKeys": [
+        "ford_lane"
+      ],
+      "positiveLocalActionSupport": [
+        "E3_FORD"
+      ],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "c4a02cd1f47b8bf7319895bebc49afd43abea0fd90c25efe18182e6ed82d0b11"
+      }
+    },
+    {
+      "definitionId": "gate_drone",
+      "bodySha256": "eb8a524baa710a47a018d392c05e43bfab8cb5cc7d2deec9d037bdc68aaad6f8",
+      "answeredQuestionKeys": [
+        "gate_activity"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "12396d5f32a686a8d4cbab4d1ac8e73bc6401056f63c261c28c5610ac3368ee0"
+      }
+    },
+    {
+      "definitionId": "gate_agency",
+      "bodySha256": "475d451569b5e93e36001fb4c98f1b34f70acb42e0905796ca0f4d19c6d8765b",
+      "answeredQuestionKeys": [
+        "gate_registration"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [
+        "E1_MAIN"
+      ],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "65e25ed53abdc5ccb5ab445b0351775b4dbd08a66aa5f6c8ecfd46d2511bb50b"
+      }
+    },
+    {
+      "definitionId": "market_drone",
+      "bodySha256": "5b1e9e0f92d2d0129a70daae21b8000c290de9cd06ab263a0f34afaffa3e23d1",
+      "answeredQuestionKeys": [
+        "market_lane"
+      ],
+      "positiveLocalActionSupport": [
+        "E2_MAIN"
+      ],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "b28a78fad4d1be7b0f084ae3978ea9b25b328bb17cacb7a7a2d26e153ae7be21"
+      }
+    },
+    {
+      "definitionId": "bridge_drone",
+      "bodySha256": "5c79f31fa61b710fe9d0758c6a9654d940b2b17850b5777d8652720dc4e77f23",
+      "answeredQuestionKeys": [
+        "bridge_signage"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "055461840df28929129e1764898dcc0ea9b17029af1aaaaa4fe5afeef146487b"
+      }
+    },
+    {
+      "definitionId": "bridge_agency",
+      "bodySha256": "85e2b5e9e2785f37c709db73e36f5e77c48ee1cb7e43bff2b94969a3eec70330",
+      "answeredQuestionKeys": [
+        "bridge_permission"
+      ],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [
+        "E3_BRIDGE"
+      ],
+      "meaning": "仅表示这份公开记录的陈述支持/反对局部通行条件，不证明真实状态、整体最优或独立来源。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "36cff935c04fa8bf110f8ceb9aa2769d4c67093a60e794a5c5297d9f63053137"
+      }
+    },
+    {
+      "definitionId": "service_drone",
+      "bodySha256": "b2342192178a3c183d6ceabcf115620b1f8fbd768141a1a68310e9a8bb899da9",
+      "answeredQuestionKeys": [
+        "service_lane"
+      ],
+      "positiveLocalActionSupport": [
+        "E1_BYPASS"
+      ],
+      "negativeLocalActionSupport": [],
+      "meaning": "仅支持可见服务路的局部路面条件，不证明完成登记或整条路线最优。",
+      "exposedGapQuestionKeys": [],
+      "localizedBodySha256": {
+        "en-US": "1adccf8edc90a1b43ec24b51ae282c58cc97d6f7f6d21300a7267b57335dec6a"
+      }
+    },
+    {
+      "definitionId": "gate_layout",
+      "bodySha256": "268b7e8d1659640817eb607e04150b9bbc1ff7431144d1ae9fec7f2036ce629c",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "gate_registration"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "668ac94b9d3e41e78c5742a536acf7faf9aaa98dac31c15c40fcbc5120a01472"
+      }
+    },
+    {
+      "definitionId": "gate_operator",
+      "bodySha256": "45a859159ee8c2ee645e70bdc9e9d6d698f336f1d6ce76a813b4f7699743d810",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "gate_registration"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "55f4b0fa37549af87d722172574e02d27423bcb43b15c127106a28bd9cba8ff2"
+      }
+    },
+    {
+      "definitionId": "gate_satellite",
+      "bodySha256": "73daa330ac33cd41503a64d7dd8ba99ff6eed9f11cfa785a8ece3c6a4a0d27f1",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "gate_registration"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "0929d831158659828dce3242896a02f57c511ad89d353e7ee8351dadb3be818e"
+      }
+    },
+    {
+      "definitionId": "market_map",
+      "bodySha256": "ddcc1c7d3df9b4362c0a7beafdd544995a47caa1e424513bee8750e749b8cc7f",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "market_lane",
+        "south_lane"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "819f8ca34d317c559a1baa085464929fcb22a8e6c9315150c02d67d1ff74b223"
+      }
+    },
+    {
+      "definitionId": "market_satellite",
+      "bodySha256": "72d8c1614eaf232a867a32ce1cc943867cbbf11105af3979eb5f61d1caa1a37b",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "market_lane"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "10a746e84b720b952356a00b5393d996348d7d766973dd418d5cb98533a6458d"
+      }
+    },
+    {
+      "definitionId": "bridge_archive",
+      "bodySha256": "ebca894207bd05703c173576f5073888edb33167d18067567584f179a842fe86",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "bridge_permission"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "37c8e53133b9e276a70a1d698e479ce60b302ebfbaed284873e6121c7ec85edd"
+      }
+    },
+    {
+      "definitionId": "bridge_satellite",
+      "bodySha256": "dd206f15d575cf46b6911b9be731f8cf9bacf1566054f6fa0d7c6706eef7c7c4",
+      "answeredQuestionKeys": [],
+      "positiveLocalActionSupport": [],
+      "negativeLocalActionSupport": [],
+      "exposedGapQuestionKeys": [
+        "bridge_permission"
+      ],
+      "meaning": "这段可见卡片正文明确说明不能确认所列当前问题。只有报告打开回执在截止前才算显示过缺口。",
+      "localizedBodySha256": {
+        "en-US": "1f1e61aeaf58e9e9b40871bf4882d977714021e1b0a60fa045c3a69230eadc83"
+      }
+    }
+  ],
+  "actionQuestionKeys": {
+    "E1_MAIN": [
+      "gate_registration"
+    ],
+    "E1_BYPASS": [
+      "service_lane"
+    ],
+    "E2_MAIN": [
+      "market_lane"
+    ],
+    "E2_BYPASS": [
+      "south_lane"
+    ],
+    "E3_BRIDGE": [
+      "bridge_permission"
+    ],
+    "E3_FORD": [
+      "ford_lane"
+    ]
+  },
+  "checks": [
+    {
+      "sceneId": "E1",
+      "questionKey": "gate_registration",
+      "channel": "localAgency",
+      "topicId": "gate_status"
+    },
+    {
+      "sceneId": "E1",
+      "questionKey": "service_lane",
+      "channel": "drone",
+      "topicId": "roads"
+    },
+    {
+      "sceneId": "E2",
+      "questionKey": "market_lane",
+      "channel": "drone",
+      "topicId": "roads"
+    },
+    {
+      "sceneId": "E2",
+      "questionKey": "south_lane",
+      "channel": "drone",
+      "topicId": "roads"
+    },
+    {
+      "sceneId": "E3",
+      "questionKey": "bridge_permission",
+      "channel": "localAgency",
+      "topicId": "bridge_status"
+    },
+    {
+      "sceneId": "E3",
+      "questionKey": "ford_lane",
+      "channel": "drone",
+      "topicId": "ford_status"
+    }
+  ],
+  "cannotConfirm": [
+    {
+      "channel": "satellite",
+      "questionKeys": [
+        "gate_registration",
+        "bridge_permission",
+        "market_lane"
+      ]
+    },
+    {
+      "channel": "drone",
+      "questionKeys": [
+        "gate_registration",
+        "bridge_permission",
+        "explosion_cause",
+        "hostile_intent"
+      ]
+    }
+  ],
+  "adequateSupport": "At least one displayed,current,uploaded public record has positiveLocalActionSupport for recommendation; its exact ref is cited by the displayed advice; no displayed matching negative record. This is a narrow observable prerequisite, not truth or optimality."
+}
