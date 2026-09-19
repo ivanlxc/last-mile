@@ -9,10 +9,12 @@ export default function Map3D({
   location,
   onFailure,
   active = true,
+  inputBlocked = false,
 }: {
   location: KnownLocation;
   onFailure: () => void;
   active?: boolean;
+  inputBlocked?: boolean;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null),
@@ -20,6 +22,8 @@ export default function Map3D({
     failure = useRef(onFailure);
   position.current = location;
   failure.current = onFailure;
+  const blocked = useRef(inputBlocked);
+  blocked.current = inputBlocked;
   const visible = useRef(active);
   visible.current = active;
   const [ready, setReady] = useState(false);
@@ -156,7 +160,7 @@ export default function Map3D({
     const animate = () => {
       if (disposed) return;
       raf = requestAnimationFrame(animate);
-      controls.enabled = visible.current;
+      controls.enabled = visible.current && !blocked.current;
       if (!visible.current) return;
       const p = locationPoint(position.current);
       const target = new THREE.Vector3(p[0], p[1] + 0.65, p[2]);

@@ -154,7 +154,14 @@
   position: absolute;
   inset: 0;
 }
-.map-renderer-layer[hidden],
+/* Keep the renderer's measured viewport while parking a view. Unity adapts its
+   camera to aspect changes, so collapsing a hidden canvas to 0 × 0 would reset
+   the observation distance when the player switches back. */
+.map-renderer-layer[hidden] {
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
+}
 .map-point-choices[hidden] {
   display: none;
 }

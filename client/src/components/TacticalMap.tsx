@@ -140,7 +140,8 @@ export function TacticalMap({
             >
               <Map3D
                 location={location}
-                active={three && !renderer.inputBlocked}
+                active={three}
+                inputBlocked={renderer.inputBlocked}
                 onFailure={() => renderer.selectMode("two")}
               />
             </Suspense>

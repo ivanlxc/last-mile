@@ -1,5 +1,5 @@
 /* Map-first command shell: the existing renderers and their assets fill the stage. */
-.map-first-command {
+.command-center.map-first-command {
   height: 100dvh;
   min-height: 540px;
   overflow: hidden;
@@ -274,7 +274,9 @@
   min-height: 30px;
 }
 .map-drawer > .panel {
-  flex: 1;
+  height: 0;
+  min-height: 0;
+  flex: 1 1 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -390,6 +392,8 @@
   padding: 8px;
 }
 .map-first-command .action-dock {
+  position: relative;
+  bottom: auto;
   min-height: 96px;
   height: auto;
   padding: 14px 20px;
@@ -562,7 +566,7 @@
   }
 }
 @media (max-width: 760px) {
-  .map-first-command {
+  .command-center.map-first-command {
     height: 100dvh;
     min-height: 640px;
   }
@@ -572,7 +576,7 @@
     gap: 12px;
     padding: 0 12px;
   }
-  .map-first-command .brand-words {
+  .map-first-command .brand > span:last-child {
     display: none;
   }
   .chapter-current {
@@ -633,13 +637,13 @@
     flex-direction: column;
   }
   .map-stage-main {
-    flex: 1;
-    min-height: 170px;
+    flex: 1 1 45%;
+    min-height: 230px;
     order: 0;
   }
   .map-drawer {
     order: 1;
-    flex: 0 1 54%;
+    flex: 1 1 55%;
     min-height: 180px;
     border: 0;
     border-top: 1px solid #71877350;

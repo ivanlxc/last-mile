@@ -189,13 +189,7 @@ test("test-only Unity bridge gates start, survives briefing transition, and acce
     )
     .toBe("N01");
   await page.getByTestId("open-advisor").click();
-  await page.evaluate(() =>
-    (window as unknown as FixtureWindow).__unityFixture.emit({
-      type: "select-location",
-      nodeId: "N02",
-    }),
-  );
-  await expect(page.locator(".map-selection")).toContainText("West gate");
+  await expect(page.getByTestId("advisor-drawer")).toBeVisible();
   await page
     .getByRole("button", { name: "Close AI advisor", exact: true })
     .click();

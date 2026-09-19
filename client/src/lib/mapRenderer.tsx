@@ -159,7 +159,7 @@ export function MapRendererProvider({
     canStart: mode !== "unity" || ready,
     runtimeError,
     selectedNodeId,
-    inputBlocked: inputBlocked || modalOpen,
+    inputBlocked: modalOpen,
     setInputBlocked,
     selectNode,
     recheck: () => {
@@ -179,7 +179,8 @@ export function MapRendererProvider({
             key={runtimeKey}
             state={renderState}
             active={mode === "unity"}
-            inputBlocked={inputBlocked || modalOpen}
+            inputBlocked={modalOpen}
+            gesturesSuspended={inputBlocked || modalOpen}
             onReady={() => setReadyKey(runtimeKey)}
             onFailure={(message) => {
               setRuntimeError(message);

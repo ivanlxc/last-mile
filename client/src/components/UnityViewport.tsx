@@ -16,6 +16,7 @@ export interface UnityViewportProps {
   state: UnityRenderState;
   active?: boolean;
   inputBlocked?: boolean;
+  gesturesSuspended?: boolean;
   onReady?: () => void;
   onFailure: (message: string) => void;
   onSelectLocation?: (nodeId: string) => void;
@@ -153,7 +154,9 @@ export default function UnityViewport(props: UnityViewportProps) {
       if (disposed || !ready || !engine) return;
       if (
         input.mode !== "stop" &&
-        (latest.current.active === false || latest.current.inputBlocked)
+        (latest.current.active === false ||
+          latest.current.inputBlocked ||
+          latest.current.gesturesSuspended)
       )
         return;
       if (![input.dx, input.dy, input.zoomLog].every(Number.isFinite)) return;
@@ -206,6 +209,7 @@ export default function UnityViewport(props: UnityViewportProps) {
     const resize = () => {
       if (disposed) return;
       const bounds = container.getBoundingClientRect();
+      if (bounds.width < 1 || bounds.height < 1) return;
       // Unity owns the render buffer size; only CSS dimensions follow the slot.
       canvas.style.width = `${Math.max(1, bounds.width)}px`;
       canvas.style.height = `${Math.max(1, bounds.height)}px`;
@@ -284,7 +288,7 @@ export default function UnityViewport(props: UnityViewportProps) {
       {status === "ready" && props.active !== false && (
         <GestureControls
           chinese={chinese}
-          suspended={!!props.inputBlocked}
+          suspended={!!props.inputBlocked || !!props.gesturesSuspended}
           onInput={sendCameraInput}
         />
       )}
