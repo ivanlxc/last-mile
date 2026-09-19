@@ -5,7 +5,11 @@ const PCM_BYTES_PER_SECOND = 32_000;
 const MAX_FRAME_BYTES = 65_536;
 const MAX_BUFFER_BYTES = 262_144;
 const MAX_AUDIO_RESPONSE_BYTES = 4 * 1024 * 1024;
-const ENGLISH_VOICES = ["aura-2-thalia-en", "aura-2-apollo-en"] as const;
+const ENGLISH_VOICES = [
+  "aura-2-draco-en",
+  "aura-2-thalia-en",
+  "aura-2-apollo-en",
+] as const;
 
 export interface SpeechConfig {
   apiKey: string;
@@ -22,7 +26,7 @@ export function loadSpeechConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): SpeechConfig {
   const apiKey = env.DEEPGRAM_API_KEY?.trim() ?? "";
-  const voice = env.DEEPGRAM_TTS_MODEL ?? "aura-2-thalia-en";
+  const voice = env.DEEPGRAM_TTS_MODEL ?? "aura-2-draco-en";
   if (!ENGLISH_VOICES.includes(voice as SpeechConfig["ttsModel"]))
     throw new Error(
       "DEEPGRAM_TTS_MODEL must be a supported English Aura-2 voice",

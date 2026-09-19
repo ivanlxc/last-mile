@@ -1,6 +1,8 @@
 # English narrator auditions · v1
 
-本轮提供游戏朗读音色候选，尚未替换游戏配置。检查时本机配置为 `aura-2-thalia-en`；当前游戏服务端仅允许 Thalia 与 Apollo，选定其他候选后需扩展服务端允许列表并更新配置。
+用户已选择 **Draco**（2026-09-19）。游戏默认朗读和本机配置已更新为 `aura-2-draco-en`，由同一个服务端合成接口用于线索与 AI 输出等朗读；服务端保留 Thalia／Apollo 显式配置兼容性。语音输入继续使用 Nova-3。
+
+本目录保留选择前的四种音色比较。生成试听时本机使用 Thalia，历史 manifest 中的 `currentConfiguredVoice` 记录的是当时状态。
 
 所有候选通过已有 Deepgram 连接实际生成，同一段虚构英文线索、默认语速与音高。只发送下列试听文字，没有发送私有剧情、存档或其他用户数据。API key 仅从本机环境读取，不写入资产、manifest 或日志。
 
@@ -29,4 +31,6 @@ node --env-file-if-exists=.env scripts/generate-voice-auditions.mjs
 
 模型名、试听文本和来源见 [manifest.json](v1/manifest.json)。合集由四个原始样本按 manifest 顺序拼接，按 comparison.json 增益调整、段间插入1秒静音后编码为48kHz单声道 MP3；单独样本保留供应商原始输出。
 
-四段原始样本与合集均可解码，时长、有限采样和非削波峰值检查通过。本轮与西门 v2 一起保存在 `checkpoint/audio-auditions-02`；游戏的朗读默认配置保持原状，等待音色选择。
+四段原始样本与合集均可解码，时长、有限采样和非削波峰值检查通过。试听文件与西门 v2 保存在 `checkpoint/audio-auditions-02`。
+
+Draco 启用版检查点为 `checkpoint/audio-03-somber-draco`：默认模型、旧模型覆盖、配置端点和合成请求转发的14项语音服务测试通过。重启后的本地服务配置返回 Draco，并通过游戏的真实合成接口返回可解码 MP3。本地服务重启前已备份存档，备份仅保存在忽略目录 `.local-artifacts/audio-draco-v3/`。

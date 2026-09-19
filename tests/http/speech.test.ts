@@ -130,7 +130,7 @@ describe("optional English speech service", () => {
       enabled: true,
       language: "en",
       sttModel: "nova-3",
-      ttsModel: "aura-2-thalia-en",
+      ttsModel: "aura-2-draco-en",
       maxRecordingSeconds: 90,
       maxTextLength: 2000,
     });
@@ -307,12 +307,34 @@ describe("optional English speech service", () => {
       RequestInit,
     ];
     expect(url.origin).toBe("https://api.deepgram.com");
-    expect(url.searchParams.get("model")).toBe("aura-2-thalia-en");
+    expect(url.searchParams.get("model")).toBe("aura-2-draco-en");
     expect(init.redirect).toBe("error");
     expect(JSON.parse(init.body as string)).toEqual({
       text: "Check the crossing.",
     });
   });
+
+  it.each(["aura-2-draco-en", "aura-2-thalia-en", "aura-2-apollo-en"])(
+    "honors the trusted English voice override %s through configuration and synthesis",
+    async (model) => {
+      const { app, synthesize, fetchAudio } = await fixture({
+        config: loadSpeechConfig({
+          DEEPGRAM_API_KEY: "test-provider-key",
+          DEEPGRAM_TTS_MODEL: model,
+        }),
+      });
+      const response = await app.inject({
+        url: "/api/v1/speech/config",
+        headers,
+      });
+      expect(response.json().ttsModel).toBe(model);
+      expect(
+        (await synthesize({ text: "Check the observation scope." })).statusCode,
+      ).toBe(200);
+      const [url] = fetchAudio.mock.calls[0]! as unknown as [URL, RequestInit];
+      expect(url.searchParams.get("model")).toBe(model);
+    },
+  );
 
   it("rejects upstream errors and oversized audio without leaking response content", async () => {
     const denied = await fixture({

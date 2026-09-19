@@ -26,6 +26,7 @@ struct Score: Decodable {
     let tailSeconds: Double
     let tracks: [Track]
     let renderReverbPercent: Float?
+    let renderLowPassHz: Float?
 }
 struct Event {
     let sample: Int64
@@ -61,7 +62,7 @@ func render() throws {
     let rate = 48000.0
     let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2)!
     let sum = AVAudioMixerNode()
-    let tone = AVAudioUnitEQ(numberOfBands: 2)
+    let tone = AVAudioUnitEQ(numberOfBands: 3)
     tone.bands[0].filterType = .highPass
     tone.bands[0].frequency = 42
     tone.bands[0].bypass = false
@@ -69,6 +70,15 @@ func render() throws {
     tone.bands[1].frequency = 4000
     tone.bands[1].gain = -3
     tone.bands[1].bypass = false
+    tone.bands[2].bypass = true
+    if let cutoff = score.renderLowPassHz {
+        guard (200...20000).contains(cutoff) else {
+            throw RenderError.invalid("Low-pass cutoff is outside the audible design range")
+        }
+        tone.bands[2].filterType = .lowPass
+        tone.bands[2].frequency = cutoff
+        tone.bands[2].bypass = false
+    }
     let space = AVAudioUnitReverb()
     let reverb = score.renderReverbPercent ?? 24
     guard (0...100).contains(reverb) else {

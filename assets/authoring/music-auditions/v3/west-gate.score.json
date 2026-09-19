@@ -1,0 +1,361 @@
+{
+  "title": "West Gate \u2014 Weight of Passage (somber v3)",
+  "bpm": 56,
+  "bars": 12,
+  "beatsPerBar": 4,
+  "tailSeconds": 8,
+  "renderReverbPercent": 34,
+  "renderLowPassHz": 3400,
+  "tracks": [
+    {
+      "name": "Low ground \u2014 sustained bowed bass",
+      "instrument": "bass",
+      "volume": 0.34,
+      "pan": -0.04,
+      "notes": [
+        {
+          "beat": 0.1,
+          "duration": 7.7,
+          "midi": 38,
+          "velocity": 39
+        },
+        {
+          "beat": 8.1,
+          "duration": 7.7,
+          "midi": 38,
+          "velocity": 39
+        },
+        {
+          "beat": 16.1,
+          "duration": 7.7,
+          "midi": 38,
+          "velocity": 44
+        },
+        {
+          "beat": 24.1,
+          "duration": 7.7,
+          "midi": 38,
+          "velocity": 44
+        },
+        {
+          "beat": 32.1,
+          "duration": 7.7,
+          "midi": 38,
+          "velocity": 39
+        },
+        {
+          "beat": 40.1,
+          "duration": 7.7,
+          "midi": 38,
+          "velocity": 39
+        }
+      ]
+    },
+    {
+      "name": "The weight of passage \u2014 low sustained strings",
+      "instrument": "strings",
+      "volume": 0.3,
+      "pan": -0.17,
+      "notes": [
+        {
+          "beat": 0.18,
+          "duration": 7.55,
+          "midi": 45,
+          "velocity": 40
+        },
+        {
+          "beat": 0.27,
+          "duration": 7.46,
+          "midi": 50,
+          "velocity": 41
+        },
+        {
+          "beat": 0.36,
+          "duration": 7.37,
+          "midi": 53,
+          "velocity": 41
+        },
+        {
+          "beat": 0.45,
+          "duration": 7.28,
+          "midi": 64,
+          "velocity": 37
+        },
+        {
+          "beat": 8.18,
+          "duration": 7.55,
+          "midi": 46,
+          "velocity": 39
+        },
+        {
+          "beat": 8.27,
+          "duration": 7.46,
+          "midi": 53,
+          "velocity": 39
+        },
+        {
+          "beat": 8.36,
+          "duration": 7.37,
+          "midi": 57,
+          "velocity": 38
+        },
+        {
+          "beat": 8.45,
+          "duration": 7.28,
+          "midi": 62,
+          "velocity": 37
+        },
+        {
+          "beat": 16.18,
+          "duration": 7.55,
+          "midi": 43,
+          "velocity": 43
+        },
+        {
+          "beat": 16.27,
+          "duration": 7.46,
+          "midi": 50,
+          "velocity": 40
+        },
+        {
+          "beat": 16.36,
+          "duration": 7.37,
+          "midi": 57,
+          "velocity": 43
+        },
+        {
+          "beat": 16.45,
+          "duration": 7.28,
+          "midi": 58,
+          "velocity": 41
+        },
+        {
+          "beat": 24.18,
+          "duration": 7.55,
+          "midi": 45,
+          "velocity": 40
+        },
+        {
+          "beat": 24.27,
+          "duration": 7.46,
+          "midi": 50,
+          "velocity": 40
+        },
+        {
+          "beat": 24.36,
+          "duration": 7.37,
+          "midi": 53,
+          "velocity": 42
+        },
+        {
+          "beat": 24.45,
+          "duration": 7.28,
+          "midi": 64,
+          "velocity": 40
+        },
+        {
+          "beat": 32.18,
+          "duration": 7.55,
+          "midi": 48,
+          "velocity": 41
+        },
+        {
+          "beat": 32.27,
+          "duration": 7.46,
+          "midi": 55,
+          "velocity": 41
+        },
+        {
+          "beat": 32.36,
+          "duration": 7.37,
+          "midi": 62,
+          "velocity": 40
+        },
+        {
+          "beat": 32.45,
+          "duration": 7.28,
+          "midi": 64,
+          "velocity": 38
+        },
+        {
+          "beat": 40.18,
+          "duration": 7.55,
+          "midi": 45,
+          "velocity": 39
+        },
+        {
+          "beat": 40.27,
+          "duration": 7.46,
+          "midi": 50,
+          "velocity": 38
+        },
+        {
+          "beat": 40.36,
+          "duration": 7.37,
+          "midi": 52,
+          "velocity": 38
+        },
+        {
+          "beat": 40.45,
+          "duration": 7.28,
+          "midi": 57,
+          "velocity": 38
+        }
+      ]
+    },
+    {
+      "name": "Distant suspended air",
+      "instrument": "warm_pad",
+      "volume": 0.27,
+      "pan": 0.18,
+      "notes": [
+        {
+          "beat": 0.4,
+          "duration": 7.5,
+          "midi": 50,
+          "velocity": 33
+        },
+        {
+          "beat": 0.46,
+          "duration": 7.44,
+          "midi": 57,
+          "velocity": 35
+        },
+        {
+          "beat": 0.52,
+          "duration": 7.38,
+          "midi": 64,
+          "velocity": 33
+        },
+        {
+          "beat": 8.4,
+          "duration": 7.5,
+          "midi": 50,
+          "velocity": 34
+        },
+        {
+          "beat": 8.46,
+          "duration": 7.44,
+          "midi": 57,
+          "velocity": 35
+        },
+        {
+          "beat": 8.52,
+          "duration": 7.38,
+          "midi": 65,
+          "velocity": 31
+        },
+        {
+          "beat": 16.4,
+          "duration": 7.5,
+          "midi": 50,
+          "velocity": 35
+        },
+        {
+          "beat": 16.46,
+          "duration": 7.44,
+          "midi": 58,
+          "velocity": 32
+        },
+        {
+          "beat": 16.52,
+          "duration": 7.38,
+          "midi": 62,
+          "velocity": 35
+        },
+        {
+          "beat": 24.4,
+          "duration": 7.5,
+          "midi": 50,
+          "velocity": 34
+        },
+        {
+          "beat": 24.46,
+          "duration": 7.44,
+          "midi": 57,
+          "velocity": 31
+        },
+        {
+          "beat": 24.52,
+          "duration": 7.38,
+          "midi": 64,
+          "velocity": 31
+        },
+        {
+          "beat": 32.4,
+          "duration": 7.5,
+          "midi": 50,
+          "velocity": 35
+        },
+        {
+          "beat": 32.46,
+          "duration": 7.44,
+          "midi": 55,
+          "velocity": 33
+        },
+        {
+          "beat": 32.52,
+          "duration": 7.38,
+          "midi": 62,
+          "velocity": 35
+        },
+        {
+          "beat": 40.4,
+          "duration": 7.5,
+          "midi": 50,
+          "velocity": 31
+        },
+        {
+          "beat": 40.46,
+          "duration": 7.44,
+          "midi": 57,
+          "velocity": 34
+        },
+        {
+          "beat": 40.52,
+          "duration": 7.38,
+          "midi": 64,
+          "velocity": 31
+        }
+      ]
+    },
+    {
+      "name": "Slow inner voice \u2014 no repeated pulse",
+      "instrument": "cello",
+      "volume": 0.2,
+      "pan": 0.09,
+      "notes": [
+        {
+          "beat": 4.0,
+          "duration": 5.4,
+          "midi": 50,
+          "velocity": 38
+        },
+        {
+          "beat": 13.5,
+          "duration": 5.8,
+          "midi": 48,
+          "velocity": 37
+        },
+        {
+          "beat": 25.0,
+          "duration": 5.4,
+          "midi": 45,
+          "velocity": 40
+        },
+        {
+          "beat": 35.5,
+          "duration": 4.8,
+          "midi": 43,
+          "velocity": 36
+        },
+        {
+          "beat": 42.0,
+          "duration": 5.8,
+          "midi": 45,
+          "velocity": 34
+        }
+      ]
+    }
+  ]
+}
