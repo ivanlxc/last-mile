@@ -32,6 +32,7 @@ import { Modal } from "./Modal";
 import { ContextModal } from "./ContextModal";
 import { useMapRenderer } from "../lib/mapRenderer";
 import { ReadAloudButton } from "./ReadAloudButton";
+import { AtmosphereControl } from "./AtmosphereControl";
 import "./map-first.css";
 const icons = {
   satellite: Satellite,
@@ -57,6 +58,7 @@ export function GameView({
   const missionMenu = useRef<HTMLDetailsElement>(null);
   const [drawer, setDrawer] = useState<"intel" | "advisor" | null>(null);
   const [seenReportCount, setSeenReportCount] = useState(s.reports.length);
+  const [seenStory, setSeenStory] = useState<string | null>(null);
   const intelTrigger = useRef<HTMLButtonElement>(null);
   const advisorTrigger = useRef<HTMLButtonElement>(null);
   const drawerClose = useRef<HTMLButtonElement>(null);
@@ -94,8 +96,10 @@ export function GameView({
     const key = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || document.querySelector("dialog[open]"))
         return;
-      if (missionOpen) {
+      if (missionOpen || missionMenu.current?.open) {
+        event.preventDefault();
         setMissionOpen(false);
+        missionMenu.current?.querySelector("summary")?.focus();
         return;
       }
       if (decision) {
@@ -184,9 +188,14 @@ export function GameView({
             className="mission-details"
             ref={missionMenu}
             open={missionOpen}
-            onToggle={(event) => setMissionOpen(event.currentTarget.open)}
           >
-            <summary data-testid="open-mission">
+            <summary
+              data-testid="open-mission"
+              onClick={(event) => {
+                event.preventDefault();
+                setMissionOpen((open) => !open);
+              }}
+            >
               {chinese ? "任务" : "Mission"}
               <ChevronDown size={14} />
             </summary>
@@ -287,11 +296,17 @@ export function GameView({
           </button>
           <button
             data-testid="open-story"
-            onClick={() => setShowScene(true)}
+            onClick={() => {
+              setSeenStory(s.sceneId ?? "prologue");
+              setShowScene(true);
+            }}
             aria-label={t("ui.readTheSceneStory")}
           >
             <BookOpen size={16} />
             {chinese ? "故事" : "Story"}
+            {seenStory !== (s.sceneId ?? "prologue") && (
+              <span className="toolbar-badge">{chinese ? "新" : "New"}</span>
+            )}
           </button>
         </div>
         <span className="operation-name" role="status">
@@ -303,6 +318,11 @@ export function GameView({
               : t("ui.awaitingOrders")}
         </span>
         <div className="map-toolbar-feedback">
+          <AtmosphereControl
+            sceneId={s.sceneId}
+            travelling={travelling}
+            reportCount={s.reports.length}
+          />
           {s.activeTasks.length > 0 && (
             <button className="task-status" onClick={() => setDrawer("intel")}>
               <span className="spinner" />
@@ -425,6 +445,7 @@ export function GameView({
                     disabled={!action.available || game.busy}
                     onClick={(event) => {
                       decisionTrigger.current = event.currentTarget;
+                      setDrawer(null);
                       setDecision(action);
                     }}
                   >
@@ -472,6 +493,7 @@ export function GameView({
                 const a = s.actionOptions.find((a) => a.actionId === "WAIT");
                 if (a) {
                   decisionTrigger.current = event.currentTarget;
+                  setDrawer(null);
                   setDecision(a);
                 }
               }}

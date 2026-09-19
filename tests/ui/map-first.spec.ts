@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("map-first layout keeps map and drafts, opens one drawer, and reviews before committing", async ({
+test("desktop map-first layout keeps map and drafts, opens one drawer, and reviews before committing", async ({
   page,
 }, info) => {
   const errors: string[] = [];
@@ -22,6 +22,7 @@ test("map-first layout keeps map and drafts, opens one drawer, and reviews befor
   const projection = async () =>
     (await page.request.get(`/api/v1/sessions/${sessionId}`)).json();
   await page.getByRole("button", { name: "Start escort", exact: true }).click();
+  await expect(page.locator(".map-first-command")).toBeVisible();
   const intel = page.getByTestId("intel-drawer"),
     advisor = page.getByTestId("advisor-drawer");
   await expect(intel).toBeHidden();
@@ -109,19 +110,28 @@ test("map-first layout keeps map and drafts, opens one drawer, and reviews befor
   await expect(page.locator(".decision-inline")).toHaveCount(0);
   await expect(page.locator(".route-choice").first()).toBeFocused();
 
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByTestId("open-intel").click();
   await expect(intel).toBeVisible();
   await expect(page.locator(".map3d canvas")).toBeVisible();
-  const mobileMap = (await page.locator(".map-viewport").boundingBox())!;
-  expect(mobileMap.height).toBeGreaterThan(80);
+  await expect(
+    page.getByRole("button", { name: "Enable ambience", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("open-story")).toBeVisible();
+  const windowMap = (await page.locator(".map-viewport").boundingBox())!;
+  expect(windowMap.height).toBeGreaterThan(350);
+  expect(windowMap.width).toBeGreaterThan(800);
+  const drawerBounds = (await intel.boundingBox())!;
+  expect(windowMap.x).toBeGreaterThanOrEqual(
+    drawerBounds.x + drawerBounds.width,
+  );
   const width = await page.evaluate(() => ({
     document: document.documentElement.scrollWidth,
     viewport: window.innerWidth,
   }));
   expect(width.document).toBeLessThanOrEqual(width.viewport + 1);
   await page.screenshot({
-    path: info.outputPath("map-first-mobile.png"),
+    path: info.outputPath("map-first-desktop-1280.png"),
     fullPage: true,
   });
   expect(errors).toEqual([]);

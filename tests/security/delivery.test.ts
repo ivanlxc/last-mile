@@ -33,6 +33,7 @@ const forbiddenKeys = [
   "world_state_json",
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
+  "DEEPGRAM_API_KEY",
   "campaign-reference.json",
 ];
 const service: GameService = {

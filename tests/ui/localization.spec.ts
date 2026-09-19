@@ -118,7 +118,7 @@ async function close(page: Page) {
   await page.locator("dialog .modal-header button").click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
 }
-test("language choice: English by default, Chinese and English persist after reload", async ({
+test("desktop language choice: English by default, Chinese and English persist after reload", async ({
   page,
   campaign,
 }, info) => {
@@ -126,10 +126,10 @@ test("language choice: English by default, Chinese and English persist after rel
   await expect(page.locator(".hero-cta")).toBeEnabled();
   await english(page);
   await shot(page, info, "01-English-title");
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 1280, height: 800 });
   await fit(page);
   await english(page);
-  await shot(page, info, "02-English-title-mobile");
+  await shot(page, info, "02-English-title-desktop-1280");
   await page.getByRole("button", { name: "中文", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(
@@ -146,7 +146,7 @@ test("language choice: English by default, Chinese and English persist after rel
   await english(page);
   await fit(page);
 });
-test("English complete campaign: translated evidence, modals, sources, advisor and sealed review", async ({
+test("English desktop campaign: translated evidence, modals, sources, advisor and sealed review", async ({
   page,
   campaign,
 }, info) => {
@@ -310,12 +310,12 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await expect(page.locator(".scene-location")).toContainText("N05");
   await english(page);
   await shot(page, info, "08-English-bridge");
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByRole("button", { name: "2D route map", exact: true }).click();
   await expect(page.locator(".map2d")).toBeVisible();
   await fit(page);
   await english(page);
-  await shot(page, info, "09-English-mobile-2D");
+  await shot(page, info, "09-English-desktop-1280-2D");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await route("E3_BRIDGE", null);
   await expect(page.locator(".dimension")).toHaveCount(4);

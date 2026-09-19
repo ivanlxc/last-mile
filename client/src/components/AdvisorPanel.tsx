@@ -20,6 +20,7 @@ import { useVoiceInput } from "../lib/speech/useVoiceInput";
 import { appendTranscript } from "../lib/speech/transcript";
 import { advisorReadout } from "../lib/speech/readout";
 import { ReadAloudButton } from "./ReadAloudButton";
+import { reportNarration } from "../lib/reportNarration";
 import "./voice.css";
 export function AdvisorPanel({
   game,
@@ -400,13 +401,17 @@ function CitationReport({
   report: P.ReportView;
   game: Game;
 }) {
-  const { t } = useI18n();
+  const { t, characters } = useI18n();
   const ref = useVisibleReceipt(
     report.reportId,
     () => void game.receipt("report_opened", { reportId: report.reportId }),
   );
   return (
     <div ref={ref}>
+      <ReadAloudButton
+        id={`citation:${report.reportId}:${report.revision}`}
+        text={reportNarration(report, characters[report.sourceRole].name)}
+      />
       <p className="source-name">{report.card.sourceLabel}</p>
       <p className="quoted-report">{report.card.body}</p>
       <p className="muted small-text">

@@ -94,7 +94,7 @@ async function assertNoHorizontalOverflow(page: Page) {
     size.viewport + 1,
   );
 }
-test("production UI: authored A campaign, confirmed investigation, source disclosure and 390px fallback", async ({
+test("production UI: authored A campaign, confirmed investigation, source disclosure and 1280px desktop window", async ({
   page,
   campaign,
 }, info) => {
@@ -319,7 +319,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   await expect(page.locator(".scene-location")).toContainText("N05");
   expect((await projection()).location.nodeId).toBe("N05");
   await screenshot(page, info, "05-E3-west-bank");
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 1280, height: 800 });
   await assertNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "二维路线图", exact: true }).click();
   await expect(
@@ -329,7 +329,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     page.getByText("路线示意 · 非实时侦察", { exact: true }),
   ).toBeVisible();
   await assertNoHorizontalOverflow(page);
-  await screenshot(page, info, "06-mobile-390-2D-fallback");
+  await screenshot(page, info, "06-desktop-1280-2D");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await route("E3_BRIDGE", null);
   await expect(
@@ -347,9 +347,9 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   expect(outcome.pendingTasks.manifest).not.toBe("pending");
   expect(outcome.pendingTasks.inspection).not.toBe("pending");
   await screenshot(page, info, "07-arrival-AAR");
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 1280, height: 800 });
   await assertNoHorizontalOverflow(page);
-  await screenshot(page, info, "08-mobile-390-AAR");
+  await screenshot(page, info, "08-desktop-1280-AAR");
   await info.attach("test-clock-notice", {
     body: "Production build + real browser + real API + SQLite. Node-only injected clock; authored A case. This test does not establish real-time duration. functional.spec.ts separately verifies actual 30-second entry.",
     contentType: "text/plain",

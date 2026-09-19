@@ -82,7 +82,7 @@ export const scenes: Record<
       "I have the passenger list. We can register at the main gate. If we go around, we will still need to handle that later.",
     speaker: "Samira",
     atmosphere:
-      "Engines idle softly. A passenger slips their papers back into a coat pocket.",
+      "Engines idle softly. A passenger folds their papers around a house key, then slips both into a coat pocket.",
     topics: [
       { id: "gate_status", label: "Current registration status" },
       { id: "manifest", label: "Passenger list and handover" },
@@ -119,7 +119,7 @@ export const scenes: Record<
       "Almost there. Please check both: is the bridge still standing, and can our vehicles cross it now?",
     speaker: "Noah",
     atmosphere:
-      "The river catches the last light. Passengers begin gathering their belongings.",
+      "The river catches the last light. Passengers gather their belongings. The passenger with the house key holds it quietly in one hand.",
     topics: [
       { id: "bridge_status", label: "Bridge and vehicle clearance" },
       { id: "ford_status", label: "Old riverbed track" },
