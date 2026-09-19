@@ -1,0 +1,14 @@
+{
+  "score": "west-gate.score.json",
+  "audio": "west-gate.mp3",
+  "durationSeconds": 63.471,
+  "sampleRate": 48000,
+  "channels": 2,
+  "codec": "MP3 VBR quality 2",
+  "normalization": "linear",
+  "integratedLoudnessLUFS": -19.0,
+  "truePeakDBTP": -2.64,
+  "loudnessRangeLU": 5.0,
+  "fadeInSeconds": 1.2,
+  "fadeOutSeconds": 4
+}

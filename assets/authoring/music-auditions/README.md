@@ -1,0 +1,45 @@
+# LAST MILE — Music auditions
+
+原创编排的虚拟乐器试听小样，供确定配乐方向使用。当前为独立音频资产，尚未接入游戏播放器，也不是最终循环母带。版本目录保留音符编排、MP3 和实测混音数据，后续修改另建版本以便比较。
+
+## v1 · 2026-09-19
+
+| 试听 | 时长 | 音色与意图 |
+| --- | --- | --- |
+| [Last Light](v1/last-light.mp3) · 开场／简报 | 1:07 | 稀疏钢琴主题、缓慢大提琴、逐渐展开的弦乐与柔和铺底；责任感中保留温暖 |
+| [A Place to Wait](v1/west-gate.mp3) · 西门 | 1:03 | 同一主题的短句、较少的和声层、低弦乐和不规则柔和脉冲；等待与不确定感 |
+
+两段共用 A–E–B–C 的短主题。开场为 A minor 并使用 Dorian 色彩；西门更多使用 Dorian 和声与悬置九度。全曲无歌词，不含真实环境录音、战斗声或倒计时提示。配乐只表现公开剧情阶段，不暗示隐藏路线状态。
+
+### 保存内容
+
+- `v1/*.score.json`：完整原创音符编排，时间单位为四分音符，16 小节、4/4 拍。
+- `v1/*.mp3`：48 kHz 双声道试听文件，统一至约 −19 LUFS；实测峰值低于 −2.6 dBTP。
+- `v1/*.mix.json`：编码后重新测量的响度、峰值、动态范围和时长。
+- `scripts/render-music-audition.swift`：macOS 离线乐器渲染器；不启用麦克风或系统扬声器。
+- `scripts/master-music-audition.py`：双遍响度匹配、1.2 秒渐入与4秒渐出、MP3 编码。
+
+渲染器使用本机 macOS 的 General MIDI / DLS 乐器库，包含钢琴、大提琴、弦乐和暖音垫。系统乐器库本身没有复制或打包进项目。虚拟乐器音色属于风格验证阶段；确认方向后可以更换音源和混音，并制作无缝循环与分轨。
+
+### 重建
+
+需要 macOS 自带 Swift / AVFoundation 与乐器库，以及 Python 3、FFmpeg（含 libmp3lame）。在仓库根目录运行：
+
+```sh
+mkdir -p .local-artifacts/music-auditions
+swift scripts/render-music-audition.swift assets/authoring/music-auditions/v1/last-light.score.json .local-artifacts/music-auditions/last-light.raw.wav
+python3 scripts/master-music-audition.py assets/authoring/music-auditions/v1/last-light.score.json .local-artifacts/music-auditions/last-light.raw.wav assets/authoring/music-auditions/v1/last-light.mp3
+swift scripts/render-music-audition.swift assets/authoring/music-auditions/v1/west-gate.score.json .local-artifacts/music-auditions/west-gate.raw.wav
+python3 scripts/master-music-audition.py assets/authoring/music-auditions/v1/west-gate.score.json .local-artifacts/music-auditions/west-gate.raw.wav assets/authoring/music-auditions/v1/west-gate.mp3
+```
+
+Swift 原始渲染文件位于被 Git 忽略的 `.local-artifacts/`；可分享的 MP3 和可编辑的编排文件随本版本保存。
+
+### 验证与版本
+
+- 两份编排均完成离线渲染，检查了音符时间、MIDI 范围，以及同轨同音高的重叠。
+- 编码后检查了两段时长、双声道、响度和真峰值；风格与试听满意度仍由实际试听决定。
+- 开始前检查点：`checkpoint/pre-music-auditions-20260919`。
+- 本轮试听检查点：`checkpoint/music-auditions-01`。
+
+实现参考：[Apple AVAudioUnitSampler](https://developer.apple.com/documentation/avfaudio/avaudiounitsampler)、[Apple offline audio processing](https://developer.apple.com/documentation/avfaudio/performing-offline-audio-processing)。

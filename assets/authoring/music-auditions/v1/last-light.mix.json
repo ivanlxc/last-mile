@@ -1,0 +1,14 @@
+{
+  "score": "last-light.score.json",
+  "audio": "last-light.mp3",
+  "durationSeconds": 67.0,
+  "sampleRate": 48000,
+  "channels": 2,
+  "codec": "MP3 VBR quality 2",
+  "normalization": "linear",
+  "integratedLoudnessLUFS": -19.0,
+  "truePeakDBTP": -3.52,
+  "loudnessRangeLU": 5.2,
+  "fadeInSeconds": 1.2,
+  "fadeOutSeconds": 4
+}

@@ -1,0 +1,727 @@
+{
+  "title": "LAST MILE \u2014 Last Light (opening audition v1)",
+  "bpm": 64,
+  "bars": 16,
+  "beatsPerBar": 4,
+  "tailSeconds": 7,
+  "tracks": [
+    {
+      "name": "The house-key theme",
+      "instrument": "piano",
+      "volume": 0.68,
+      "pan": -0.08,
+      "notes": [
+        {
+          "beat": 0.8081,
+          "duration": 1.05,
+          "midi": 69,
+          "velocity": 54
+        },
+        {
+          "beat": 2.11,
+          "duration": 1.4,
+          "midi": 76,
+          "velocity": 55
+        },
+        {
+          "beat": 4.1251,
+          "duration": 1.1,
+          "midi": 71,
+          "velocity": 49
+        },
+        {
+          "beat": 5.6116,
+          "duration": 1.75,
+          "midi": 72,
+          "velocity": 58
+        },
+        {
+          "beat": 8.8046,
+          "duration": 1.6,
+          "midi": 69,
+          "velocity": 52
+        },
+        {
+          "beat": 11.0045,
+          "duration": 1.2,
+          "midi": 67,
+          "velocity": 50
+        },
+        {
+          "beat": 12.9218,
+          "duration": 2.45,
+          "midi": 64,
+          "velocity": 47
+        },
+        {
+          "beat": 16.7132,
+          "duration": 1.2,
+          "midi": 76,
+          "velocity": 57
+        },
+        {
+          "beat": 18.4207,
+          "duration": 1.65,
+          "midi": 79,
+          "velocity": 59
+        },
+        {
+          "beat": 20.7048,
+          "duration": 1.25,
+          "midi": 76,
+          "velocity": 55
+        },
+        {
+          "beat": 22.3006,
+          "duration": 1.25,
+          "midi": 74,
+          "velocity": 53
+        },
+        {
+          "beat": 24.8542,
+          "duration": 1.65,
+          "midi": 71,
+          "velocity": 47
+        },
+        {
+          "beat": 27.1611,
+          "duration": 1.5,
+          "midi": 69,
+          "velocity": 46
+        },
+        {
+          "beat": 29.714,
+          "duration": 1.45,
+          "midi": 67,
+          "velocity": 43
+        },
+        {
+          "beat": 32.8233,
+          "duration": 1.05,
+          "midi": 69,
+          "velocity": 59
+        },
+        {
+          "beat": 34.1198,
+          "duration": 1.4,
+          "midi": 76,
+          "velocity": 59
+        },
+        {
+          "beat": 36.1092,
+          "duration": 1.1,
+          "midi": 71,
+          "velocity": 58
+        },
+        {
+          "beat": 37.6187,
+          "duration": 1.75,
+          "midi": 72,
+          "velocity": 59
+        },
+        {
+          "beat": 40.8251,
+          "duration": 1.5,
+          "midi": 76,
+          "velocity": 61
+        },
+        {
+          "beat": 42.9104,
+          "duration": 1.2,
+          "midi": 74,
+          "velocity": 51
+        },
+        {
+          "beat": 44.6628,
+          "duration": 1.1,
+          "midi": 72,
+          "velocity": 51
+        },
+        {
+          "beat": 46.1571,
+          "duration": 1.2,
+          "midi": 71,
+          "velocity": 52
+        },
+        {
+          "beat": 48.9082,
+          "duration": 1.5,
+          "midi": 69,
+          "velocity": 49
+        },
+        {
+          "beat": 51.108,
+          "duration": 1.2,
+          "midi": 67,
+          "velocity": 47
+        },
+        {
+          "beat": 53.0185,
+          "duration": 2.1,
+          "midi": 64,
+          "velocity": 44
+        },
+        {
+          "beat": 56.8236,
+          "duration": 1.45,
+          "midi": 71,
+          "velocity": 48
+        },
+        {
+          "beat": 59.0171,
+          "duration": 4.3,
+          "midi": 69,
+          "velocity": 43
+        }
+      ]
+    },
+    {
+      "name": "Quiet left hand",
+      "instrument": "piano",
+      "volume": 0.29,
+      "pan": 0.1,
+      "notes": [
+        {
+          "beat": 0.1694,
+          "duration": 1.8,
+          "midi": 45,
+          "velocity": 46
+        },
+        {
+          "beat": 1.6582,
+          "duration": 1.55,
+          "midi": 52,
+          "velocity": 42
+        },
+        {
+          "beat": 3.3613,
+          "duration": 1.4,
+          "midi": 60,
+          "velocity": 36
+        },
+        {
+          "beat": 4.8087,
+          "duration": 1.75,
+          "midi": 59,
+          "velocity": 42
+        },
+        {
+          "beat": 6.3548,
+          "duration": 1.4,
+          "midi": 64,
+          "velocity": 34
+        },
+        {
+          "beat": 8.1595,
+          "duration": 1.8,
+          "midi": 41,
+          "velocity": 46
+        },
+        {
+          "beat": 9.662,
+          "duration": 1.55,
+          "midi": 52,
+          "velocity": 45
+        },
+        {
+          "beat": 11.3767,
+          "duration": 1.4,
+          "midi": 60,
+          "velocity": 39
+        },
+        {
+          "beat": 12.8007,
+          "duration": 1.75,
+          "midi": 57,
+          "velocity": 43
+        },
+        {
+          "beat": 14.3601,
+          "duration": 1.4,
+          "midi": 64,
+          "velocity": 34
+        },
+        {
+          "beat": 16.1559,
+          "duration": 1.8,
+          "midi": 48,
+          "velocity": 46
+        },
+        {
+          "beat": 17.6609,
+          "duration": 1.55,
+          "midi": 55,
+          "velocity": 43
+        },
+        {
+          "beat": 19.3686,
+          "duration": 1.4,
+          "midi": 62,
+          "velocity": 40
+        },
+        {
+          "beat": 20.8103,
+          "duration": 1.75,
+          "midi": 59,
+          "velocity": 41
+        },
+        {
+          "beat": 22.3763,
+          "duration": 1.4,
+          "midi": 64,
+          "velocity": 33
+        },
+        {
+          "beat": 24.1635,
+          "duration": 1.8,
+          "midi": 43,
+          "velocity": 44
+        },
+        {
+          "beat": 25.6593,
+          "duration": 1.55,
+          "midi": 50,
+          "velocity": 41
+        },
+        {
+          "beat": 27.3739,
+          "duration": 1.4,
+          "midi": 59,
+          "velocity": 39
+        },
+        {
+          "beat": 28.8008,
+          "duration": 1.75,
+          "midi": 55,
+          "velocity": 43
+        },
+        {
+          "beat": 30.3643,
+          "duration": 1.4,
+          "midi": 64,
+          "velocity": 35
+        },
+        {
+          "beat": 32.1689,
+          "duration": 1.8,
+          "midi": 50,
+          "velocity": 43
+        },
+        {
+          "beat": 33.6549,
+          "duration": 1.55,
+          "midi": 54,
+          "velocity": 44
+        },
+        {
+          "beat": 35.3577,
+          "duration": 1.4,
+          "midi": 62,
+          "velocity": 38
+        },
+        {
+          "beat": 36.8203,
+          "duration": 1.75,
+          "midi": 57,
+          "velocity": 45
+        },
+        {
+          "beat": 38.3683,
+          "duration": 1.4,
+          "midi": 64,
+          "velocity": 38
+        },
+        {
+          "beat": 40.1743,
+          "duration": 1.8,
+          "midi": 45,
+          "velocity": 44
+        },
+        {
+          "beat": 41.6725,
+          "duration": 1.55,
+          "midi": 52,
+          "velocity": 45
+        },
+        {
+          "beat": 43.3701,
+          "duration": 1.4,
+          "midi": 59,
+          "velocity": 35
+        },
+        {
+          "beat": 44.8258,
+          "duration": 1.75,
+          "midi": 57,
+          "velocity": 45
+        },
+        {
+          "beat": 46.3663,
+          "duration": 1.4,
+          "midi": 60,
+          "velocity": 32
+        },
+        {
+          "beat": 48.1549,
+          "duration": 1.8,
+          "midi": 41,
+          "velocity": 48
+        },
+        {
+          "beat": 49.6572,
+          "duration": 1.55,
+          "midi": 52,
+          "velocity": 39
+        },
+        {
+          "beat": 51.3574,
+          "duration": 1.4,
+          "midi": 60,
+          "velocity": 37
+        },
+        {
+          "beat": 52.8112,
+          "duration": 1.75,
+          "midi": 57,
+          "velocity": 41
+        },
+        {
+          "beat": 54.371,
+          "duration": 1.4,
+          "midi": 64,
+          "velocity": 36
+        },
+        {
+          "beat": 56.2263,
+          "duration": 3.1,
+          "midi": 45,
+          "velocity": 40
+        },
+        {
+          "beat": 57.8693,
+          "duration": 2.7,
+          "midi": 52,
+          "velocity": 38
+        },
+        {
+          "beat": 59.1528,
+          "duration": 3.2,
+          "midi": 59,
+          "velocity": 29
+        }
+      ]
+    },
+    {
+      "name": "Wide evening strings",
+      "instrument": "strings",
+      "volume": 0.22,
+      "pan": -0.12,
+      "notes": [
+        {
+          "beat": 8.1807,
+          "duration": 7.48,
+          "midi": 52,
+          "velocity": 42
+        },
+        {
+          "beat": 8.2402,
+          "duration": 7.425,
+          "midi": 57,
+          "velocity": 42
+        },
+        {
+          "beat": 8.309,
+          "duration": 7.37,
+          "midi": 60,
+          "velocity": 40
+        },
+        {
+          "beat": 8.3547,
+          "duration": 7.315,
+          "midi": 64,
+          "velocity": 38
+        },
+        {
+          "beat": 16.1844,
+          "duration": 7.48,
+          "midi": 55,
+          "velocity": 40
+        },
+        {
+          "beat": 16.2575,
+          "duration": 7.425,
+          "midi": 59,
+          "velocity": 41
+        },
+        {
+          "beat": 16.2979,
+          "duration": 7.37,
+          "midi": 62,
+          "velocity": 42
+        },
+        {
+          "beat": 16.3657,
+          "duration": 7.315,
+          "midi": 64,
+          "velocity": 39
+        },
+        {
+          "beat": 24.1993,
+          "duration": 7.48,
+          "midi": 50,
+          "velocity": 38
+        },
+        {
+          "beat": 24.255,
+          "duration": 7.425,
+          "midi": 55,
+          "velocity": 41
+        },
+        {
+          "beat": 24.3023,
+          "duration": 7.37,
+          "midi": 59,
+          "velocity": 37
+        },
+        {
+          "beat": 24.3527,
+          "duration": 7.315,
+          "midi": 64,
+          "velocity": 37
+        },
+        {
+          "beat": 32.2024,
+          "duration": 7.48,
+          "midi": 54,
+          "velocity": 41
+        },
+        {
+          "beat": 32.2435,
+          "duration": 7.425,
+          "midi": 57,
+          "velocity": 45
+        },
+        {
+          "beat": 32.3017,
+          "duration": 7.37,
+          "midi": 62,
+          "velocity": 46
+        },
+        {
+          "beat": 32.3553,
+          "duration": 7.315,
+          "midi": 64,
+          "velocity": 43
+        },
+        {
+          "beat": 40.2008,
+          "duration": 7.48,
+          "midi": 52,
+          "velocity": 47
+        },
+        {
+          "beat": 40.2383,
+          "duration": 7.425,
+          "midi": 57,
+          "velocity": 46
+        },
+        {
+          "beat": 40.3075,
+          "duration": 7.37,
+          "midi": 59,
+          "velocity": 47
+        },
+        {
+          "beat": 40.3471,
+          "duration": 7.315,
+          "midi": 60,
+          "velocity": 41
+        },
+        {
+          "beat": 48.2039,
+          "duration": 7.48,
+          "midi": 52,
+          "velocity": 43
+        },
+        {
+          "beat": 48.2592,
+          "duration": 7.425,
+          "midi": 57,
+          "velocity": 40
+        },
+        {
+          "beat": 48.3066,
+          "duration": 7.37,
+          "midi": 60,
+          "velocity": 41
+        },
+        {
+          "beat": 48.3474,
+          "duration": 7.315,
+          "midi": 64,
+          "velocity": 42
+        },
+        {
+          "beat": 56.2005,
+          "duration": 7.48,
+          "midi": 52,
+          "velocity": 43
+        },
+        {
+          "beat": 56.2422,
+          "duration": 7.425,
+          "midi": 57,
+          "velocity": 38
+        },
+        {
+          "beat": 56.3147,
+          "duration": 7.37,
+          "midi": 59,
+          "velocity": 39
+        },
+        {
+          "beat": 56.3561,
+          "duration": 7.315,
+          "midi": 60,
+          "velocity": 40
+        }
+      ]
+    },
+    {
+      "name": "Distant light",
+      "instrument": "warm_pad",
+      "volume": 0.18,
+      "pan": 0.22,
+      "notes": [
+        {
+          "beat": 16.4173,
+          "duration": 7.1,
+          "midi": 67,
+          "velocity": 33
+        },
+        {
+          "beat": 16.5383,
+          "duration": 7.1,
+          "midi": 74,
+          "velocity": 37
+        },
+        {
+          "beat": 24.4208,
+          "duration": 7.1,
+          "midi": 62,
+          "velocity": 38
+        },
+        {
+          "beat": 24.5267,
+          "duration": 7.1,
+          "midi": 71,
+          "velocity": 35
+        },
+        {
+          "beat": 32.4069,
+          "duration": 7.1,
+          "midi": 66,
+          "velocity": 32
+        },
+        {
+          "beat": 32.5233,
+          "duration": 7.1,
+          "midi": 74,
+          "velocity": 33
+        },
+        {
+          "beat": 40.4007,
+          "duration": 7.1,
+          "midi": 64,
+          "velocity": 32
+        },
+        {
+          "beat": 40.5301,
+          "duration": 7.1,
+          "midi": 71,
+          "velocity": 35
+        },
+        {
+          "beat": 48.4071,
+          "duration": 7.1,
+          "midi": 64,
+          "velocity": 36
+        },
+        {
+          "beat": 48.5331,
+          "duration": 7.1,
+          "midi": 72,
+          "velocity": 35
+        },
+        {
+          "beat": 56.4187,
+          "duration": 7.1,
+          "midi": 64,
+          "velocity": 35
+        },
+        {
+          "beat": 56.5258,
+          "duration": 7.1,
+          "midi": 71,
+          "velocity": 34
+        }
+      ]
+    },
+    {
+      "name": "One shared journey",
+      "instrument": "cello",
+      "volume": 0.29,
+      "pan": -0.2,
+      "notes": [
+        {
+          "beat": 0.4027,
+          "duration": 6.9,
+          "midi": 45,
+          "velocity": 36
+        },
+        {
+          "beat": 8.3892,
+          "duration": 6.9,
+          "midi": 41,
+          "velocity": 37
+        },
+        {
+          "beat": 16.3959,
+          "duration": 6.9,
+          "midi": 48,
+          "velocity": 37
+        },
+        {
+          "beat": 24.3843,
+          "duration": 6.9,
+          "midi": 43,
+          "velocity": 34
+        },
+        {
+          "beat": 32.3982,
+          "duration": 6.9,
+          "midi": 50,
+          "velocity": 40
+        },
+        {
+          "beat": 40.3848,
+          "duration": 6.9,
+          "midi": 45,
+          "velocity": 44
+        },
+        {
+          "beat": 48.3981,
+          "duration": 6.9,
+          "midi": 41,
+          "velocity": 42
+        },
+        {
+          "beat": 56.4002,
+          "duration": 6.9,
+          "midi": 45,
+          "velocity": 42
+        }
+      ]
+    }
+  ]
+}
