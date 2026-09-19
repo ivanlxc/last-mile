@@ -12,10 +12,12 @@ import type {
   KnownLocation,
   SceneId,
 } from "../../../docs/engineering_v0.5/contracts/public.types";
-import { mapData, locationPoint } from "../lib/map";
+import { mapData } from "../lib/map";
 import { UnityMapSlot, useMapRenderer } from "../lib/mapRenderer";
 import { mapRendererCopy } from "../lib/mapRendererCopy";
 import { Modal } from "./Modal";
+import { Map2D } from "./Map2D";
+export { Map2D } from "./Map2D";
 const Map3D = lazy(() => import("./Map3D"));
 export function TacticalMap({
   location,
@@ -65,6 +67,7 @@ export function TacticalMap({
   return (
     <section
       ref={mapRoot}
+      data-map-mode={renderer.mode}
       className={`tactical-map renderer-map ${stage ? "stage-map" : ""} ${selected ? "has-selection" : ""} ${large ? "large" : ""} ${expanded ? "expanded" : ""}`}
       aria-label={t("ui.convoyTerrainModel")}
     >
@@ -152,6 +155,9 @@ export function TacticalMap({
             location={location}
             sceneId={sceneId}
             onSelectLocation={renderer.selectNode}
+            selectedNodeId={renderer.selectedNodeId}
+            active={!unity && !three}
+            inputBlocked={renderer.inputBlocked}
           />
         </div>
         <span className="map-north">
@@ -170,7 +176,7 @@ export function TacticalMap({
             ? copy.controls
             : three
               ? t("ui.dragToRotateScrollToZoom")
-              : t("ui.routeDiagramNotLiveReconnaissance")}
+              : copy.satelliteTerrain}
         </span>
       </div>
       <div
@@ -293,161 +299,5 @@ export function TacticalMap({
         </Modal>
       )}
     </section>
-  );
-}
-export function Map2D({
-  location,
-  sceneId,
-  onSelectLocation,
-}: {
-  location: KnownLocation;
-  sceneId: SceneId | null;
-  onSelectLocation?: (nodeId: string) => void;
-}) {
-  const { t, nodeLabel } = useI18n();
-  const p = locationPoint(location),
-    xy = (p: number[]) => [70 + (p[0] + 17) * 15, 48 + (p[2] + 10) * 13];
-  const [cx, cy] = xy(p);
-  return (
-    <svg
-      className="map2d"
-      viewBox="0 0 620 330"
-      role={onSelectLocation ? "group" : "img"}
-      aria-label={t("ui.publicRouteMapAndCurrentConvoyPosition")}
-    >
-      <defs>
-        <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path
-            d="M30 0H0V30"
-            fill="none"
-            stroke="#97b5a2"
-            strokeOpacity=".09"
-          />
-        </pattern>
-        <radialGradient id="glow">
-          <stop stopColor="#6b947e" stopOpacity=".13" />
-          <stop offset="1" stopColor="#6b947e" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <rect width="620" height="330" fill="#15201d" />
-      <rect width="620" height="330" fill="url(#grid)" />
-      <ellipse cx="260" cy="130" rx="240" ry="150" fill="url(#glow)" />
-      <path
-        d="M379 -10C336 55 421 94 390 153S368 255 426 350"
-        stroke="#334e49"
-        strokeWidth="31"
-        fill="none"
-      />
-      <path
-        d="M379 -10C336 55 421 94 390 153S368 255 426 350"
-        stroke="#6b9990"
-        strokeOpacity=".3"
-        strokeDasharray="3 6"
-        fill="none"
-      />
-      {[0, 1, 2, 3].map((i) => (
-        <path
-          key={i}
-          d={`M${i * 23 - 80} 70 Q90 ${-i * 22 - 40} 240 ${i * 12 + 22} T600 55`}
-          fill="none"
-          stroke="#c2b58b"
-          strokeOpacity=".1"
-        />
-      ))}
-      {mapData.routes.map((r) => (
-        <polyline
-          key={r.routeId}
-          points={r.waypoints.map((p) => xy(p).join(",")).join(" ")}
-          fill="none"
-          stroke={
-            r.routeId === location.routeId
-              ? "#edbc76"
-              : r.enabled
-                ? "#77988a"
-                : "#3e5149"
-          }
-          strokeWidth={r.routeId === location.routeId ? 3 : 1.7}
-          strokeDasharray={r.enabled ? undefined : "3 4"}
-        />
-      ))}
-      {mapData.nodes.map((n) => {
-        const [x, y] = xy(n.position),
-          active = n.sceneId === sceneId,
-          major = !!n.sceneId || ["N00", "N07"].includes(n.nodeId);
-        return (
-          <g
-            key={n.nodeId}
-            role={onSelectLocation ? "button" : undefined}
-            tabIndex={onSelectLocation ? 0 : undefined}
-            aria-label={onSelectLocation ? nodeLabel(n.nodeId) : undefined}
-            style={onSelectLocation ? { cursor: "pointer" } : undefined}
-            onClick={() => onSelectLocation?.(n.nodeId)}
-            onKeyDown={(event) => {
-              if (
-                onSelectLocation &&
-                (event.key === "Enter" || event.key === " ")
-              ) {
-                event.preventDefault();
-                onSelectLocation(n.nodeId);
-              }
-            }}
-          >
-            {onSelectLocation && (
-              <circle cx={x} cy={y} r={14} fill="transparent" />
-            )}
-            <circle
-              cx={x}
-              cy={y}
-              r={active ? 7 : major ? 4 : 2.5}
-              fill={
-                active ? "#d6af73" : n.nodeId === "N07" ? "#a2c6b2" : "#5d7b6b"
-              }
-            />
-            {major && (
-              <>
-                <text
-                  x={x}
-                  y={y - 12}
-                  textAnchor="middle"
-                  fill={active ? "#f0d5ac" : "#a3b5a8"}
-                  fontSize="10"
-                  fontFamily="system-ui"
-                >
-                  {nodeLabel(n.nodeId)}
-                </text>
-                <text
-                  x={x}
-                  y={y + 17}
-                  textAnchor="middle"
-                  fill="#658573"
-                  fontSize="8"
-                >
-                  {n.nodeId}
-                </text>
-              </>
-            )}
-          </g>
-        );
-      })}
-      <circle
-        cx={cx}
-        cy={cy}
-        r="12"
-        fill="none"
-        stroke="#f4c685"
-        strokeOpacity=".5"
-      />
-      <circle
-        cx={cx}
-        cy={cy}
-        r="5"
-        fill="#ffe4b5"
-        stroke="#705736"
-        strokeWidth="2"
-      />
-      <text x="477" y="308" fill="#668776" fontSize="8" letterSpacing="3">
-        WADI / SECTOR 07
-      </text>
-    </svg>
   );
 }

@@ -1,0 +1,370 @@
+{
+  "source": "assets/authoring/last-mile-unity/LAST_MILE_Unity_Refined.blend",
+  "sourceSha256": "c8be1e67902a756d38363eb87eab1ed7fcd24692167970c06a241e04fd0c677c",
+  "publicMap": "client/src/lib/map-data.json",
+  "publicMapSha256": "378cb0c2a982e41aab12c661fdb0ded439544f71bf606e3c722a52a27fd50101",
+  "blenderVersion": "5.2.1 LTS",
+  "image": "reference-topdown.png",
+  "resolution": [
+    1536,
+    1024
+  ],
+  "projection": "orthographic; north-up; no camera tilt",
+  "camera": {
+    "location": [
+      0.0,
+      0.0,
+      80.0
+    ],
+    "rotationRadians": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "orthoScale": 48.0,
+    "sensorFit": "HORIZONTAL",
+    "verifiedFrame": {
+      "x": [
+        -24.0,
+        24.0
+      ],
+      "y": [
+        -16.0,
+        16.0
+      ]
+    }
+  },
+  "blenderBounds": {
+    "x": [
+      -24.0,
+      24.0
+    ],
+    "y": [
+      -16.0,
+      16.0
+    ]
+  },
+  "glbBounds": {
+    "x": [
+      -24.0,
+      24.0
+    ],
+    "z": [
+      -16.0,
+      16.0
+    ]
+  },
+  "pixelMapping": {
+    "x": "(glbX + 24) * 32",
+    "y": "(glbZ + 16) * 32",
+    "boundsReferTo": "image edges; width=1536, height=1024"
+  },
+  "originalTerrainBounds": {
+    "min": [
+      -20.0,
+      -14.0,
+      0.561087
+    ],
+    "max": [
+      20.0,
+      14.0,
+      4.376505
+    ]
+  },
+  "continuationBounds": {
+    "min": [
+      -26.0,
+      -18.200001,
+      0.599831
+    ],
+    "max": [
+      26.0,
+      18.200001,
+      1.689662
+    ]
+  },
+  "continuationPerimeterVertices": 1088,
+  "removedObjectCount": 473,
+  "removedCollectionPrefixes": [
+    "00_",
+    "06_",
+    "08_",
+    "09_",
+    "10_",
+    "11_"
+  ],
+  "routeAlignmentChecks": [
+    {
+      "routeId": "R00",
+      "mesh": "R00_road",
+      "waypointCount": 10,
+      "maxDistanceFromRoadFootprint": 0.0
+    },
+    {
+      "routeId": "R01",
+      "mesh": "R01_road",
+      "waypointCount": 13,
+      "maxDistanceFromRoadFootprint": 9.5e-07
+    },
+    {
+      "routeId": "R02",
+      "mesh": "R02_road",
+      "waypointCount": 20,
+      "maxDistanceFromRoadFootprint": 0.0
+    },
+    {
+      "routeId": "R03",
+      "mesh": "R03_road",
+      "waypointCount": 13,
+      "maxDistanceFromRoadFootprint": 2.4e-07
+    },
+    {
+      "routeId": "R04",
+      "mesh": "R04_road",
+      "waypointCount": 12,
+      "maxDistanceFromRoadFootprint": 2.5e-07
+    },
+    {
+      "routeId": "R05",
+      "mesh": "R05_road",
+      "waypointCount": 16,
+      "maxDistanceFromRoadFootprint": 4.8e-07
+    },
+    {
+      "routeId": "R06",
+      "mesh": "R06_MAIN_BRIDGE_road",
+      "waypointCount": 7,
+      "maxDistanceFromRoadFootprint": 2.4e-07
+    },
+    {
+      "routeId": "R07",
+      "mesh": "R07_road",
+      "waypointCount": 17,
+      "maxDistanceFromRoadFootprint": 0.0
+    },
+    {
+      "routeId": "R08",
+      "mesh": "R08_road",
+      "waypointCount": 17,
+      "maxDistanceFromRoadFootprint": 0.0
+    },
+    {
+      "routeId": "R09",
+      "mesh": "R09_road",
+      "waypointCount": 13,
+      "maxDistanceFromRoadFootprint": 0.0
+    },
+    {
+      "routeId": "R10",
+      "mesh": "R10_road",
+      "waypointCount": 19,
+      "maxDistanceFromRoadFootprint": 9.5e-07
+    },
+    {
+      "routeId": "R11",
+      "mesh": "R11_road",
+      "waypointCount": 12,
+      "maxDistanceFromRoadFootprint": 4.8e-07
+    },
+    {
+      "routeId": "R12",
+      "mesh": "R12_road",
+      "waypointCount": 21,
+      "maxDistanceFromRoadFootprint": 4.8e-07
+    }
+  ],
+  "publicNodes": [
+    {
+      "nodeId": "N00",
+      "glb": [
+        -16,
+        1.077772314920433,
+        9
+      ],
+      "blender": [
+        -16.0,
+        -9.0,
+        1.0777722597122192
+      ],
+      "pixel": [
+        256.00001,
+        800.0
+      ]
+    },
+    {
+      "nodeId": "N01",
+      "glb": [
+        -11,
+        1.0393662652318638,
+        5
+      ],
+      "blender": [
+        -11.0,
+        -5.0,
+        1.0393662452697754
+      ],
+      "pixel": [
+        416.00002,
+        672.0
+      ]
+    },
+    {
+      "nodeId": "N02",
+      "glb": [
+        -4,
+        1.0480626409858003,
+        1
+      ],
+      "blender": [
+        -4.0,
+        -1.0,
+        1.0480626821517944
+      ],
+      "pixel": [
+        639.99998,
+        544.0
+      ]
+    },
+    {
+      "nodeId": "N03",
+      "glb": [
+        -8,
+        1.0444149808394372,
+        -5
+      ],
+      "blender": [
+        -8.0,
+        5.0,
+        1.04441499710083
+      ],
+      "pixel": [
+        512.00002,
+        352.0
+      ]
+    },
+    {
+      "nodeId": "N04",
+      "glb": [
+        -1,
+        1.2767261400413372,
+        -9
+      ],
+      "blender": [
+        -1.0,
+        9.0,
+        1.2767261266708374
+      ],
+      "pixel": [
+        735.99998,
+        224.0
+      ]
+    },
+    {
+      "nodeId": "N05",
+      "glb": [
+        3,
+        1.326,
+        -1
+      ],
+      "blender": [
+        3.0,
+        1.0,
+        1.3259999752044678
+      ],
+      "pixel": [
+        864.0,
+        480.0
+      ]
+    },
+    {
+      "nodeId": "N06",
+      "glb": [
+        7,
+        1.326,
+        -1
+      ],
+      "blender": [
+        7.0,
+        1.0,
+        1.3259999752044678
+      ],
+      "pixel": [
+        991.99997,
+        480.0
+      ]
+    },
+    {
+      "nodeId": "N07",
+      "glb": [
+        15,
+        1.0303142489414885,
+        -8
+      ],
+      "blender": [
+        15.0,
+        8.0,
+        1.0303142070770264
+      ],
+      "pixel": [
+        1248.0,
+        256.0
+      ]
+    },
+    {
+      "nodeId": "N08",
+      "glb": [
+        -1,
+        1.0846364366509171,
+        8
+      ],
+      "blender": [
+        -1.0,
+        -8.0,
+        1.0846364498138428
+      ],
+      "pixel": [
+        735.99998,
+        768.0
+      ]
+    },
+    {
+      "nodeId": "N09",
+      "glb": [
+        6,
+        0.9476931089266111,
+        7
+      ],
+      "blender": [
+        6.0,
+        -7.0,
+        0.9476931095123291
+      ],
+      "pixel": [
+        960.0,
+        736.0
+      ]
+    },
+    {
+      "nodeId": "N10",
+      "glb": [
+        12,
+        1.0369488083422276,
+        2
+      ],
+      "blender": [
+        12.0,
+        -2.0,
+        1.036948800086975
+      ],
+      "pixel": [
+        1152.0,
+        576.0
+      ]
+    }
+  ],
+  "limitations": [
+    "Fictional authored geography, not GIS or satellite photography.",
+    "Ground outside the original terrain is a static render-only continuation.",
+    "No labels, nodes, actors, event layers or authored tabletop appear in the reference."
+  ]
+}

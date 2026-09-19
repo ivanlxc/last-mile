@@ -1,0 +1,188 @@
+.satellite-map {
+  --satellite-earth: #a3957c;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--satellite-earth);
+  isolation: isolate;
+}
+.satellite-map .map2d {
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+}
+.satellite-map.interactive .map2d {
+  cursor: grab;
+  touch-action: none;
+}
+.satellite-map.dragging .map2d,
+.satellite-map.dragging .satellite-node {
+  cursor: grabbing;
+}
+.satellite-fallback {
+  fill: #6c6658;
+}
+.satellite-imagery,
+.satellite-routes,
+.satellite-convoy {
+  pointer-events: none;
+}
+.satellite-route {
+  fill: none;
+  stroke: #e4e7df;
+  stroke-width: 1.4px;
+  stroke-opacity: 0.76;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 1px 1px #202b2b9e);
+}
+.satellite-route.secondary {
+  stroke: #bed0ce;
+  stroke-width: 1px;
+  stroke-opacity: 0.58;
+  stroke-dasharray: 4 5;
+}
+.satellite-route.current {
+  stroke: #f4c46f;
+  stroke-width: 3px;
+  stroke-opacity: 1;
+}
+.satellite-node {
+  outline: none;
+}
+.satellite-map.interactive .satellite-node {
+  cursor: pointer;
+}
+.satellite-hit {
+  fill: transparent;
+}
+.satellite-node-dot {
+  fill: #f1f1e9;
+  stroke: #303b3c;
+  stroke-width: 1.5px;
+}
+.satellite-node.current .satellite-node-dot {
+  fill: #f4c46f;
+}
+.satellite-node-ring {
+  fill: #18333544;
+  stroke: #f6eed6;
+  stroke-width: 1.5px;
+  opacity: 0;
+}
+.satellite-node.selected .satellite-node-ring,
+.satellite-node:focus-visible .satellite-node-ring,
+.satellite-node:hover .satellite-node-ring {
+  opacity: 1;
+}
+.satellite-node-label {
+  fill: #fff9e8;
+  stroke: #202c2ee8;
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+  font:
+    500 12px / 1.2 system-ui,
+    sans-serif;
+  letter-spacing: 0.15px;
+  opacity: 0;
+  pointer-events: none;
+}
+.satellite-node.labelled .satellite-node-label,
+.satellite-node:hover .satellite-node-label,
+.satellite-node:focus-visible .satellite-node-label {
+  opacity: 1;
+}
+.satellite-node.current .satellite-node-label {
+  fill: #ffe1a5;
+}
+.satellite-map[data-compact="true"] .satellite-node-label {
+  font-size: 10px;
+}
+.satellite-convoy-halo {
+  fill: #18373877;
+  stroke: #8ee4e9;
+  stroke-width: 1px;
+}
+.satellite-convoy-dot {
+  fill: #b9f5ef;
+  stroke: #214347;
+  stroke-width: 2px;
+}
+.satellite-navigation {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  background: #172726eb;
+  border: 1px solid #cdd8c14d;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px #111a193d;
+  overflow: hidden;
+}
+.satellite-navigation button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid #cdd8c129;
+  background: transparent;
+  color: #f1eedb;
+  cursor: pointer;
+}
+.satellite-navigation button:last-child {
+  border: 0;
+}
+.satellite-navigation button:hover:not(:disabled),
+.satellite-navigation button:focus-visible {
+  background: #48635e;
+}
+.satellite-navigation button:focus-visible {
+  outline: 2px solid #f4c46f;
+  outline-offset: -3px;
+}
+.satellite-navigation button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.satellite-map-hint,
+.satellite-image-status {
+  position: absolute;
+  left: 12px;
+  padding: 5px 8px;
+  background: #172726c9;
+  border-radius: 3px;
+  color: #f1eedb;
+  font-size: 10px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+.satellite-map-hint {
+  bottom: 12px;
+}
+.satellite-image-status {
+  top: 12px;
+  max-width: calc(100% - 64px);
+}
+.satellite-map[data-compact="true"] .satellite-map-hint,
+.brief-right .satellite-map-hint {
+  display: none;
+}
+.brief-right .renderer-map[data-map-mode="two"] .map-viewport {
+  min-height: 270px;
+}
+.renderer-map[data-map-mode="two"] .map-north {
+  right: 12px;
+  color: #f5f0d9;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: #172726bd;
+}
+.renderer-map[data-map-mode="two"] .map-north i {
+  color: #f5f0d9;
+}

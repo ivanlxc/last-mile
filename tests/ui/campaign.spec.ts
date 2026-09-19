@@ -326,7 +326,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     page.getByRole("group", { name: "公开路线图与车队当前位置" }),
   ).toBeVisible();
   await expect(
-    page.getByText("路线示意 · 非实时侦察", { exact: true }),
+    page.getByText("卫星风格地形 · 非实时影像", { exact: true }),
   ).toBeVisible();
   await assertNoHorizontalOverflow(page);
   await screenshot(page, info, "06-desktop-1280-2D");
