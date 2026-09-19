@@ -7,8 +7,8 @@ export const campaign = {
   region: "Sahel Valley",
   premise: "Twenty people. One road home. No complete answers.",
   briefing: [
-    "Dusk falls over Sahel Valley after a temporary ceasefire. Communications remain patchy. Daybreak Reception Point is preparing its final transfer, and your convoy has ten minutes to reach the far bank.",
-    "Twenty civilians are on board. Some carry their house keys; others have only their papers. The medic warns that after eight minutes, one passenger will need priority medical transfer. The clock keeps running while you deliberate.",
+    "Dusk falls over Sahel Valley after a temporary ceasefire. Communications remain patchy. Daybreak Reception Point awaits on the far bank. Guide the convoy through three decision scenes and bring everyone there.",
+    "Twenty civilians are on board. Some carry their house keys; others have only their papers. Explore the map, read intelligence and discuss your choices without an overall time limit. Elapsed mission time is recorded; investigations and travel still take their stated time.",
     "You command the convoy. Noah, your intelligence officer, handles imagery and road conditions. Samira, your liaison, contacts local agencies and witnesses. Your AI advisor can analyze the material you share. The final decision is yours.",
   ],
   closing: "The last stretch on the map is the start of twenty new chapters.",
@@ -21,7 +21,7 @@ export const campaign = {
     {
       number: "02",
       title: "Choose what the AI sees",
-      text: "Upload up to 5 intelligence cards per scene. The AI cannot automatically see other cards, the countdown, or your remaining resources. Anything you type is marked as your unverified statement.",
+      text: "Upload up to 5 intelligence cards per scene. The AI cannot automatically see other cards, elapsed mission time, or your remaining resources. Anything you type is marked as your unverified statement.",
     },
     {
       number: "03",

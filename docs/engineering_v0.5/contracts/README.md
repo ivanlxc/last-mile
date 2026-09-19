@@ -10,3 +10,12 @@
 - `fixtures/*-cases.json`: positive and negative shape tests. Cross-record permissions and state transitions require runtime integration tests.
 
 Run the commands in `../04_LLD_API与契约.md`. All `$ref` targets are local files. New source metadata must not silently become public metadata.
+
+Current mission timing semantics (policy `0.6.0`): `missionDeadlineMs: null`
+means there is no overall mission time limit. `missionTimeMs` still records
+elapsed time, and investigations, movement and waiting retain their durations.
+The private policy sets `missionDurationMs` and `medicalSupportAtMs` to `null`,
+disabling both the overall deadline and the elapsed-time medical penalty;
+`outcomeSuccess: "arrival_N07"` has no deadline condition. Non-negative numeric
+deadlines, the legacy success rule, and historical deadline/medical events
+remain valid for stored records. Fixtures cover both policy generations.

@@ -2664,7 +2664,12 @@
           "maximum": 9007199254740991
         },
         "missionDeadlineMs": {
-          "const": 600000
+          "description": "Null means the mission has no overall time limit. A non-negative integer preserves the elapsed-mission-time deadline of historical timed sessions.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
         },
         "serverNow": {
           "type": "string",
@@ -4224,7 +4229,12 @@
               "format": "date-time"
             },
             "missionDeadlineMs": {
-              "const": 600000
+              "description": "Null means the mission has no overall time limit. A non-negative integer preserves the elapsed-mission-time deadline of historical timed sessions.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
             },
             "location": {
               "$ref": "#/$defs/KnownLocation",

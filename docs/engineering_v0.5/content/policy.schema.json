@@ -37,12 +37,20 @@
       "minItems": 1
     },
     "missionDurationMs": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Null disables the overall mission time limit; integer values remain valid for historical timed policies."
     },
     "medicalSupportAtMs": {
-      "type": "integer",
-      "minimum": 0
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "description": "Null disables the elapsed-time medical-support penalty; integer values remain valid for historical policies."
     },
     "civilianCount": {
       "type": "integer",
@@ -209,8 +217,10 @@
     "outcomeSuccess": {
       "type": "string",
       "enum": [
+        "arrival_N07",
         "arrival_N07_before_or_at_deadline"
-      ]
+      ],
+      "description": "Current unlimited missions succeed on arrival at N07. The deadline-qualified value is retained for historical policy records."
     },
     "bridgeRefusalRecoveryLimit": {
       "type": "integer",

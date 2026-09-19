@@ -62,21 +62,19 @@ export function GameView({
   useEffect(() => {
     sample.current = { mission: s.missionTimeMs, at: performance.now() };
     setDisplayClock(s.missionTimeMs);
-  }, [s.missionTimeMs]);
+  }, [s.sessionId, s.runEpoch, s.missionTimeMs]);
   useEffect(() => {
+    // Idle reading does not require persisted clock packets. Interpolate only
+    // the display; every new server sample reanchors this shared elapsed clock.
     const interval = setInterval(() => {
       if (!document.hidden)
         setDisplayClock(
-          Math.min(
-            s.missionDeadlineMs,
-            sample.current.mission +
-              Math.min(1800, performance.now() - sample.current.at),
-          ),
+          sample.current.mission +
+            Math.max(0, performance.now() - sample.current.at),
         );
     }, 200);
     return () => clearInterval(interval);
-  }, [s.missionDeadlineMs]);
-  const remaining = s.missionDeadlineMs - displayClock;
+  }, []);
   const travelling =
     s.phase === "resolving" && s.activeOperation?.operationKind !== "wait";
   const previousScene = useRef(s.sceneId);
@@ -138,13 +136,11 @@ export function GameView({
                 : t("ui.priorityTransferNeeded")}
             </span>
           </div>
-          <div
-            className={`mission-clock ${remaining < 120000 ? "critical" : ""}`}
-          >
+          <div className="mission-clock">
             <Clock3 size={17} />
             <div>
-              <small>{t("ui.windowRemaining")}</small>
-              <strong>{timer(remaining)}</strong>
+              <small>{t("ui.elapsedMissionTime")}</small>
+              <strong>{timer(displayClock)}</strong>
             </div>
           </div>
           <button
@@ -355,10 +351,15 @@ export function GameView({
         </button>
       </footer>
       {context && (
-        <ContextModal game={game} onClose={() => setContext(false)} />
+        <ContextModal
+          game={game}
+          missionTimeMs={displayClock}
+          onClose={() => setContext(false)}
+        />
       )}
       {decision && (
         <DecisionModal
+          missionTimeMs={displayClock}
           game={game}
           action={decision}
           onClose={() => setDecision(null)}

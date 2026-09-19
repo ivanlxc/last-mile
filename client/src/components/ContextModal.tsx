@@ -9,9 +9,11 @@ import { useVisibleReceipt } from "../lib/useVisibleReceipt";
 import { Modal } from "./Modal";
 export function ContextModal({
   game,
+  missionTimeMs,
   onClose,
 }: {
   game: Game;
+  missionTimeMs: number;
   onClose: () => void;
 }) {
   const { t, locale, duration, characters, channelLabels, channelScope } =
@@ -32,8 +34,8 @@ export function ContextModal({
         <div className="context-time">
           <Clock3 size={15} />
           <span>
-            {t("context.clock", {
-              time: timer(s.missionDeadlineMs - s.missionTimeMs),
+            {t("context.elapsed", {
+              time: timer(missionTimeMs),
               medical:
                 s.medical.status === "stable"
                   ? t("medical.stable")

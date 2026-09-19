@@ -354,3 +354,115 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   expect(errors).toEqual([]);
   expect(failures).toEqual([]);
 });
+
+for (const locale of ["en-US", "zh-CN"] as const) {
+  test(`unlimited exploration: ${locale} counts up, keeps choices after thirty minutes and survives reload`, async ({
+    page,
+    campaign,
+  }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(campaign.url);
+    if (locale === "zh-CN")
+      await page.getByRole("button", { name: "中文", exact: true }).click();
+    const createdResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith("/api/v1/sessions"),
+    );
+    await page.locator(".hero-cta").click();
+    const created = (await (
+      await createdResponse
+    ).json()) as Public.SessionCreated;
+    const projection = () => campaign.projection(created.sessionId);
+    await expect(page.locator(".mission-stats")).toContainText(
+      locale === "zh-CN" ? "不限时长" : "no time limit",
+    );
+    await expect(page.locator(".brief-grid")).not.toContainText(
+      /十分钟|八分钟|ten minutes|eight minutes/,
+    );
+    await page.locator(".brief-footer .primary").click();
+    await expect(page.locator(".command-center")).toBeVisible();
+    await campaign.advance(30_000);
+    await expect(page.locator(".route-choice").first()).toBeEnabled();
+    const beforeReading = await projection();
+    expect(beforeReading.missionDeadlineMs).toBeNull();
+    await expect(page.locator(".mission-clock small")).toHaveText(
+      locale === "zh-CN" ? "累计用时 · 不限时" : "Elapsed · no limit",
+    );
+    const displayedSeconds = async () => {
+      const value = await page.locator(".mission-clock strong").innerText();
+      const [minutes, seconds] = value.split(":").map(Number);
+      return minutes * 60 + seconds;
+    };
+
+    // Quiet reading no longer needs a clock.sample each second. The HUD and
+    // already-open modal share the same interpolation of the last server sample.
+    await page.locator(".resource-context").click();
+    await expect(page.locator(".context-time")).toContainText(
+      locale === "zh-CN" ? "没有总时限" : "No overall time limit",
+    );
+    const initialDisplay = await displayedSeconds();
+    await expect
+      .poll(displayedSeconds, { timeout: 7000 })
+      .toBeGreaterThan(initialDisplay + 2);
+    const modalClock = (await page.locator(".context-time").innerText()).match(
+      /(\d+):(\d{2})/,
+    )!;
+    expect(
+      Math.abs(
+        Number(modalClock[1]) * 60 +
+          Number(modalClock[2]) -
+          (await displayedSeconds()),
+      ),
+    ).toBeLessThanOrEqual(1);
+    await page.locator("dialog .modal-header button").click();
+
+    await campaign.advance(30 * 60_000);
+    const afterReading = await projection();
+    expect(afterReading).toMatchObject({
+      lifecycle: "active",
+      phase: "scene",
+      missionDeadlineMs: null,
+      missionTimeMs: 1_830_000,
+    });
+    expect(afterReading.medical).toMatchObject({
+      status: "stable",
+      targetAtMissionMs: null,
+    });
+    expect(afterReading.taskOptions).toEqual(beforeReading.taskOptions);
+    expect(afterReading.actionOptions).toEqual(beforeReading.actionOptions);
+    await page.reload();
+    await expect(page.locator(".route-choice").first()).toBeEnabled();
+    await expect.poll(displayedSeconds).toBeGreaterThanOrEqual(1830);
+    await expect(page.locator(".mission-clock")).not.toHaveClass(/critical/);
+    await expect(page.locator(".medical-hud")).not.toHaveClass(/warning/);
+    await expect(page.locator(".command-center")).not.toContainText(
+      /窗口剩余|Window remaining|Priority transfer needed|需要优先转送/,
+    );
+
+    await page.locator(".wait-button").click();
+    await expect(page.locator(".decision-cost")).toContainText(
+      locale === "zh-CN" ? "任务用时" : "Mission time",
+    );
+    await expect(page.locator(".decision-cost")).not.toContainText(
+      /窗口|window/i,
+    );
+    const actionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith("/actions"),
+    );
+    await page.locator(".decision-submit .primary").click();
+    expect((await actionResponse).status()).toBe(202);
+    expect((await projection()).activeOperation?.operationKind).toBe("wait");
+    await campaign.advance(15_000);
+    expect(await projection()).toMatchObject({
+      lifecycle: "active",
+      phase: "scene",
+      missionTimeMs: 1_845_000,
+    });
+    await screenshot(page, info, `unlimited-${locale}-after-thirty-minutes`);
+    expect(errors).toEqual([]);
+  });
+}

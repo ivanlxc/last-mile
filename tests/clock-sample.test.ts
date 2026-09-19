@@ -13,6 +13,7 @@ const previous: P.SessionProjection = {
   phase: "resolving",
   stateVersion: 3,
   missionTimeMs: 1000,
+  missionDeadlineMs: null,
   location: { nodeId: null, routeId: "R00", progressPermille: 33 },
 };
 const sample: P.SseClockSample = {
@@ -24,7 +25,7 @@ const sample: P.SseClockSample = {
   data: {
     missionTimeMs: 6000,
     serverNow: "2026-09-18T17:00:06.000Z",
-    missionDeadlineMs: 600000,
+    missionDeadlineMs: null,
     location: { nodeId: null, routeId: "R00", progressPermille: 200 },
   },
 };
@@ -34,6 +35,7 @@ describe("authoritative clock and convoy samples", () => {
     const result = applyClockSample(previous, sample)!;
     expect(result.missionTimeMs).toBe(6000);
     expect(result.stateVersion).toBe(previous.stateVersion);
+    expect(result.missionDeadlineMs).toBeNull();
     expect(buildUnityRenderState(result, "en-US").location).toEqual(
       sample.data.location,
     );
@@ -54,8 +56,23 @@ describe("authoritative clock and convoy samples", () => {
   });
   it("accepts historical clock packets without inventing a future position", () => {
     const { location: _, ...data } = sample.data;
-    const result = applyClockSample(previous, { ...sample, data })!;
+    const historical = { ...previous, missionDeadlineMs: 600000 as const };
+    const result = applyClockSample(historical, {
+      ...sample,
+      data: { ...data, missionDeadlineMs: 600000 },
+    })!;
     expect(result.missionTimeMs).toBe(6000);
     expect(result.location).toEqual(previous.location);
+    expect(result.missionDeadlineMs).toBe(600000);
+  });
+  it("accepts unlimited-session clock samples after the former ten-minute deadline", () => {
+    const result = applyClockSample(previous, {
+      ...sample,
+      data: { ...sample.data, missionTimeMs: 7200000 },
+    })!;
+    expect(result.missionTimeMs).toBe(7200000);
+    expect(result.missionDeadlineMs).toBeNull();
+    expect(result.stateVersion).toBe(previous.stateVersion);
+    expect(result.location).toEqual(sample.data.location);
   });
 });

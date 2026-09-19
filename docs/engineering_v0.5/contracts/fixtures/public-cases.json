@@ -1947,6 +1947,357 @@
         "comparedKnownCosts": false,
         "declaredQuestionKey": null
       }
+    },
+    {
+      "name": "valid_SessionProjection_unlimited",
+      "schema": "public.schema.json#/$defs/SessionProjection",
+      "valid": true,
+      "instance": {
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "runEpoch": "11111111-1111-4111-8111-111111111111",
+        "profileId": "SINGLE_PLAYER_REFERENCE",
+        "runPurpose": "approved_play",
+        "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "contentVersionId": "11111111-1111-4111-8111-111111111111",
+        "stateVersion": 0,
+        "lifecycle": "created",
+        "phase": "briefing",
+        "sceneId": null,
+        "missionTimeMs": 0,
+        "missionDeadlineMs": null,
+        "serverNow": "2026-09-16T12:00:00Z",
+        "location": {
+          "nodeId": "N00",
+          "routeId": null,
+          "progressPermille": 0
+        },
+        "civilianCount": 20,
+        "medical": {
+          "status": "stable",
+          "targetAtMissionMs": null,
+          "note": "REFERENCE"
+        },
+        "pendingTasks": {
+          "manifest": "notRequired",
+          "inspection": "notRequired"
+        },
+        "resources": [
+          {
+            "role": "analyst",
+            "channel": "satellite",
+            "initial": 2,
+            "remaining": 2,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "analyst",
+            "channel": "drone",
+            "initial": 3,
+            "remaining": 3,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "liaison",
+            "channel": "localAgency",
+            "initial": 3,
+            "remaining": 3,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "liaison",
+            "channel": "witness",
+            "initial": 2,
+            "remaining": 2,
+            "spent": 0,
+            "scope": "session"
+          }
+        ],
+        "reportQuotas": [
+          {
+            "role": "analyst",
+            "sceneId": "E1",
+            "limit": 3,
+            "used": 0,
+            "reserved": 0,
+            "remaining": 3
+          },
+          {
+            "role": "liaison",
+            "sceneId": "E1",
+            "limit": 3,
+            "used": 0,
+            "reserved": 0,
+            "remaining": 3
+          }
+        ],
+        "uploadQuota": null,
+        "reports": [],
+        "sceneUploads": [],
+        "inboxVersion": 0,
+        "assistantContextVersion": 0,
+        "activeTasks": [],
+        "activeOperation": null,
+        "taskOptions": [],
+        "actionOptions": [],
+        "latestAdviceJob": null,
+        "unuploadedReportIds": [],
+        "lastViewCursor": "11111111-1111-4111-8111-111111111111:0",
+        "sealedHash": null
+      }
+    },
+    {
+      "name": "invalid_SessionProjection_negative_deadline",
+      "schema": "public.schema.json#/$defs/SessionProjection",
+      "valid": false,
+      "instance": {
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "runEpoch": "11111111-1111-4111-8111-111111111111",
+        "profileId": "SINGLE_PLAYER_REFERENCE",
+        "runPurpose": "approved_play",
+        "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "contentVersionId": "11111111-1111-4111-8111-111111111111",
+        "stateVersion": 0,
+        "lifecycle": "created",
+        "phase": "briefing",
+        "sceneId": null,
+        "missionTimeMs": 0,
+        "missionDeadlineMs": -1,
+        "serverNow": "2026-09-16T12:00:00Z",
+        "location": {
+          "nodeId": "N00",
+          "routeId": null,
+          "progressPermille": 0
+        },
+        "civilianCount": 20,
+        "medical": {
+          "status": "stable",
+          "targetAtMissionMs": null,
+          "note": "REFERENCE"
+        },
+        "pendingTasks": {
+          "manifest": "notRequired",
+          "inspection": "notRequired"
+        },
+        "resources": [
+          {
+            "role": "analyst",
+            "channel": "satellite",
+            "initial": 2,
+            "remaining": 2,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "analyst",
+            "channel": "drone",
+            "initial": 3,
+            "remaining": 3,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "liaison",
+            "channel": "localAgency",
+            "initial": 3,
+            "remaining": 3,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "liaison",
+            "channel": "witness",
+            "initial": 2,
+            "remaining": 2,
+            "spent": 0,
+            "scope": "session"
+          }
+        ],
+        "reportQuotas": [
+          {
+            "role": "analyst",
+            "sceneId": "E1",
+            "limit": 3,
+            "used": 0,
+            "reserved": 0,
+            "remaining": 3
+          },
+          {
+            "role": "liaison",
+            "sceneId": "E1",
+            "limit": 3,
+            "used": 0,
+            "reserved": 0,
+            "remaining": 3
+          }
+        ],
+        "uploadQuota": null,
+        "reports": [],
+        "sceneUploads": [],
+        "inboxVersion": 0,
+        "assistantContextVersion": 0,
+        "activeTasks": [],
+        "activeOperation": null,
+        "taskOptions": [],
+        "actionOptions": [],
+        "latestAdviceJob": null,
+        "unuploadedReportIds": [],
+        "lastViewCursor": "11111111-1111-4111-8111-111111111111:0",
+        "sealedHash": null
+      }
+    },
+    {
+      "name": "invalid_SessionProjection_string_deadline",
+      "schema": "public.schema.json#/$defs/SessionProjection",
+      "valid": false,
+      "instance": {
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "runEpoch": "11111111-1111-4111-8111-111111111111",
+        "profileId": "SINGLE_PLAYER_REFERENCE",
+        "runPurpose": "approved_play",
+        "policyHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "contentVersionId": "11111111-1111-4111-8111-111111111111",
+        "stateVersion": 0,
+        "lifecycle": "created",
+        "phase": "briefing",
+        "sceneId": null,
+        "missionTimeMs": 0,
+        "missionDeadlineMs": "unlimited",
+        "serverNow": "2026-09-16T12:00:00Z",
+        "location": {
+          "nodeId": "N00",
+          "routeId": null,
+          "progressPermille": 0
+        },
+        "civilianCount": 20,
+        "medical": {
+          "status": "stable",
+          "targetAtMissionMs": null,
+          "note": "REFERENCE"
+        },
+        "pendingTasks": {
+          "manifest": "notRequired",
+          "inspection": "notRequired"
+        },
+        "resources": [
+          {
+            "role": "analyst",
+            "channel": "satellite",
+            "initial": 2,
+            "remaining": 2,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "analyst",
+            "channel": "drone",
+            "initial": 3,
+            "remaining": 3,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "liaison",
+            "channel": "localAgency",
+            "initial": 3,
+            "remaining": 3,
+            "spent": 0,
+            "scope": "session"
+          },
+          {
+            "role": "liaison",
+            "channel": "witness",
+            "initial": 2,
+            "remaining": 2,
+            "spent": 0,
+            "scope": "session"
+          }
+        ],
+        "reportQuotas": [
+          {
+            "role": "analyst",
+            "sceneId": "E1",
+            "limit": 3,
+            "used": 0,
+            "reserved": 0,
+            "remaining": 3
+          },
+          {
+            "role": "liaison",
+            "sceneId": "E1",
+            "limit": 3,
+            "used": 0,
+            "reserved": 0,
+            "remaining": 3
+          }
+        ],
+        "uploadQuota": null,
+        "reports": [],
+        "sceneUploads": [],
+        "inboxVersion": 0,
+        "assistantContextVersion": 0,
+        "activeTasks": [],
+        "activeOperation": null,
+        "taskOptions": [],
+        "actionOptions": [],
+        "latestAdviceJob": null,
+        "unuploadedReportIds": [],
+        "lastViewCursor": "11111111-1111-4111-8111-111111111111:0",
+        "sealedHash": null
+      }
+    },
+    {
+      "name": "valid_SseClockSample_unlimited",
+      "schema": "public.schema.json#/$defs/SseClockSample",
+      "valid": true,
+      "instance": {
+        "eventType": "clock.sample",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "runEpoch": "11111111-1111-4111-8111-111111111111",
+        "viewSequence": 1,
+        "stateVersion": 0,
+        "data": {
+          "missionTimeMs": 0,
+          "serverNow": "2026-09-16T12:00:00Z",
+          "missionDeadlineMs": null
+        }
+      }
+    },
+    {
+      "name": "invalid_SseClockSample_negative_deadline",
+      "schema": "public.schema.json#/$defs/SseClockSample",
+      "valid": false,
+      "instance": {
+        "eventType": "clock.sample",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "runEpoch": "11111111-1111-4111-8111-111111111111",
+        "viewSequence": 1,
+        "stateVersion": 0,
+        "data": {
+          "missionTimeMs": 0,
+          "serverNow": "2026-09-16T12:00:00Z",
+          "missionDeadlineMs": -1
+        }
+      }
+    },
+    {
+      "name": "invalid_SseClockSample_string_deadline",
+      "schema": "public.schema.json#/$defs/SseClockSample",
+      "valid": false,
+      "instance": {
+        "eventType": "clock.sample",
+        "sessionId": "11111111-1111-4111-8111-111111111111",
+        "runEpoch": "11111111-1111-4111-8111-111111111111",
+        "viewSequence": 1,
+        "stateVersion": 0,
+        "data": {
+          "missionTimeMs": 0,
+          "serverNow": "2026-09-16T12:00:00Z",
+          "missionDeadlineMs": "unlimited"
+        }
+      }
     }
   ]
 }

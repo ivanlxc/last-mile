@@ -49,6 +49,8 @@ export interface State {
     | "terminal";
   sceneId: P.SceneId | null;
   mission: number;
+  /** null: unlimited; absent only in historical snapshots with a 10-minute limit. */
+  missionDeadlineMs?: number | null;
   createdAt: number;
   startWall: number | null;
   flags: Flags;

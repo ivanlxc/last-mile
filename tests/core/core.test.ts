@@ -177,6 +177,7 @@ describe("SQLite authoritative core", () => {
   });
   it("two roles observe concurrently on one clock, and same-role second task cannot take resources", async () => {
     const x = await setup();
+    await x.advance(660000);
     await task(x, "analyst", "gate_drone");
     await task(x, "liaison", "gate_agency");
     await expect(task(x, "analyst", "service_drone")).rejects.toThrow(
@@ -187,7 +188,9 @@ describe("SQLite authoritative core", () => {
     expect(v.activeTasks).toHaveLength(1);
     v = await x.advance(15000);
     expect(v.reports).toHaveLength(2);
-    expect(v.missionTimeMs).toBe(60000);
+    expect(v.missionTimeMs).toBe(720000);
+    expect(v.lifecycle).toBe("active");
+    expect(v.missionDeadlineMs).toBeNull();
     expect(v.resources.find((r) => r.channel === "drone")?.spent).toBe(1);
   });
   it("WAIT leaves investigation active and permits other-role tasks without double charging time", async () => {
@@ -322,7 +325,7 @@ describe("SQLite authoritative core", () => {
       DomainError,
     );
   });
-  it("mission deadline preserves a partial route location and refuses post-terminal gameplay", async () => {
+  it("explicit player exit after ten minutes preserves a partial route and refuses post-terminal gameplay", async () => {
     const x = await setup();
     for (let i = 0; i < 6; i++) {
       await action(x, "WAIT", 60000);
@@ -331,36 +334,80 @@ describe("SQLite authoritative core", () => {
     await action(x, "E1_MAIN");
     await x.advance(65000);
     await action(x, "E2_MAIN");
-    await x.advance(145000);
-    const o = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
-    expect(o.terminationReason).toBe("mission_deadline");
+    const traveling = await x.advance(160000);
+    expect(traveling.missionTimeMs).toBe(615000);
+    expect(traveling.lifecycle).toBe("active");
+    expect(traveling.missionDeadlineMs).toBeNull();
+    const o = (await x.command("abandonSession", {
+      reason: "player_exit",
+    })) as P.OutcomeView;
+    expect(o.terminationReason).toBe("abandoned");
+    expect(o.sealedAtMissionMs).toBe(615000);
     expect(o.taskSuccess).toBe(false);
     expect(o.finalLocation.nodeId).toBeNull();
-    expect(o.finalLocation.routeId).toBe("R03");
+    expect(o.finalLocation.routeId).toBe("R05");
+    expect(o.finalLocation).toEqual(traveling.location);
     await expect(action(x, "WAIT", 15000)).rejects.toThrow(DomainError);
   });
-  it("medical status is stable at 479999 ms and changes to priority transfer exactly at 480000 ms", async () => {
+  it("new sessions have no deadline or medical target and remain stable beyond the former time boundaries", async () => {
     const x = await setup();
-    expect((await x.get()).medical.status).toBe("stable");
-    expect((await x.get()).medical.note).toContain("稳定");
+    expect(x.made.projection.missionDeadlineMs).toBeNull();
+    expect(x.made.projection.medical.targetAtMissionMs).toBeNull();
+    const initial = await x.get();
+    expect(initial.medical.status).toBe("stable");
+    expect(initial.medical.note).toContain("稳定");
     const before = await x.advance(449999);
     expect(before.missionTimeMs).toBe(479999);
     expect(before.medical.status).toBe("stable");
     const after = await x.advance(1);
     expect(after.missionTimeMs).toBe(480000);
-    expect(after.medical.status).toBe("target_missed");
-    expect(after.medical.note).toContain("需要优先转送");
+    expect(after.medical).toEqual(initial.medical);
     expect(after.civilianCount).toBe(20);
     expect(after.lifecycle).toBe("active");
+    const later = await x.advance(720000);
+    expect(later.missionTimeMs).toBe(1200000);
+    expect(later.lifecycle).toBe("active");
+    expect(later.medical).toEqual(initial.medical);
+    expect(later.stateVersion).toBe(initial.stateVersion);
+  });
+  it("long idle reading has an advancing clock without pending events or unbounded clock outbox rows", async () => {
+    const x = await setup();
+    const before = await x.get();
+    expect(before.activeTasks).toHaveLength(0);
+    expect(before.activeOperation).toBeNull();
+    const later = await x.advance(7200000);
+    expect(later).toMatchObject({
+      lifecycle: "active",
+      sceneId: "E1",
+      missionTimeMs: 7230000,
+      missionDeadlineMs: null,
+      stateVersion: before.stateVersion,
+      lastViewCursor: before.lastViewCursor,
+    });
+    expect(await x.svc.getEventsSince(x.sid, before.lastViewCursor)).toEqual(
+      [],
+    );
+    // Reading catches up elapsed time even when there is no scheduler event due.
+    x.clock.advance(5000);
+    expect((await x.get()).missionTimeMs).toBe(7235000);
+    expect(await x.svc.getEventsSince(x.sid, before.lastViewCursor)).toEqual(
+      [],
+    );
   });
   it("clock samples advance view cursor but neither stateVersion nor game event count", async () => {
     const x = await setup();
+    await x.advance(720000);
+    await task(x, "analyst", "gate_drone");
     const old = await x.get();
     await x.advance(1000);
     const events = await x.svc.getEventsSince(x.sid, old.lastViewCursor);
-    expect(events.some((e) => e.eventType === "clock.sample")).toBe(true);
+    const sample = events.find((e) => e.eventType === "clock.sample");
+    expect(sample?.data).toMatchObject({
+      missionTimeMs: 751000,
+      missionDeadlineMs: null,
+    });
     expect((await x.get()).stateVersion).toBe(old.stateVersion);
-    expect((await x.get()).missionTimeMs).toBe(31000);
+    expect((await x.get()).missionTimeMs).toBe(751000);
   });
   it("clock samples carry live R00 convoy progress without a new rule-state version", async () => {
     const x = await setup("A", ":memory:", 0);
@@ -406,7 +453,11 @@ describe("SQLite authoritative core", () => {
       throw Error("subscriber failed");
     });
     await task(x, "analyst", "gate_drone");
-    for (let i = 0; i < 270; i++) await x.advance(1000);
+    for (let i = 0; i < 270; i++) {
+      // Keep an operation active: idle reading intentionally has no clock rows.
+      if (i % 60 === 0) await action(x, "WAIT", 60000);
+      await x.advance(1000);
+    }
     const end = Number((await x.get()).lastViewCursor.split(":").at(-1));
     expect(end - start).toBeGreaterThan(250);
     expect(seen.map((e) => e.viewSequence)).toEqual(
@@ -494,7 +545,11 @@ describe("SQLite authoritative core", () => {
     dirs.push(dir);
     const db = join(dir, "game.sqlite");
     const x = await setup("A", db);
+    await x.advance(720000);
     await task(x, "analyst", "gate_drone");
+    const outcome = await x.command("abandonSession", {
+      reason: "player_exit",
+    });
     await x.svc.close();
     services.splice(services.indexOf(x.svc), 1);
     const second = await createGameService({
@@ -508,16 +563,61 @@ describe("SQLite authoritative core", () => {
       x.sid,
     )) as P.SessionProjection;
     expect(projection.lifecycle).toBe("sealed");
+    expect(projection.missionTimeMs).toBe(750000);
+    expect(projection.missionDeadlineMs).toBeNull();
     expect(await second.hasSessionAccess(x.sid, "command")).toBe(false);
-    expect(await second.read("getOutcome", x.sid)).toMatchObject({
-      terminationReason: "technical_interruption",
-    });
+    expect(await second.read("getOutcome", x.sid)).toEqual(outcome);
+    expect(outcome.terminationReason).toBe("abandoned");
     const check = new DatabaseSync(db);
     expect(check.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
     check.close();
   });
+  it("reopens a historical snapshot without the new deadline field and preserves its original timed seal", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "last-mile-legacy-time-limit-"));
+    dirs.push(dir);
+    const dbPath = join(dir, "game.sqlite");
+    const x = await setup("A", dbPath);
+    // A pre-unlimited stored State omitted missionDeadlineMs and included the
+    // medical target. Seed that legacy shape; do not rewrite its sealed outcome.
+    const fixture = new DatabaseSync(dbPath);
+    const stored = fixture
+      .prepare("SELECT world_state_json FROM sessions WHERE session_id=?")
+      .get(x.sid) as { world_state_json: string };
+    const historicalState = JSON.parse(stored.world_state_json);
+    delete historicalState.missionDeadlineMs;
+    historicalState.medical.targetAtMissionMs = 480000;
+    fixture
+      .prepare("UPDATE sessions SET world_state_json=? WHERE session_id=?")
+      .run(JSON.stringify(historicalState), x.sid);
+    fixture.close();
+    expect((await x.get()).missionDeadlineMs).toBe(600000);
+    await x.advance(570000);
+    const original = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
+    expect(original).toMatchObject({
+      terminationReason: "mission_deadline",
+      sealedAtMissionMs: 600000,
+      medical: { status: "target_missed", targetAtMissionMs: 480000 },
+    });
+    await x.svc.close();
+    services.splice(services.indexOf(x.svc), 1);
+    const reopened = await createGameService({
+      dbPath,
+      clock: x.clock,
+      resumeSessionIds: [x.sid],
+    });
+    services.push(reopened);
+    expect(await reopened.read("getSession", x.sid)).toMatchObject({
+      lifecycle: "sealed",
+      missionTimeMs: 600000,
+      missionDeadlineMs: 600000,
+      sealedHash: original.sealedHash,
+    });
+    expect(await reopened.read("getOutcome", x.sid)).toEqual(original);
+    expect(await reopened.hasSessionAccess(x.sid, "command")).toBe(false);
+  });
   it("terminal evaluation and export preserve seal and original gameplay event range", async () => {
     const x = await setup();
+    await x.advance(720000);
     await x.command("createTask", {
       taskKind: "request_report",
       targetRole: "analyst",
@@ -527,6 +627,7 @@ describe("SQLite authoritative core", () => {
     const o = (await x.command("abandonSession", {
       reason: "player_exit",
     })) as P.OutcomeView;
+    expect(o.sealedAtMissionMs).toBe(751000);
     const e = (await x.svc.execute(
       "requestEvaluation",
       {
@@ -559,7 +660,7 @@ describe("SQLite authoritative core", () => {
   });
 });
 
-describe("authored route matrix and arrival deadline", () => {
+describe("authored route matrix and unlimited arrival time", () => {
   for (const caseId of ["A", "B"] as const)
     for (const gate of ["E1_MAIN", "E1_BYPASS"])
       for (const market of ["E2_MAIN", "E2_BYPASS"])
@@ -607,14 +708,21 @@ describe("authored route matrix and arrival deadline", () => {
               "getOutcome",
               x.sid,
             )) as P.OutcomeView;
-            expect(out.sealedAtMissionMs).toBe(Math.min(600000, expected));
-            expect(out.taskSuccess).toBe(expected <= 600000);
-            expect(out.finalLocation.nodeId === "N07").toBe(expected <= 600000);
+            expect(out.sealedAtMissionMs).toBe(expected);
+            expect(out.taskSuccess).toBe(true);
+            expect(out.finalLocation.nodeId).toBe("N07");
+            expect(out.terminationReason).toBe(
+              river === "E3_BRIDGE" &&
+                caseId === "A" &&
+                (pendingManifest || pendingInspection)
+                ? "awaiting_transfer"
+                : "arrived",
+            );
             expect(out.handoffCompletedAtMissionMs).toBeNull();
           });
         }
-  for (const extra of [0, 1])
-    it(`arrival at deadline ${extra === 0 ? "exactly" : "plus one millisecond"}`, async () => {
+  for (const extra of [0, 1, 3600000])
+    it(`arrival at ${600000 + extra} ms succeeds without a mission time limit`, async () => {
       const x = await setup();
       for (let i = 0; i < 4; i++) {
         await action(x, "WAIT", 60000);
@@ -630,11 +738,10 @@ describe("authored route matrix and arrival deadline", () => {
       await action(x, "E3_BRIDGE");
       await x.advance(105000);
       const o = (await x.svc.read("getOutcome", x.sid)) as P.OutcomeView;
-      expect(o.sealedAtMissionMs).toBe(600000);
-      expect(o.taskSuccess).toBe(extra === 0);
-      expect(o.terminationReason).toBe(
-        extra === 0 ? "arrived" : "mission_deadline",
-      );
+      expect(o.sealedAtMissionMs).toBe(600000 + extra);
+      expect(o.taskSuccess).toBe(true);
+      expect(o.terminationReason).toBe("arrived");
+      expect(o.medical.status).toBe("stable");
     });
   it("five immutable uploads fill quota and tracing produces a new charged report instead of editing original", async () => {
     const x = await setup();
@@ -755,9 +862,9 @@ describe("graceful shutdown catches up due authoritative events", () => {
       );
       expect(outcome.finalLocation.nodeId).toBe(extra === 0 ? "N07" : null);
     });
-  for (const extra of [-1, 0])
-    it(`closing ${extra === 0 ? "at" : "one millisecond before"} the mission deadline processes only due events`, async () => {
-      const dir = mkdtempSync(join(tmpdir(), "last-mile-close-deadline-"));
+  for (const extra of [-1, 0, 7200000])
+    it(`closing an idle session at ${600000 + extra} ms preserves elapsed time as a technical interruption`, async () => {
+      const dir = mkdtempSync(join(tmpdir(), "last-mile-close-unlimited-"));
       dirs.push(dir);
       const dbPath = join(dir, "game.sqlite");
       const x = await setup("B", dbPath);
@@ -778,10 +885,8 @@ describe("graceful shutdown catches up due authoritative events", () => {
       check.close();
       expect(outcome.taskSuccess).toBe(false);
       expect(outcome.sealedAtMissionMs).toBe(600000 + extra);
-      expect(outcome.terminationReason).toBe(
-        extra === 0 ? "mission_deadline" : "technical_interruption",
-      );
-      expect(outcome.medical.status).toBe("target_missed");
-      expect(outcome.medical.note).toContain("优先转送");
+      expect(outcome.terminationReason).toBe("technical_interruption");
+      expect(outcome.medical.status).toBe("stable");
+      expect(outcome.medical.targetAtMissionMs).toBeNull();
     });
 });

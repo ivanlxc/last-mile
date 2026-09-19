@@ -235,7 +235,12 @@
           "type": "object",
           "properties": {
             "missionDeadlineMs": {
-              "const": 600000
+              "description": "Null means the mission has no overall time limit. A non-negative integer preserves the elapsed-mission-time deadline of historical timed sessions.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
             },
             "startedAt": {
               "type": "string",

@@ -37,17 +37,24 @@ explicit offline template gateway, which makes no network calls.
 5. Accepted commands, their ledger entries, state, public events, and success
    receipt commit together. Network requests never hold a SQLite transaction.
 
-The scheduler samples a monotonic clock every 100 ms. Costs determine completion
+The scheduler samples a monotonic clock every 1000 ms. Costs determine completion
 times; accepting an action does not subtract the duration a second time. WAIT
 allows investigation and AI work to continue. A route locks further route choices
 and cancels unfinished investigations with their report reservations released;
-spent investigation resources remain spent. Due events use a stable order, and
-arrival exactly at 600,000 ms wins over the deadline at the same instant.
+spent investigation resources remain spent. Due events use a stable order. New
+sessions have no mission deadline or medical timer: reading and exploration do
+not cause failure, and arrival after 600,000 ms is still successful. Each session
+stores its own nullable deadline; absent fields in legacy snapshots retain the
+original 600,000 ms policy, and historical outcomes are never recalculated.
 
-The public clock sample is persisted at most once per observed second. It includes
+While an operation or investigation is active, the public clock sample is
+persisted at most once per observed second. It includes
 the authoritative public convoy location so movement reaches the renderer between
 game events, and advances only the view cursor, not `stateVersion`. The location
 field remains optional in the wire schema for historical outbox compatibility.
+Stationary reading with no pending work creates no per-second outbox rows. The
+client interpolates elapsed time locally, and a fresh projection resynchronizes
+it with the server's monotonic time; gameplay commands still use server time.
 SSE cursors are `<runEpoch>:<viewSequence>`; HTTP polls the
 durable view outbox and may request the next page of up to 250 events.
 
@@ -105,7 +112,8 @@ missing display receipts remain limitations, not invented evidence of misconduct
 The reference campaign ends at destination arrival. If administrative work remains,
 the outcome can say `awaiting_transfer` while still reporting successful arrival.
 No actual handoff stage is implemented, so `handoffCompletedAtMissionMs` remains
-null. A timeout preserves the actual partial-route location.
+null. Explicit termination preserves the actual partial-route location. Old
+sealed timeout outcomes remain readable under their original rule version.
 
 A graceful close first commits events already due at its sampled mission time,
 then technically seals sessions still active. It does not start new model work.
@@ -127,7 +135,7 @@ pnpm exec vitest run tests/core tests/http tests/ai
 
 Core tests cover both cases across all 16 route combinations, bridge refusal and
 recovery, partial routes, parallel tasks and WAIT, global budgets, correction
-charges, atomic upload batches, stale commands and idempotency, deadline ordering,
+charges, atomic upload batches, stale commands and idempotency, unlimited mission time,
 terminal history, and crash recovery. HTTP tests validate actual wire responses
 and SSE resume behavior. AI integration tests exercise input isolation and the
 behavior-fact rules through real core events. These tests do not claim that a live

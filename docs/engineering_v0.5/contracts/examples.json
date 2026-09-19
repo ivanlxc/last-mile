@@ -418,7 +418,7 @@
     "phase": "briefing",
     "sceneId": null,
     "missionTimeMs": 0,
-    "missionDeadlineMs": 600000,
+    "missionDeadlineMs": null,
     "serverNow": "2026-09-16T12:00:00Z",
     "location": {
       "nodeId": "N00",
@@ -517,7 +517,7 @@
       "phase": "briefing",
       "sceneId": null,
       "missionTimeMs": 0,
-      "missionDeadlineMs": 600000,
+      "missionDeadlineMs": null,
       "serverNow": "2026-09-16T12:00:00Z",
       "location": {
         "nodeId": "N00",
@@ -791,7 +791,7 @@
       "phase": "briefing",
       "sceneId": null,
       "missionTimeMs": 0,
-      "missionDeadlineMs": 600000,
+      "missionDeadlineMs": null,
       "serverNow": "2026-09-16T12:00:00Z",
       "location": {
         "nodeId": "N00",
@@ -1074,7 +1074,7 @@
     "data": {
       "missionTimeMs": 0,
       "serverNow": "2026-09-16T12:00:00Z",
-      "missionDeadlineMs": 600000
+      "missionDeadlineMs": null
     }
   },
   "PublicSseEvent": {
@@ -1095,7 +1095,7 @@
       "phase": "briefing",
       "sceneId": null,
       "missionTimeMs": 0,
-      "missionDeadlineMs": 600000,
+      "missionDeadlineMs": null,
       "serverNow": "2026-09-16T12:00:00Z",
       "location": {
         "nodeId": "N00",

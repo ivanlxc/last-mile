@@ -424,17 +424,23 @@ export class CoreGameService implements GameService {
   private missionNow(s: State) {
     if (s.lifecycle !== "running") return s.mission;
     const a = this.anchors.get(s.sessionId);
+    const deadline = this.missionDeadline(s);
     return a
       ? Math.max(
           s.mission,
           Math.min(
-            600000,
+            deadline ?? Number.POSITIVE_INFINITY,
             Math.floor(
               a.mission + Math.max(0, this.clock.monotonicMs() - a.mono),
             ),
           ),
         )
       : s.mission;
+  }
+  private missionDeadline(s: State): number | null {
+    // Existing sealed snapshots predate the explicit unlimited policy. Preserve
+    // their original meaning without retroactively changing a historical run.
+    return s.missionDeadlineMs === undefined ? 600000 : s.missionDeadlineMs;
   }
   private async save(s: State) {
     await this.store.run(
@@ -797,6 +803,11 @@ export class CoreGameService implements GameService {
   private async projection(s: State): Promise<P.SessionProjection> {
     const now = this.missionNow(s),
       op = this.op(s);
+    const session = await this.row(s.sessionId);
+    const content = await this.store.one(
+      "SELECT content_version_id FROM content_versions WHERE content_hash=?",
+      session.content_hash,
+    );
     const rows = await this.store.all(
       "SELECT * FROM quota_accounts WHERE session_id=? AND quota_scope=?",
       s.sessionId,
@@ -810,8 +821,8 @@ export class CoreGameService implements GameService {
       runEpoch: s.runEpoch,
       profileId: "SINGLE_PLAYER_REFERENCE",
       runPurpose: s.runPurpose,
-      policyHash: this.world.policyHash,
-      contentVersionId: this.contentVersionId,
+      policyHash: session.policy_hash,
+      contentVersionId: content.content_version_id,
       stateVersion: s.version,
       lifecycle:
         s.lifecycle === "briefing"
@@ -829,7 +840,7 @@ export class CoreGameService implements GameService {
               : "resolving",
       sceneId: s.sceneId,
       missionTimeMs: now,
-      missionDeadlineMs: 600000,
+      missionDeadlineMs: this.missionDeadline(s),
       serverNow: iso(this.clock.nowMs()),
       location: this.location(s, now),
       civilianCount: 20,
@@ -971,7 +982,7 @@ export class CoreGameService implements GameService {
         uncertainty: "none",
         description: "选择 15、30 或 60 秒；调查继续运行",
       },
-      knownRisk: "等待会使用任务剩余时间。",
+      knownRisk: "等待期间累计用时继续增加，岗位调查继续运行。",
       irreversibleNotice: null,
       available: !locked,
       disabledReason: locked ? "phase_locked" : null,
@@ -1229,6 +1240,7 @@ export class CoreGameService implements GameService {
         phase: "briefing",
         sceneId: null,
         mission: 0,
+        missionDeadlineMs: this.world.policy.missionDurationMs,
         createdAt: now,
         startWall: null,
         flags: {
@@ -1257,8 +1269,8 @@ export class CoreGameService implements GameService {
         routeIdsTaken: [],
         medical: {
           status: "stable",
-          targetAtMissionMs: 480000,
-          note: "乘员状态稳定，等待转送；请留意转送目标时刻。",
+          targetAtMissionMs: this.world.policy.medicalSupportAtMs,
+          note: "乘员状态稳定，等待转送。",
         },
         outcome: null,
         arrivalMs: null,
@@ -1446,7 +1458,10 @@ export class CoreGameService implements GameService {
     await this.event(
       s,
       "session.started",
-      { missionDurationMs: 600000 },
+      {
+        missionDeadlineMs: this.missionDeadline(s),
+        startedAt: iso(s.startWall),
+      },
       "human",
       s.actors.commander,
     );
@@ -2320,26 +2335,31 @@ export class CoreGameService implements GameService {
             id: t.view.taskId,
             kind: "task",
           });
-        if (s.medical.status !== "target_missed")
+        if (
+          s.medical.targetAtMissionMs !== null &&
+          s.medical.status !== "target_missed"
+        )
           candidates.push({
-            due: 480000,
+            due: s.medical.targetAtMissionMs,
             priority: 40,
             id: "medical",
             kind: "medical",
           });
-        candidates.push({
-          due: 600000,
-          priority: 90,
-          id: "deadline",
-          kind: "deadline",
-        });
+        const deadline = this.missionDeadline(s);
+        if (deadline !== null)
+          candidates.push({
+            due: deadline,
+            priority: 90,
+            id: "deadline",
+            kind: "deadline",
+          });
         const next = candidates.sort(
           (a, b) =>
             a.due - b.due ||
             a.priority - b.priority ||
             a.id.localeCompare(b.id),
         )[0];
-        if (next.due > now) break;
+        if (!next || next.due > now) break;
         if (++steps > 256) {
           await this.tx(async () => {
             s.version++;
@@ -2362,7 +2382,7 @@ export class CoreGameService implements GameService {
           else if (next.kind === "medical") {
             s.medical = {
               status: "target_missed",
-              targetAtMissionMs: 480000,
+              targetAtMissionMs: s.medical.targetAtMissionMs,
               note: "已到转送目标时刻，需要优先转送；请尽快抵达接收站。",
             };
             await this.event(s, "medical.target_missed", {});
@@ -2383,7 +2403,13 @@ export class CoreGameService implements GameService {
           } else await this.save(s);
         });
       }
-      if (s.lifecycle === "running") {
+      // Stationary reading needs no durable per-second events. Clients advance
+      // elapsed time from the last authoritative sample; GET resynchronizes it.
+      // Work in progress still emits live locations and task clock samples.
+      if (
+        s.lifecycle === "running" &&
+        (this.op(s) || s.tasks.some((task) => active(task.view)))
+      ) {
         const second = Math.floor(now / 1000);
         if (second > (this.lastClockSamples.get(sid) ?? 0)) {
           await this.tx(
@@ -2391,7 +2417,7 @@ export class CoreGameService implements GameService {
               await this.publicEvent(s, "clock.sample", {
                 missionTimeMs: now,
                 serverNow: iso(this.clock.nowMs()),
-                missionDeadlineMs: 600000,
+                missionDeadlineMs: this.missionDeadline(s),
                 // Motion advances between rule-changing projections. Send the
                 // public route position from the same authoritative clock sample.
                 location: this.location(s, now),
@@ -2435,7 +2461,9 @@ export class CoreGameService implements GameService {
         op.view.operationId,
       );
     }
-    const arrived = s.arrivalMs !== null && s.arrivalMs <= 600000;
+    const deadline = this.missionDeadline(s);
+    const arrived =
+      s.arrivalMs !== null && (deadline === null || s.arrivalMs <= deadline);
     const pending = this.pending(s);
     const outcome: P.OutcomeView = {
       sessionId: s.sessionId,
@@ -2486,6 +2514,7 @@ export class CoreGameService implements GameService {
           ? "interrupted"
           : "completed";
     s.phase = "terminal";
+    const session = await this.row(s.sessionId);
     await this.store.insert("terminal_seals", {
       session_id: s.sessionId,
       seal_id: uid(),
@@ -2496,8 +2525,8 @@ export class CoreGameService implements GameService {
       terminal_mission_ms: s.mission,
       outcome_json: canonical(outcome),
       immutable_behavior_json: canonical({ decisions: s.decisions }),
-      content_hash: this.world.contentHash,
-      policy_hash: this.world.policyHash,
+      content_hash: session.content_hash,
+      policy_hash: session.policy_hash,
       sealed_at_ms: this.clock.nowMs(),
     });
     await this.publicEvent(s, "outcome.sealed", outcome);
@@ -2575,7 +2604,7 @@ export class CoreGameService implements GameService {
       description: "可等待15、30或60秒，岗位调查可继续。",
       knownDurationMs: null as any,
       durationQualifier: "base_only",
-      limitations: ["选择与任务时间由指挥官决定，当前私有倒计时未上传。"],
+      limitations: ["选择与任务时间由指挥官决定，当前累计用时未上传。"],
     });
     const authorizedArgs: Parameters<typeof buildAdvisorInput>[0] =
       localizePublic(

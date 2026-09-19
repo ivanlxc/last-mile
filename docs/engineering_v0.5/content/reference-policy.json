@@ -1,6 +1,6 @@
 {
   "profileId": "SINGLE_PLAYER_REFERENCE",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "status": "review",
   "mode": "single_player",
   "sceneIds": [
@@ -8,8 +8,8 @@
     "E2",
     "E3"
   ],
-  "missionDurationMs": 600000,
-  "medicalSupportAtMs": 480000,
+  "missionDurationMs": null,
+  "medicalSupportAtMs": null,
   "civilianCount": 20,
   "channelLimits": {
     "satellite": 2,
@@ -47,7 +47,7 @@
   "advisorMode": "live_with_labeled_fallback",
   "confidencePresentation": "qualitative",
   "evaluationProfile": "four_dimensions_mixed_or_insufficient",
-  "outcomeSuccess": "arrival_N07_before_or_at_deadline",
+  "outcomeSuccess": "arrival_N07",
   "bridgeRefusalRecoveryLimit": 1,
   "normalLaunchAllowed": false,
   "demoLaunchAllowed": true

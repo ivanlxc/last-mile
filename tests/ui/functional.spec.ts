@@ -57,14 +57,19 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
   expect(resumed.sessionId).toBe(created.sessionId);
   expect(resumed.sceneId).toBe("E1");
   expect(resumed.missionTimeMs).toBeGreaterThanOrEqual(30000);
+  expect(resumed.missionDeadlineMs).toBeNull();
+  await expect(page.locator(".mission-clock small")).toHaveText(
+    "累计用时 · 不限时",
+  );
   await expect(
     page.getByRole("heading", { name: "门后的答案", exact: true }),
   ).toBeVisible();
   const afterReload = seconds(
     await page.locator(".mission-clock strong").innerText(),
   );
-  expect(afterReload).toBeLessThan(600);
-  expect(afterReload).toBeLessThanOrEqual(beforeReload + 1);
+  expect(afterReload).toBeGreaterThanOrEqual(30);
+  // A fresh authoritative sample can correct subsecond display interpolation.
+  expect(afterReload).toBeGreaterThanOrEqual(beforeReload - 1);
   const contextReceipt = page.waitForResponse(
     (r) =>
       r.url().endsWith("/display-receipts") &&

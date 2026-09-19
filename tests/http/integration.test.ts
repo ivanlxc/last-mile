@@ -168,7 +168,14 @@ async function fixture() {
 describe("real SQLite domain through public HTTP", () => {
   it("completes reporting, immutable upload, advice, WAIT, sealing, evaluation, replay and export", async () => {
     const f = await fixture();
+    expect(f.created.projection.missionDeadlineMs).toBeNull();
+    await f.advance(720000);
     const current = await f.projection();
+    expect(current).toMatchObject({
+      lifecycle: "active",
+      missionTimeMs: 750000,
+      missionDeadlineMs: null,
+    });
     const option = current.taskOptions.find(
       (o) => o.available && o.investigationKind === "satellite_scan",
     )!;
@@ -276,6 +283,7 @@ describe("real SQLite domain through public HTTP", () => {
     );
     const outcome = abandon.json() as Public.OutcomeView;
     expect(outcome.terminationReason).toBe("abandoned");
+    expect(outcome.sealedAtMissionMs).toBeGreaterThan(750000);
     expect(await f.get(`${f.base}/outcome`, "OutcomeView")).toEqual(outcome);
     const evaluation = await f.post(
       `${f.base}/evaluations`,
@@ -386,6 +394,21 @@ describe("real SQLite domain through public HTTP", () => {
 
   it("reconnects a real SSE cursor using runEpoch and emits only schema-valid public events", async () => {
     const f = await fixture();
+    await f.advance(720000);
+    await f.command(
+      "/actions",
+      {
+        actionId: "WAIT",
+        waitDurationMs: 15000,
+        reason: "等待观察结果",
+        reasonAnnotation: null,
+        basedOnAdviceJobId: null,
+        referencedReportIds: [],
+        cancelPendingInvestigations: false,
+      },
+      "ActionAccepted",
+      202,
+    );
     const p = await f.projection();
     expect(p.lastViewCursor).toMatch(new RegExp(`^${f.created.runEpoch}:`));
     const response = await f.app.inject({

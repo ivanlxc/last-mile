@@ -6,7 +6,7 @@ export type Actor = { "kind": "human" | "npc" | "rules" | "system"; "actorId": (
 
 export type EventSessionCreated = { "eventId": string; "sessionId": string; "seq": number; "missionTimeMs": number; "recordedAt": string; "actor": Actor; "requestId": (string | null); "causationEventId": (string | null); "eventType": "session.created"; "data": { "profileId": "SINGLE_PLAYER_REFERENCE"; "policyHash": string; "contentVersionId": string; "privateCaseId": string; "seedHash": string } };
 
-export type EventSessionStarted = { "eventId": string; "sessionId": string; "seq": number; "missionTimeMs": number; "recordedAt": string; "actor": Actor; "requestId": (string | null); "causationEventId": (string | null); "eventType": "session.started"; "data": { "missionDeadlineMs": 600000; "startedAt": string } };
+export type EventSessionStarted = { "eventId": string; "sessionId": string; "seq": number; "missionTimeMs": number; "recordedAt": string; "actor": Actor; "requestId": (string | null); "causationEventId": (string | null); "eventType": "session.started"; "data": { "missionDeadlineMs": (number | null); "startedAt": string } };
 
 export type EventSceneEntered = { "eventId": string; "sessionId": string; "seq": number; "missionTimeMs": number; "recordedAt": string; "actor": Actor; "requestId": (string | null); "causationEventId": (string | null); "eventType": "scene.entered"; "data": { "sceneId": "E1" | "E2" | "E3"; "location": Public.KnownLocation } };
 

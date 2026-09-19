@@ -7,10 +7,12 @@ import { timer } from "../lib/narrative";
 import { Modal } from "./Modal";
 export function DecisionModal({
   game,
+  missionTimeMs,
   action,
   onClose,
 }: {
   game: Game;
+  missionTimeMs: number;
   action: P.ActionOption;
   onClose: () => void;
 }) {
@@ -69,8 +71,8 @@ export function DecisionModal({
           </strong>
         </div>
         <div>
-          <span>{t("ui.escortWindowRemaining")}</span>
-          <strong>{timer(s.missionDeadlineMs - s.missionTimeMs)}</strong>
+          <span>{t("ui.missionTime")}</span>
+          <strong>{timer(missionTimeMs)}</strong>
         </div>
       </div>
       <p className="decision-risk">{action.knownRisk}</p>

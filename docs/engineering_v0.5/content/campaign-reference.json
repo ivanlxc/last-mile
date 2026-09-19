@@ -110,7 +110,7 @@
     {
       "backgroundId": "BG04",
       "title": "信息边界",
-      "text": "你的输入中未自动包含指挥官的撤离倒计时、伤员状态和资源余额；必要时请询问而不要估计。",
+      "text": "你的输入中未自动包含指挥官的累计用时、乘员状态和资源余额；必要时请询问而不要估计。",
       "validity": "fictional_general_guidance_not_current_truth"
     },
     {
@@ -1496,7 +1496,7 @@
           "topicId": "bridge_status",
           "priority": 20,
           "title": "桥梁管理值班答复",
-          "body": "当前暂停该级别车辆过桥。没有承诺在本次撤离窗口内恢复，可走旧河床便道。",
+          "body": "当前暂停该级别车辆过桥，恢复时间未定，可走旧河床便道。",
           "statementKind": "testimony",
           "sourceLabel": "桥梁管理值班台",
           "observationScope": "桥梁管理值班答复",

@@ -50,7 +50,9 @@ function fakeService(): GameService {
     })),
     hasPlayerSessionAccess: vi.fn(async () => true),
     listPlayerSessions: vi.fn(async () => []),
-    read: vi.fn(async (op) => op === "getHealth" ? { ...example(op), storageReady: true } : example(op)),
+    read: vi.fn(async (op) =>
+      op === "getHealth" ? { ...example(op), storageReady: true } : example(op),
+    ),
     getEventsSince: vi.fn(async () => []),
     subscribe: vi.fn(async () => () => {}),
     hasSessionAccess: vi.fn(async () => true),
@@ -74,6 +76,30 @@ function pathFor(path: string) {
 }
 
 describe("frozen HTTP contract and authentication", () => {
+  it("reads both unlimited-session contracts and historical 600000 ms deadline records", () => {
+    for (const missionDeadlineMs of [null, 600000]) {
+      const projection = example("getSession");
+      projection.missionDeadlineMs = missionDeadlineMs;
+      projection.medical.targetAtMissionMs =
+        missionDeadlineMs === null ? null : 480000;
+      expect(contracts.errors("SessionProjection", projection)).toEqual([]);
+      const sample = {
+        eventType: "clock.sample",
+        sessionId: projection.sessionId,
+        runEpoch: projection.runEpoch,
+        viewSequence: 1,
+        stateVersion: projection.stateVersion,
+        data: {
+          missionTimeMs: missionDeadlineMs === null ? 7200000 : 599999,
+          serverNow: projection.serverNow,
+          missionDeadlineMs,
+          location: projection.location,
+        },
+      };
+      expect(contracts.errors("SseClockSample", sample)).toEqual([]);
+    }
+  });
+
   it("local bootstrap initializes an HttpOnly cookie; protected reads require it", async () => {
     const { app } = await setup();
     const unauth = await app.inject({

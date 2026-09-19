@@ -93,7 +93,7 @@ export function Landing({
         </p>
         <p className="hero-description">
           {" "}
-          {t("ui.withFragmentsOfIntelligenceAndTimeRunning")} <br />{" "}
+          {t("ui.withFragmentsOfIntelligence")} <br />{" "}
           {t("ui.decideWhatToTrustAndHowTo")}{" "}
         </p>
         <button
@@ -112,7 +112,7 @@ export function Landing({
         <span className="hero-meta">
           {" "}
           {t("ui.oneCommander")} <i /> {t("ui.threeCriticalChoices")} <i />{" "}
-          {t("ui.aTenMinuteEscortWindow")}{" "}
+          {t("ui.unlimitedExploration")}{" "}
         </span>
       </section>
       <div className="landing-coordinate">
@@ -171,7 +171,7 @@ export function Briefing({ game }: { game: Game }) {
             <div>
               <Clock3 size={19} />
               <strong>
-                10<small>{t("ui.minWindow")}</small>
+                ∞<small>{t("ui.noTimeLimit")}</small>
               </strong>
             </div>
             <div>
