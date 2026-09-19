@@ -12,6 +12,7 @@
   <assembly fullname="Assembly-CSharp">
     <type fullname="LastMile.RenderState" preserve="all" />
     <type fullname="LastMile.KnownLocation" preserve="all" />
+    <type fullname="LastMile.CameraInput" preserve="all" />
     <type fullname="LastMile.BridgeEvent" preserve="all" />
     <type fullname="LastMile.PublicMap" preserve="all" />
     <type fullname="LastMile.PublicNode" preserve="all" />

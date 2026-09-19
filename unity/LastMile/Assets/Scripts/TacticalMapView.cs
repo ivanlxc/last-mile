@@ -41,6 +41,11 @@ namespace LastMile
         private static readonly Color Cyan = new Color(0.25f, 0.85f, 0.91f);
         private static readonly Color Gold = new Color(1f, 0.78f, 0.35f);
 
+        public void ApplyCameraInput(CameraInput input)
+        {
+            if (cameraControls != null) cameraControls.ApplyGestureInput(input);
+        }
+
         public void Initialize(PublicMap map, LastMileBridge bridge)
         {
             surface = Resources.Load<Material>("MapSurface");

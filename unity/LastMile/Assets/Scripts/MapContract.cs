@@ -27,6 +27,18 @@ namespace LastMile
         public int progressPermille;
     }
 
+    // Independent camera input; it cannot carry or advance mission state.
+    [Serializable] public sealed class CameraInput
+    {
+        public int schemaVersion;
+        public string instanceId;
+        public long sequence;
+        public string mode;
+        public float dx;
+        public float dy;
+        public float zoomLog;
+    }
+
     [Serializable] public sealed class BridgeEvent
     {
         public int schemaVersion = 1;

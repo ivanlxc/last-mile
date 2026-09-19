@@ -18,6 +18,8 @@ namespace LastMile
         private bool dragging;
         private bool pointerCaptured;
         private float previousAspect;
+        private float gesturesSuppressedUntil;
+        private const float ManualInputPrioritySeconds = 0.5f;
 
         public bool Following => following;
         public void SetConvoy(Transform target) { convoy = target; }
@@ -39,6 +41,7 @@ namespace LastMile
 
         public void ResetView()
         {
+            SuppressGestures();
             following = false;
             center = new Vector3(0, 1, 0);
             yaw = -17; pitch = 49;
@@ -48,12 +51,58 @@ namespace LastMile
 
         public void FollowConvoy()
         {
+            SuppressGestures();
             if (convoy == null) return;
             following = true;
             center = convoy.position + Vector3.up * 0.2f;
             pitch = 38;
             distance = 7.5f;
             PositionCamera();
+        }
+
+        public void ApplyGestureInput(CameraInput input)
+        {
+            // No velocity or backlog: stop/release/loss needs no extra animation to settle.
+            if (input.mode == "stop") return;
+            Vector3 mouse = Input.mousePosition;
+            bool inside = PointerInside(mouse);
+            // SendMessage can arrive before Update consumes the current input frame.
+            bool manualInputNow = inside && (Input.GetMouseButton(0) || Input.GetMouseButton(1) ||
+                Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) ||
+                Input.mouseScrollDelta.y != 0 || Input.GetKeyDown(KeyCode.Home) || Input.GetKeyDown(KeyCode.F));
+            if (manualInputNow) SuppressGestures();
+            if (pointerCaptured || Time.unscaledTime < gesturesSuppressedUntil) return;
+            if (input.mode == "pan") Pan(input.dx, input.dy);
+            else if (input.mode == "zoom") Zoom(input.zoomLog);
+            PositionCamera();
+        }
+
+        private void SuppressGestures()
+        {
+            gesturesSuppressedUntil = Time.unscaledTime + ManualInputPrioritySeconds;
+        }
+
+        private static bool PointerInside(Vector3 point)
+        {
+            return point.x >= 0 && point.x <= Screen.width && point.y >= 0 && point.y <= Screen.height;
+        }
+
+        private void Pan(float dx, float dy)
+        {
+            if (dx == 0 && dy == 0) return;
+            following = false;
+            Vector3 right = transform.right; right.y = 0; right.Normalize();
+            Vector3 forward = Vector3.Cross(right, Vector3.up);
+            float visibleHeight = 2 * distance * Mathf.Tan(view.fieldOfView * Mathf.Deg2Rad * 0.5f);
+            center -= right * dx * visibleHeight * view.aspect;
+            center -= forward * dy * visibleHeight;
+            center.x = Mathf.Clamp(center.x, -23, 23); center.z = Mathf.Clamp(center.z, -17, 17);
+        }
+
+        private void Zoom(float zoomLog)
+        {
+            // Changing distance preserves an existing convoy-follow target.
+            distance = Mathf.Clamp(distance * Mathf.Exp(-zoomLog), 2.8f, 90);
         }
 
         private float OverviewDistance()
@@ -67,30 +116,28 @@ namespace LastMile
             Vector3 mouse = Input.mousePosition;
             Vector3 delta = mouse - previousPointer;
             previousPointer = mouse;
-            bool inside = mouse.x >= 0 && mouse.x <= Screen.width && mouse.y >= 0 && mouse.y <= Screen.height;
+            bool inside = PointerInside(mouse);
+            if (inside && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1) || Input.mouseScrollDelta.y != 0))
+                SuppressGestures();
             // Leave camera buttons to IMGUI instead of also selecting the map beneath.
             bool overControls = mouse.y < 44 && mouse.x > Screen.width - 278;
             if (inside && !overControls && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)))
             { pointerStart = mouse; dragging = false; pointerCaptured = true; delta = Vector3.zero; }
             if (pointerCaptured && (Input.GetMouseButton(0) || Input.GetMouseButton(1)) && (mouse - pointerStart).sqrMagnitude > 36)
                 dragging = true;
+            if (pointerCaptured) SuppressGestures();
             if (inside && pointerCaptured && Input.GetMouseButton(0) && dragging)
             {
-                following = false;
-                Vector3 right = transform.right; right.y = 0; right.Normalize();
-                Vector3 forward = Vector3.Cross(right, Vector3.up);
-                float scale = 2 * distance * Mathf.Tan(view.fieldOfView * Mathf.Deg2Rad * 0.5f) / Mathf.Max(Screen.height, 1);
-                center -= right * delta.x * scale;
-                center -= forward * delta.y * scale;
-                center.x = Mathf.Clamp(center.x, -23, 23); center.z = Mathf.Clamp(center.z, -17, 17);
+                Pan(delta.x / Mathf.Max(Screen.width, 1), delta.y / Mathf.Max(Screen.height, 1));
             }
             if (inside && pointerCaptured && Input.GetMouseButton(1))
             {
+                following = false;
                 yaw += delta.x * 0.27f;
                 pitch = Mathf.Clamp(pitch - delta.y * 0.23f, 16, 78);
             }
             if (inside)
-                distance = Mathf.Clamp(distance * Mathf.Exp(-Input.mouseScrollDelta.y * 0.065f), 2.8f, 90);
+                Zoom(Input.mouseScrollDelta.y * 0.065f);
             if (inside && pointerCaptured && Input.GetMouseButtonUp(0) && !dragging && !overControls)
             {
                 if (Physics.Raycast(view.ScreenPointToRay(mouse), out RaycastHit hit, 160))

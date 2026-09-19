@@ -12,6 +12,7 @@ namespace LastMile
         private RenderState current;
         private TacticalMapView map;
         private string startupError;
+        private long cameraSequence = -1;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] private static extern void LastMileDispatch(string json);
@@ -48,7 +49,34 @@ namespace LastMile
             if (string.IsNullOrWhiteSpace(value)) return;
             instanceId = value;
             current = null;
+            cameraSequence = -1;
             Emit(startupError == null ? "ready" : "error", null, startupError);
+        }
+
+        [UnityEngine.Scripting.Preserve]
+        public void ApplyCameraInput(string json)
+        {
+            if (string.IsNullOrEmpty(instanceId) || map == null || string.IsNullOrEmpty(json)) return;
+            try
+            {
+                var input = JsonUtility.FromJson<CameraInput>(json);
+                if (input == null || input.schemaVersion != 1 || input.instanceId != instanceId ||
+                    input.sequence < 0 || input.sequence <= cameraSequence ||
+                    (input.mode != "pan" && input.mode != "zoom" && input.mode != "stop") ||
+                    !Bounded(input.dx, 0.15f) || !Bounded(input.dy, 0.15f) || !Bounded(input.zoomLog, 0.35f)) return;
+                // Consume even suppressed input so it cannot be replayed after mouse control.
+                cameraSequence = input.sequence;
+                map.ApplyCameraInput(input);
+            }
+            catch (Exception)
+            {
+                // Bad optional input must never disable the map or affect the mission.
+            }
+        }
+
+        private static bool Bounded(float value, float limit)
+        {
+            return !float.IsNaN(value) && !float.IsInfinity(value) && Mathf.Abs(value) <= limit;
         }
 
         [UnityEngine.Scripting.Preserve]
