@@ -1,0 +1,95 @@
+{
+  "title": "Bridge — The Weight Across the Water (somber v4)",
+  "bpm": 56,
+  "bars": 16,
+  "beatsPerBar": 4,
+  "tailSeconds": 8,
+  "renderReverbPercent": 38,
+  "renderLowPassHz": 3800,
+  "tracks": [
+    {
+      "name": "Wide water — sustained strings",
+      "instrument": "strings",
+      "volume": 0.32,
+      "pan": -0.22,
+      "notes": [
+        { "beat": 0.28, "duration": 31.54, "midi": 52, "velocity": 35 },
+        { "beat": 0.4, "duration": 15.4, "midi": 57, "velocity": 34 },
+        { "beat": 0.6, "duration": 31.18, "midi": 60, "velocity": 33 },
+        { "beat": 0.74, "duration": 14.98, "midi": 64, "velocity": 30 },
+        { "beat": 16.22, "duration": 15.48, "midi": 53, "velocity": 36 },
+        { "beat": 24.18, "duration": 7.47, "midi": 64, "velocity": 31 },
+        { "beat": 32.2, "duration": 15.56, "midi": 50, "velocity": 39 },
+        { "beat": 32.34, "duration": 15.5, "midi": 57, "velocity": 40 },
+        { "beat": 32.45, "duration": 15.28, "midi": 53, "velocity": 38 },
+        { "beat": 32.52, "duration": 7.3, "midi": 65, "velocity": 37 },
+        { "beat": 36.5, "duration": 11.28, "midi": 60, "velocity": 40 },
+        { "beat": 40.34, "duration": 7.45, "midi": 64, "velocity": 38 },
+        { "beat": 48.22, "duration": 15.3, "midi": 52, "velocity": 34 },
+        { "beat": 48.4, "duration": 11.4, "midi": 57, "velocity": 33 },
+        { "beat": 48.58, "duration": 11.05, "midi": 62, "velocity": 31 },
+        { "beat": 54.3, "duration": 9.2, "midi": 59, "velocity": 28 }
+      ]
+    },
+    {
+      "name": "What must be carried — long cello line",
+      "instrument": "cello",
+      "volume": 0.3,
+      "pan": -0.06,
+      "notes": [
+        { "beat": 1.12, "duration": 10.13, "midi": 45, "velocity": 36 },
+        { "beat": 11.18, "duration": 9.14, "midi": 48, "velocity": 37 },
+        { "beat": 20.24, "duration": 8.08, "midi": 52, "velocity": 38 },
+        { "beat": 28.24, "duration": 7.95, "midi": 53, "velocity": 39 },
+        { "beat": 36.12, "duration": 6.2, "midi": 57, "velocity": 43 },
+        { "beat": 42.24, "duration": 6.11, "midi": 60, "velocity": 44 },
+        { "beat": 48.28, "duration": 6.04, "midi": 59, "velocity": 39 },
+        { "beat": 54.24, "duration": 5.07, "midi": 57, "velocity": 35 },
+        { "beat": 59.24, "duration": 4.44, "midi": 52, "velocity": 31 }
+      ]
+    },
+    {
+      "name": "Air above the river — suspended warmth",
+      "instrument": "warm_pad",
+      "volume": 0.15,
+      "pan": 0.28,
+      "notes": [
+        { "beat": 0.96, "duration": 14.3, "midi": 59, "velocity": 28 },
+        { "beat": 17.2, "duration": 13.9, "midi": 64, "velocity": 29 },
+        { "beat": 17.44, "duration": 13.4, "midi": 57, "velocity": 28 },
+        { "beat": 33.8, "duration": 13.4, "midi": 64, "velocity": 33 },
+        { "beat": 35.1, "duration": 12.0, "midi": 62, "velocity": 32 },
+        { "beat": 49.2, "duration": 9.7, "midi": 62, "velocity": 28 },
+        { "beat": 49.48, "duration": 14.15, "midi": 57, "velocity": 27 },
+        { "beat": 49.7, "duration": 10.3, "midi": 64, "velocity": 26 }
+      ]
+    },
+    {
+      "name": "The far bank — bowed foundation",
+      "instrument": "bass",
+      "volume": 0.23,
+      "pan": 0.03,
+      "notes": [
+        { "beat": 0.16, "duration": 15.59, "midi": 33, "velocity": 35 },
+        { "beat": 16.16, "duration": 15.62, "midi": 33, "velocity": 34 },
+        { "beat": 32.14, "duration": 15.68, "midi": 38, "velocity": 39 },
+        { "beat": 48.16, "duration": 15.39, "midi": 40, "velocity": 32 }
+      ]
+    },
+    {
+      "name": "A remembered key — distant opening fragments",
+      "instrument": "piano",
+      "volume": 0.18,
+      "pan": 0.2,
+      "notes": [
+        { "beat": 3.42, "duration": 4.2, "midi": 57, "velocity": 33 },
+        { "beat": 9.14, "duration": 3.9, "midi": 64, "velocity": 32 },
+        { "beat": 13.68, "duration": 4.4, "midi": 59, "velocity": 29 },
+        { "beat": 18.62, "duration": 5.2, "midi": 60, "velocity": 32 },
+        { "beat": 37.34, "duration": 4.7, "midi": 57, "velocity": 35 },
+        { "beat": 44.72, "duration": 4.9, "midi": 64, "velocity": 33 },
+        { "beat": 55.62, "duration": 5.5, "midi": 59, "velocity": 28 }
+      ]
+    }
+  ]
+}

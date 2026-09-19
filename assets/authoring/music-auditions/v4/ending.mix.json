@@ -1,0 +1,14 @@
+{
+  "score": "ending.score.json",
+  "audio": "ending.mp3",
+  "durationSeconds": 73.0,
+  "sampleRate": 48000,
+  "channels": 2,
+  "codec": "MP3 VBR quality 2",
+  "normalization": "linear",
+  "integratedLoudnessLUFS": -19.01,
+  "truePeakDBTP": -2.44,
+  "loudnessRangeLU": 5.4,
+  "fadeInSeconds": 1.2,
+  "fadeOutSeconds": 4
+}

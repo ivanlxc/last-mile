@@ -1,0 +1,32 @@
+[
+  {
+    "track": "market",
+    "durationSeconds": 72.0,
+    "decodedPeak": 0.44287,
+    "channels": 2,
+    "sampleRate": 48000,
+    "finiteAndUnclipped": true,
+    "fadedEndpoints": true,
+    "samePitchOverlap": false
+  },
+  {
+    "track": "bridge",
+    "durationSeconds": 76.571,
+    "decodedPeak": 0.49276,
+    "channels": 2,
+    "sampleRate": 48000,
+    "finiteAndUnclipped": true,
+    "fadedEndpoints": true,
+    "samePitchOverlap": false
+  },
+  {
+    "track": "ending",
+    "durationSeconds": 73.0,
+    "decodedPeak": 0.75454,
+    "channels": 2,
+    "sampleRate": 48000,
+    "finiteAndUnclipped": true,
+    "fadedEndpoints": true,
+    "samePitchOverlap": false
+  }
+]

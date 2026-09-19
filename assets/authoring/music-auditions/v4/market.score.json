@@ -1,0 +1,90 @@
+{
+  "title": "Market — Unsettled Accounts (somber v4)",
+  "bpm": 60,
+  "bars": 16,
+  "beatsPerBar": 4,
+  "tailSeconds": 8,
+  "renderReverbPercent": 33,
+  "renderLowPassHz": 3000,
+  "tracks": [
+    {
+      "name": "Sparse low piano intervals — room between accounts",
+      "instrument": "piano",
+      "volume": 0.33,
+      "pan": -0.1,
+      "notes": [
+        { "beat": 0.65, "duration": 5.1, "midi": 40, "velocity": 43 },
+        { "beat": 0.72, "duration": 5.03, "midi": 47, "velocity": 39 },
+        { "beat": 9.25, "duration": 4.8, "midi": 43, "velocity": 39 },
+        { "beat": 9.32, "duration": 4.73, "midi": 50, "velocity": 36 },
+        { "beat": 18.1, "duration": 4.3, "midi": 48, "velocity": 40 },
+        { "beat": 18.18, "duration": 4.22, "midi": 55, "velocity": 37 },
+        { "beat": 27.25, "duration": 3.8, "midi": 45, "velocity": 38 },
+        { "beat": 27.32, "duration": 3.73, "midi": 52, "velocity": 35 },
+        { "beat": 34.4, "duration": 5.4, "midi": 40, "velocity": 42 },
+        { "beat": 34.48, "duration": 5.32, "midi": 55, "velocity": 36 },
+        { "beat": 43.1, "duration": 4.6, "midi": 45, "velocity": 39 },
+        { "beat": 43.18, "duration": 4.52, "midi": 52, "velocity": 36 },
+        { "beat": 51.65, "duration": 4.9, "midi": 43, "velocity": 37 },
+        { "beat": 51.73, "duration": 4.82, "midi": 50, "velocity": 34 },
+        { "beat": 59.15, "duration": 4.1, "midi": 47, "velocity": 33 },
+        { "beat": 59.23, "duration": 4.02, "midi": 54, "velocity": 31 }
+      ]
+    },
+    {
+      "name": "Quiet sustained fragments — changing points of agreement",
+      "instrument": "strings",
+      "volume": 0.21,
+      "pan": -0.17,
+      "notes": [
+        { "beat": 1.8, "duration": 7.2, "midi": 47, "velocity": 33 },
+        { "beat": 2.05, "duration": 7.6, "midi": 52, "velocity": 32 },
+        { "beat": 10.4, "duration": 6.5, "midi": 45, "velocity": 30 },
+        { "beat": 10.7, "duration": 6.8, "midi": 50, "velocity": 32 },
+        { "beat": 18.75, "duration": 8.1, "midi": 48, "velocity": 33 },
+        { "beat": 19.1, "duration": 7.8, "midi": 52, "velocity": 32 },
+        { "beat": 20.3, "duration": 5.6, "midi": 59, "velocity": 27 },
+        { "beat": 27.7, "duration": 5.9, "midi": 50, "velocity": 32 },
+        { "beat": 28.1, "duration": 6.3, "midi": 57, "velocity": 29 },
+        { "beat": 34.2, "duration": 7.4, "midi": 52, "velocity": 35 },
+        { "beat": 34.65, "duration": 7.8, "midi": 55, "velocity": 33 },
+        { "beat": 35.1, "duration": 7.0, "midi": 59, "velocity": 29 },
+        { "beat": 43.7, "duration": 6.1, "midi": 50, "velocity": 31 },
+        { "beat": 44.05, "duration": 6.0, "midi": 57, "velocity": 30 },
+        { "beat": 50.5, "duration": 5.8, "midi": 47, "velocity": 29 },
+        { "beat": 50.9, "duration": 5.6, "midi": 55, "velocity": 28 },
+        { "beat": 56.75, "duration": 6.9, "midi": 52, "velocity": 28 },
+        { "beat": 57.1, "duration": 6.3, "midi": 59, "velocity": 27 }
+      ]
+    },
+    {
+      "name": "Low cello — considered replies and silence",
+      "instrument": "cello",
+      "volume": 0.22,
+      "pan": 0.08,
+      "notes": [
+        { "beat": 4.1, "duration": 6.2, "midi": 40, "velocity": 36 },
+        { "beat": 14.3, "duration": 6.4, "midi": 43, "velocity": 33 },
+        { "beat": 24.2, "duration": 6.6, "midi": 45, "velocity": 35 },
+        { "beat": 36.8, "duration": 6.7, "midi": 47, "velocity": 36 },
+        { "beat": 48.4, "duration": 5.6, "midi": 43, "velocity": 32 },
+        { "beat": 56.1, "duration": 7.45, "midi": 40, "velocity": 30 }
+      ]
+    },
+    {
+      "name": "Soft suspended air — the unanswered part",
+      "instrument": "warm_pad",
+      "volume": 0.19,
+      "pan": 0.19,
+      "notes": [
+        { "beat": 5.4, "duration": 7.3, "midi": 54, "velocity": 27 },
+        { "beat": 13.9, "duration": 8.6, "midi": 59, "velocity": 27 },
+        { "beat": 22.8, "duration": 7.4, "midi": 55, "velocity": 26 },
+        { "beat": 30.2, "duration": 8.5, "midi": 54, "velocity": 29 },
+        { "beat": 38.9, "duration": 6.6, "midi": 62, "velocity": 25 },
+        { "beat": 46.1, "duration": 8.0, "midi": 52, "velocity": 26 },
+        { "beat": 55.3, "duration": 8.2, "midi": 54, "velocity": 25 }
+      ]
+    }
+  ]
+}

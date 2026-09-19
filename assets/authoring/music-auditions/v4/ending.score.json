@@ -1,0 +1,591 @@
+{
+  "title": "After the Crossing \u2014 A Place to Rest (ending)",
+  "bpm": 60,
+  "bars": 16,
+  "beatsPerBar": 4,
+  "tailSeconds": 9,
+  "renderReverbPercent": 29,
+  "renderLowPassHz": 4700,
+  "tracks": [
+    {
+      "name": "The house key \u2014 a quiet return",
+      "instrument": "piano",
+      "volume": 0.67,
+      "pan": -0.07,
+      "notes": [
+        {
+          "beat": 0.8605,
+          "duration": 1.2,
+          "midi": 69,
+          "velocity": 51
+        },
+        {
+          "beat": 2.5634,
+          "duration": 1.55,
+          "midi": 76,
+          "velocity": 51
+        },
+        {
+          "beat": 4.6646,
+          "duration": 1.05,
+          "midi": 71,
+          "velocity": 47
+        },
+        {
+          "beat": 6.175,
+          "duration": 1.4,
+          "midi": 72,
+          "velocity": 52
+        },
+        {
+          "beat": 9.0143,
+          "duration": 2.05,
+          "midi": 69,
+          "velocity": 51
+        },
+        {
+          "beat": 12.0639,
+          "duration": 2.8,
+          "midi": 67,
+          "velocity": 45
+        },
+        {
+          "beat": 16.9662,
+          "duration": 1.65,
+          "midi": 64,
+          "velocity": 49
+        },
+        {
+          "beat": 19.2221,
+          "duration": 1.65,
+          "midi": 67,
+          "velocity": 49
+        },
+        {
+          "beat": 21.7207,
+          "duration": 1.65,
+          "midi": 72,
+          "velocity": 52
+        },
+        {
+          "beat": 25.2689,
+          "duration": 2.2,
+          "midi": 71,
+          "velocity": 44
+        },
+        {
+          "beat": 28.6714,
+          "duration": 2.0,
+          "midi": 69,
+          "velocity": 42
+        },
+        {
+          "beat": 32.9244,
+          "duration": 1.75,
+          "midi": 69,
+          "velocity": 49
+        },
+        {
+          "beat": 35.3195,
+          "duration": 1.6,
+          "midi": 72,
+          "velocity": 54
+        },
+        {
+          "beat": 37.6581,
+          "duration": 1.7,
+          "midi": 76,
+          "velocity": 53
+        },
+        {
+          "beat": 40.8638,
+          "duration": 2.0,
+          "midi": 74,
+          "velocity": 48
+        },
+        {
+          "beat": 43.7107,
+          "duration": 3.0,
+          "midi": 72,
+          "velocity": 47
+        },
+        {
+          "beat": 49.2087,
+          "duration": 1.7,
+          "midi": 69,
+          "velocity": 43
+        },
+        {
+          "beat": 51.8647,
+          "duration": 2.5,
+          "midi": 67,
+          "velocity": 43
+        },
+        {
+          "beat": 56.8096,
+          "duration": 1.8,
+          "midi": 64,
+          "velocity": 45
+        },
+        {
+          "beat": 59.5582,
+          "duration": 4.1,
+          "midi": 60,
+          "velocity": 40
+        }
+      ]
+    },
+    {
+      "name": "Open-handed harmony",
+      "instrument": "piano",
+      "volume": 0.25,
+      "pan": 0.09,
+      "notes": [
+        {
+          "beat": 0.2088,
+          "duration": 2.4,
+          "midi": 45,
+          "velocity": 35
+        },
+        {
+          "beat": 2.3689,
+          "duration": 2.3,
+          "midi": 52,
+          "velocity": 36
+        },
+        {
+          "beat": 4.4223,
+          "duration": 2.65,
+          "midi": 60,
+          "velocity": 30
+        },
+        {
+          "beat": 8.2246,
+          "duration": 2.4,
+          "midi": 41,
+          "velocity": 35
+        },
+        {
+          "beat": 10.3564,
+          "duration": 2.3,
+          "midi": 52,
+          "velocity": 37
+        },
+        {
+          "beat": 12.4114,
+          "duration": 2.65,
+          "midi": 60,
+          "velocity": 34
+        },
+        {
+          "beat": 16.2187,
+          "duration": 2.4,
+          "midi": 43,
+          "velocity": 37
+        },
+        {
+          "beat": 18.3735,
+          "duration": 2.3,
+          "midi": 55,
+          "velocity": 35
+        },
+        {
+          "beat": 20.4241,
+          "duration": 2.65,
+          "midi": 62,
+          "velocity": 31
+        },
+        {
+          "beat": 24.2103,
+          "duration": 2.4,
+          "midi": 43,
+          "velocity": 39
+        },
+        {
+          "beat": 26.3671,
+          "duration": 2.3,
+          "midi": 50,
+          "velocity": 36
+        },
+        {
+          "beat": 28.4083,
+          "duration": 2.65,
+          "midi": 59,
+          "velocity": 34
+        },
+        {
+          "beat": 32.2207,
+          "duration": 2.4,
+          "midi": 41,
+          "velocity": 37
+        },
+        {
+          "beat": 34.3598,
+          "duration": 2.3,
+          "midi": 52,
+          "velocity": 36
+        },
+        {
+          "beat": 36.4108,
+          "duration": 2.65,
+          "midi": 60,
+          "velocity": 31
+        },
+        {
+          "beat": 40.2188,
+          "duration": 2.4,
+          "midi": 40,
+          "velocity": 35
+        },
+        {
+          "beat": 42.3738,
+          "duration": 2.3,
+          "midi": 55,
+          "velocity": 37
+        },
+        {
+          "beat": 44.4088,
+          "duration": 2.65,
+          "midi": 62,
+          "velocity": 31
+        },
+        {
+          "beat": 48.2119,
+          "duration": 2.4,
+          "midi": 48,
+          "velocity": 39
+        },
+        {
+          "beat": 50.3576,
+          "duration": 2.3,
+          "midi": 53,
+          "velocity": 33
+        },
+        {
+          "beat": 52.4181,
+          "duration": 2.65,
+          "midi": 60,
+          "velocity": 32
+        },
+        {
+          "beat": 56.2023,
+          "duration": 7.35,
+          "midi": 48,
+          "velocity": 32
+        },
+        {
+          "beat": 56.3098,
+          "duration": 7.23,
+          "midi": 55,
+          "velocity": 35
+        },
+        {
+          "beat": 56.4414,
+          "duration": 7.11,
+          "midi": 60,
+          "velocity": 35
+        }
+      ]
+    },
+    {
+      "name": "A place to rest",
+      "instrument": "strings",
+      "volume": 0.18,
+      "pan": -0.19,
+      "notes": [
+        {
+          "beat": 8.2148,
+          "duration": 7.55,
+          "midi": 52,
+          "velocity": 32
+        },
+        {
+          "beat": 8.2908,
+          "duration": 7.48,
+          "midi": 57,
+          "velocity": 30
+        },
+        {
+          "beat": 8.3463,
+          "duration": 7.41,
+          "midi": 60,
+          "velocity": 32
+        },
+        {
+          "beat": 8.4342,
+          "duration": 7.34,
+          "midi": 64,
+          "velocity": 33
+        },
+        {
+          "beat": 16.206,
+          "duration": 7.55,
+          "midi": 55,
+          "velocity": 30
+        },
+        {
+          "beat": 16.2818,
+          "duration": 7.48,
+          "midi": 59,
+          "velocity": 33
+        },
+        {
+          "beat": 16.3482,
+          "duration": 7.41,
+          "midi": 62,
+          "velocity": 31
+        },
+        {
+          "beat": 16.432,
+          "duration": 7.34,
+          "midi": 64,
+          "velocity": 30
+        },
+        {
+          "beat": 24.2244,
+          "duration": 7.55,
+          "midi": 50,
+          "velocity": 34
+        },
+        {
+          "beat": 24.2905,
+          "duration": 7.48,
+          "midi": 55,
+          "velocity": 30
+        },
+        {
+          "beat": 24.3522,
+          "duration": 7.41,
+          "midi": 59,
+          "velocity": 31
+        },
+        {
+          "beat": 24.4263,
+          "duration": 7.34,
+          "midi": 62,
+          "velocity": 34
+        },
+        {
+          "beat": 32.2178,
+          "duration": 7.55,
+          "midi": 52,
+          "velocity": 36
+        },
+        {
+          "beat": 32.2949,
+          "duration": 7.48,
+          "midi": 57,
+          "velocity": 34
+        },
+        {
+          "beat": 32.3518,
+          "duration": 7.41,
+          "midi": 60,
+          "velocity": 35
+        },
+        {
+          "beat": 32.4208,
+          "duration": 7.34,
+          "midi": 64,
+          "velocity": 35
+        },
+        {
+          "beat": 40.2175,
+          "duration": 7.55,
+          "midi": 55,
+          "velocity": 35
+        },
+        {
+          "beat": 40.2864,
+          "duration": 7.48,
+          "midi": 59,
+          "velocity": 35
+        },
+        {
+          "beat": 40.3555,
+          "duration": 7.41,
+          "midi": 62,
+          "velocity": 36
+        },
+        {
+          "beat": 40.4181,
+          "duration": 7.34,
+          "midi": 64,
+          "velocity": 35
+        },
+        {
+          "beat": 48.207,
+          "duration": 7.55,
+          "midi": 53,
+          "velocity": 32
+        },
+        {
+          "beat": 48.2906,
+          "duration": 7.48,
+          "midi": 57,
+          "velocity": 34
+        },
+        {
+          "beat": 48.3533,
+          "duration": 7.41,
+          "midi": 60,
+          "velocity": 34
+        },
+        {
+          "beat": 48.4245,
+          "duration": 7.34,
+          "midi": 64,
+          "velocity": 32
+        },
+        {
+          "beat": 56.2181,
+          "duration": 7.55,
+          "midi": 55,
+          "velocity": 32
+        },
+        {
+          "beat": 56.2904,
+          "duration": 7.48,
+          "midi": 60,
+          "velocity": 31
+        },
+        {
+          "beat": 56.3511,
+          "duration": 7.41,
+          "midi": 64,
+          "velocity": 31
+        },
+        {
+          "beat": 56.4267,
+          "duration": 7.34,
+          "midi": 69,
+          "velocity": 32
+        }
+      ]
+    },
+    {
+      "name": "Light on the far bank",
+      "instrument": "warm_pad",
+      "volume": 0.14,
+      "pan": 0.2,
+      "notes": [
+        {
+          "beat": 16.5742,
+          "duration": 7.15,
+          "midi": 59,
+          "velocity": 31
+        },
+        {
+          "beat": 16.6527,
+          "duration": 7.06,
+          "midi": 64,
+          "velocity": 28
+        },
+        {
+          "beat": 24.5718,
+          "duration": 7.15,
+          "midi": 55,
+          "velocity": 27
+        },
+        {
+          "beat": 24.6542,
+          "duration": 7.06,
+          "midi": 62,
+          "velocity": 29
+        },
+        {
+          "beat": 32.5724,
+          "duration": 7.15,
+          "midi": 57,
+          "velocity": 27
+        },
+        {
+          "beat": 32.6644,
+          "duration": 7.06,
+          "midi": 64,
+          "velocity": 30
+        },
+        {
+          "beat": 40.573,
+          "duration": 7.15,
+          "midi": 59,
+          "velocity": 30
+        },
+        {
+          "beat": 40.6607,
+          "duration": 7.06,
+          "midi": 64,
+          "velocity": 30
+        },
+        {
+          "beat": 48.5585,
+          "duration": 7.15,
+          "midi": 57,
+          "velocity": 30
+        },
+        {
+          "beat": 48.6538,
+          "duration": 7.06,
+          "midi": 64,
+          "velocity": 29
+        }
+      ]
+    },
+    {
+      "name": "Breathing room",
+      "instrument": "cello",
+      "volume": 0.23,
+      "pan": 0.02,
+      "notes": [
+        {
+          "beat": 0.3634,
+          "duration": 7.05,
+          "midi": 45,
+          "velocity": 34
+        },
+        {
+          "beat": 8.358,
+          "duration": 7.05,
+          "midi": 41,
+          "velocity": 37
+        },
+        {
+          "beat": 16.3728,
+          "duration": 7.05,
+          "midi": 43,
+          "velocity": 35
+        },
+        {
+          "beat": 24.367,
+          "duration": 7.05,
+          "midi": 43,
+          "velocity": 34
+        },
+        {
+          "beat": 32.3647,
+          "duration": 7.05,
+          "midi": 41,
+          "velocity": 37
+        },
+        {
+          "beat": 40.3731,
+          "duration": 7.05,
+          "midi": 40,
+          "velocity": 40
+        },
+        {
+          "beat": 48.357,
+          "duration": 7.05,
+          "midi": 48,
+          "velocity": 39
+        },
+        {
+          "beat": 56.3721,
+          "duration": 7.05,
+          "midi": 48,
+          "velocity": 38
+        }
+      ]
+    }
+  ]
+}

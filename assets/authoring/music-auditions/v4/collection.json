@@ -1,0 +1,44 @@
+{
+  "title": "LAST MILE - Complete five-cue music collection v4",
+  "date": "2026-09-19",
+  "pathsRelativeTo": "assets/authoring/music-auditions",
+  "runtimeIntegrated": false,
+  "format": "instrumental audition masters with fades; not seamless loop exports",
+  "tracks": [
+    {
+      "cue": "opening",
+      "title": "Last Light",
+      "file": "v1/last-light.mp3",
+      "durationSeconds": 67.0,
+      "status": "approved"
+    },
+    {
+      "cue": "E1",
+      "title": "Weight of Passage",
+      "file": "v3/west-gate.mp3",
+      "durationSeconds": 59.429,
+      "status": "approved"
+    },
+    {
+      "cue": "E2",
+      "title": "Unsettled Accounts",
+      "file": "v4/market.mp3",
+      "durationSeconds": 72.0,
+      "status": "new_for_review"
+    },
+    {
+      "cue": "E3",
+      "title": "The Weight Across the Water",
+      "file": "v4/bridge.mp3",
+      "durationSeconds": 76.571,
+      "status": "new_for_review"
+    },
+    {
+      "cue": "ending",
+      "title": "A Place to Rest",
+      "file": "v4/ending.mp3",
+      "durationSeconds": 73.0,
+      "status": "new_for_review"
+    }
+  ]
+}
