@@ -72,7 +72,13 @@ export default defineConfig({
     host: "127.0.0.1",
     port: 5173,
     strictPort: true,
-    proxy: { "/api": { target: "http://127.0.0.1:3111", changeOrigin: false } },
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:3111",
+        changeOrigin: false,
+        ws: true,
+      },
+    },
     fs: {
       strict: true,
       allow: [path.resolve("client"), path.resolve("node_modules")],

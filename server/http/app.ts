@@ -8,6 +8,7 @@ import Fastify, {
   type FastifyRequest,
 } from "fastify";
 import fastifyStatic from "@fastify/static";
+import fastifyWebsocket from "@fastify/websocket";
 import type {
   GameService,
   MutationOperation,
@@ -25,6 +26,7 @@ import {
   requestContextVary,
 } from "./request-context.js";
 import { isUnityAssetRequest, unityAssetHeaders } from "./unity-assets.js";
+import { registerSpeechRoutes, type SpeechOptions } from "./speech.js";
 
 export interface HttpAppOptions {
   service: GameService;
@@ -32,6 +34,7 @@ export interface HttpAppOptions {
   launchToken?: string;
   closeServiceOnClose?: boolean;
   store?: Store;
+  speech?: SpeechOptions;
 }
 class HttpFailure extends Error {
   constructor(
@@ -134,6 +137,11 @@ export async function createHttpApp(
     genReqId: () => randomUUID(),
   });
 
+  await app.register(fastifyWebsocket, {
+    options: { maxPayload: 65_536, perMessageDeflate: false },
+    errorHandler: (_error, socket) => socket.terminate(),
+  });
+
   app.addHook("onRequest", async (request, reply) => {
     reply
       .header("X-Request-Id", request.id)
@@ -142,7 +150,7 @@ export async function createHttpApp(
       .header("Referrer-Policy", "no-referrer");
     reply.header(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
     );
     const remote = request.ip;
     if (
@@ -167,6 +175,9 @@ export async function createHttpApp(
       throw new HttpFailure("CAPABILITY_DENIED", 403);
     }
     const path = request.url.split("?")[0];
+    // Browsers send Origin on a WebSocket upgrade; never allow originless speech sockets.
+    if (path === "/api/v1/speech/transcribe" && !origin)
+      throw new HttpFailure("CAPABILITY_DENIED", 403);
     if (!path?.startsWith("/api/")) return;
     reply.header("Cache-Control", "no-store");
     if (path === "/api/v1/health") return;
@@ -359,6 +370,18 @@ export async function createHttpApp(
     if (contracts.errors(name, value).length)
       throw new HttpFailure("SERVICE_UNAVAILABLE", 503);
   }
+
+  await registerSpeechRoutes(
+    app,
+    (request) => {
+      const identity = identities.get(request);
+      return {
+        key: identity?.playerId ?? request.ip,
+        expiresAtMs: identity?.expiresAtMs,
+      };
+    },
+    options.speech,
+  );
 
   // Platform liveness is distinct from the truthful game/storage readiness endpoint.
   app.get("/_platform/health", async (_request, reply) => {

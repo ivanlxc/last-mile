@@ -8,19 +8,42 @@ import {
   ChevronDown,
   ShieldQuestion,
   CircleHelp,
+  Mic,
+  Square,
 } from "lucide-react";
 import type { AdvisorOutput } from "../../../docs/engineering_v0.5/contracts/agent-derived.types";
 import type { P } from "../lib/api";
 import type { Game } from "../lib/useGame";
 import { useVisibleReceipt } from "../lib/useVisibleReceipt";
 import { Modal } from "./Modal";
-export function AdvisorPanel({ game, active = true }: { game: Game; active?: boolean }) {
-  const { t } = useI18n();
+import { useVoiceInput } from "../lib/speech/useVoiceInput";
+import { appendTranscript } from "../lib/speech/transcript";
+import "./voice.css";
+export function AdvisorPanel({
+  game,
+  active = true,
+}: {
+  game: Game;
+  active?: boolean;
+}) {
+  const { t, locale } = useI18n();
   const s = game.state!,
     job = s.latestAdviceJob,
     [text, setText] = useState(""),
     [expanded, setExpanded] = useState(false),
     [source, setSource] = useState<P.ReportView | null>(null);
+  const [draftTruncated, setDraftTruncated] = useState(false);
+  const voice = useVoiceInput({
+    active,
+    english: locale === "en-US",
+    onText: (transcript) =>
+      setText((draft) => {
+        const result = appendTranscript(draft, transcript);
+        setDraftTruncated(result.truncated);
+        return result.text;
+      }),
+  });
+  const recording = voice.state !== "idle";
   const output =
     job?.result && "claims" in job.result
       ? (job.result as AdvisorOutput)
@@ -51,7 +74,8 @@ export function AdvisorPanel({ game, active = true }: { game: Game; active?: boo
   const enabled =
     !!s.sceneId &&
     (s.phase === "scene" || s.activeOperation?.operationKind === "wait") &&
-    !game.busy;
+    !game.busy &&
+    !recording;
   return (
     <section className="advisor-panel panel">
       <div className="section-heading">
@@ -94,9 +118,7 @@ export function AdvisorPanel({ game, active = true }: { game: Game; active?: boo
           </div>
         ) : null}
         {output ? (
-          <div
-            className={`advice-content ${!current ? "stale" : ""}`}
-          >
+          <div className={`advice-content ${!current ? "stale" : ""}`}>
             {!current && (
               <div className="notice-amber">
                 {" "}
@@ -114,7 +136,9 @@ export function AdvisorPanel({ game, active = true }: { game: Game; active?: boo
               <span>{t("ui.evidenceAnalysis")}</span>
               <span>V{s.inboxVersion}</span>
             </div>
-            <div ref={ref}><h3>{output.summary}</h3></div>
+            <div ref={ref}>
+              <h3>{output.summary}</h3>
+            </div>
             <div className="advice-rationale">
               {output.recommendation.rationale}
             </div>
@@ -252,7 +276,11 @@ export function AdvisorPanel({ game, active = true }: { game: Game; active?: boo
             maxLength={2000}
             placeholder={t("ui.askAQuestionOrShareAConstraint")}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            readOnly={recording}
+            onChange={(e) => {
+              setText(e.target.value);
+              setDraftTruncated(false);
+            }}
           />
           <button
             type="submit"
@@ -262,6 +290,65 @@ export function AdvisorPanel({ game, active = true }: { game: Game; active?: boo
             <ArrowUpRight size={20} />
           </button>
         </form>
+        <div className="voice-input-toolbar">
+          <button
+            type="button"
+            className="voice-input-button"
+            data-recording={recording}
+            disabled={
+              !active ||
+              (!recording && (!voice.available || !enabled)) ||
+              voice.state === "finalizing"
+            }
+            title={
+              voice.unavailableReason ||
+              "Record an English prompt; review it before sending"
+            }
+            onClick={() => (recording ? voice.stop() : voice.start())}
+          >
+            {recording ? <Square size={13} /> : <Mic size={14} />}
+            {voice.state === "finalizing"
+              ? "Finishing…"
+              : voice.state === "starting"
+                ? "Cancel microphone"
+                : recording
+                  ? "Stop recording"
+                  : "Voice input"}
+          </button>
+          <span>
+            {locale === "zh-CN"
+              ? "语音仅支持英文"
+              : recording
+                ? "English · up to 90 sec"
+                : "English · review before Send"}
+          </span>
+        </div>
+        {recording && (voice.live.confirmed || voice.live.interim) && (
+          <div className="voice-feedback voice-live" aria-live="polite">
+            {voice.live.confirmed} <em>{voice.live.interim}</em>
+          </div>
+        )}
+        {(voice.error || voice.notice) && (
+          <p
+            className={`voice-feedback ${voice.error ? "error" : ""}`}
+            role="status"
+          >
+            {voice.error || voice.notice}
+          </p>
+        )}
+        {!voice.available && !voice.error && (
+          <p className="voice-feedback">
+            {locale === "zh-CN"
+              ? "请切换到英文版使用语音；文字输入仍可使用。"
+              : voice.unavailableReason}
+          </p>
+        )}
+        {draftTruncated && (
+          <p className="voice-draft-limit" role="status">
+            The 2,000-character draft limit was reached. Review the ending
+            before sending.
+          </p>
+        )}
         <small>{t("ui.freeTextIsUnverifiedTimeAndResource")}</small>
       </div>
       {source && active && (
