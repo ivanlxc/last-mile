@@ -26,6 +26,17 @@ export function TacticalMap({
   const copy = mapRendererCopy(locale);
   const [expanded, setExpanded] = useState(false);
   const [setup, setSetup] = useState(false);
+  const mapRoot = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const element = mapRoot.current;
+    const expandForGestures = () => setExpanded(true);
+    element?.addEventListener("last-mile-gesture-open", expandForGestures);
+    // The persistent Unity view may have moved here from the briefing screen.
+    if (element?.querySelector('.gesture-toggle[aria-expanded="true"]'))
+      expandForGestures();
+    return () =>
+      element?.removeEventListener("last-mile-gesture-open", expandForGestures);
+  }, []);
   const selected = mapData.nodes.find(
     (n) => n.nodeId === renderer.selectedNodeId,
   );
@@ -37,6 +48,7 @@ export function TacticalMap({
   const unity = renderer.mode === "unity";
   return (
     <section
+      ref={mapRoot}
       className={`tactical-map renderer-map ${selected ? "has-selection" : ""} ${large ? "large" : ""} ${expanded ? "expanded" : ""}`}
       aria-label={t("ui.convoyTerrainModel")}
     >

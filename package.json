@@ -7,10 +7,11 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "tsx scripts/dev.ts",
+    "dev": "node scripts/prepare-gestures.mjs && tsx scripts/dev.ts",
     "dev:server": "tsx watch --env-file-if-exists=.env server/index.ts",
-    "dev:client": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "dev:client": "node scripts/prepare-gestures.mjs && vite --host 127.0.0.1",
+    "prepare:gestures": "node scripts/prepare-gestures.mjs",
+    "build": "node scripts/prepare-gestures.mjs && tsc --noEmit && vite build",
     "build:unity": "node scripts/build-unity.mjs",
     "build:art": "node scripts/build-art.mjs",
     "start": "tsx --env-file-if-exists=.env server/index.ts",
@@ -23,6 +24,7 @@
   },
   "dependencies": {
     "@fastify/static": "^10.1.3",
+    "@mediapipe/tasks-vision": "1.0.1",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "fastify": "^5.12.4",

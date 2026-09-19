@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import GestureControls from "./GestureControls";
+import type { GestureCameraDelta } from "../lib/gestures/gestureInterpreter";
 import {
   canApplyUnitySnapshot,
   loadUnityFactory,
@@ -22,6 +24,13 @@ export default function UnityViewport(props: UnityViewportProps) {
   const latest = useRef(props);
   latest.current = props;
   const flush = useRef<(() => void) | null>(null);
+  const cameraInput = useRef<((input: GestureCameraDelta) => void) | null>(
+    null,
+  );
+  const sendCameraInput = useCallback(
+    (input: GestureCameraDelta) => cameraInput.current?.(input),
+    [],
+  );
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -38,6 +47,8 @@ export default function UnityViewport(props: UnityViewportProps) {
     let lastState: UnityRenderState | null = null;
     let lastPayload = "";
     let sequence = 0;
+    let cameraSequence = 0;
+    let cameraMoving = false;
     const instanceId = crypto.randomUUID();
     const controller = new AbortController();
     // A canvas per effect prevents a late StrictMode engine from sharing the
@@ -70,6 +81,7 @@ export default function UnityViewport(props: UnityViewportProps) {
       observer?.disconnect();
       canvas.remove();
       if (flush.current === sendState) flush.current = null;
+      if (cameraInput.current === sendCamera) cameraInput.current = null;
       if (engine) {
         quit(engine);
         engine = undefined;
@@ -105,6 +117,30 @@ export default function UnityViewport(props: UnityViewportProps) {
       } catch (reason) {
         fail(reason);
       }
+    };
+    const sendCamera = (input: GestureCameraDelta) => {
+      if (disposed || !ready || !engine) return;
+      if (![input.dx, input.dy, input.zoomLog].every(Number.isFinite)) return;
+      if (input.mode === "stop" && !cameraMoving) return;
+      if (
+        input.mode !== "stop" &&
+        input.dx === 0 &&
+        input.dy === 0 &&
+        input.zoomLog === 0
+      )
+        return;
+      cameraMoving = input.mode !== "stop";
+      // Separate channel: camera input never enters the authoritative projection.
+      engine.SendMessage(
+        "LastMileBridge",
+        "ApplyCameraInput",
+        JSON.stringify({
+          schemaVersion: 1,
+          instanceId,
+          sequence: ++cameraSequence,
+          ...input,
+        }),
+      );
     };
     const receive = (event: Event) => {
       const message = parseUnityBridgeEvent(
@@ -148,6 +184,7 @@ export default function UnityViewport(props: UnityViewportProps) {
     );
     window.addEventListener("last-mile-unity", receive);
     flush.current = sendState;
+    cameraInput.current = sendCamera;
 
     void (async () => {
       const manifest = await loadUnityManifest(controller.signal);
@@ -193,6 +230,9 @@ export default function UnityViewport(props: UnityViewportProps) {
   return (
     <div className="unity-viewport" data-unity-status={status}>
       <div className="unity-canvas-host" ref={host} />
+      {status === "ready" && (
+        <GestureControls chinese={chinese} onInput={sendCameraInput} />
+      )}
       {status !== "ready" && (
         <div className="unity-loading" role="status" aria-live="polite">
           {status === "loading" ? (

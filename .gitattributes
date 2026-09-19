@@ -10,6 +10,7 @@
 *.blend binary
 *.glb binary
 *.fbx binary
+*.task binary
 *.png binary
 *.jpg binary
 *.pdf binary

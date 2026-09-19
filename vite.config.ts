@@ -9,6 +9,7 @@ import {
 } from "./server/http/unity-assets.js";
 export default defineConfig({
   root: "client",
+  worker: { format: "es" },
   plugins: [
     react(),
     {

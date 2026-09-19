@@ -30,6 +30,7 @@ unity/**/*.sln
 unity/**/.vs/
 unity/.build-output/
 client/public/unity/
+client/public/gestures/
 coverage/
 test-results/
 playwright-report/
