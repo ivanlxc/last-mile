@@ -1,5 +1,9 @@
 export type Landmark = { x: number; y: number; z?: number };
-export type HandObservation = { landmarks: Landmark[]; handedness?: string };
+export type HandObservation = {
+  landmarks: Landmark[];
+  worldLandmarks?: Landmark[];
+  handedness?: string;
+};
 export type GestureControlMode = "pan" | "orbit" | "zoom";
 export type GestureCameraDelta = {
   mode: GestureControlMode | "stop";
@@ -16,7 +20,7 @@ export type GestureResult = {
 };
 
 type Point = { x: number; y: number };
-type Observation = { point: Point; pinchRatio: number; isV: boolean };
+type Observation = { point: Point; pinchRatio: number; isThumbUp: boolean };
 type Track = Observation & { pinched: boolean; pinchSince: number };
 
 const ENTER_PINCH = 0.38;
@@ -35,62 +39,83 @@ const MODES: GestureControlMode[] = ["pan", "orbit", "zoom"];
 const distance = (a: Point, b: Point, aspect: number) =>
   Math.hypot((a.x - b.x) * aspect, a.y - b.y);
 
-function jointCosine(a: Point, joint: Point, b: Point, aspect: number) {
-  const ax = (a.x - joint.x) * aspect;
+function jointBend(a: Landmark, joint: Landmark, b: Landmark): number | null {
+  const ax = a.x - joint.x;
   const ay = a.y - joint.y;
-  const bx = (b.x - joint.x) * aspect;
+  const az = (a.z ?? 0) - (joint.z ?? 0);
+  const bx = b.x - joint.x;
   const by = b.y - joint.y;
-  const length = Math.hypot(ax, ay) * Math.hypot(bx, by);
-  return length > 0.000001 ? (ax * bx + ay * by) / length : null;
+  const bz = (b.z ?? 0) - (joint.z ?? 0);
+  const length = Math.hypot(ax, ay, az) * Math.hypot(bx, by, bz);
+  if (!Number.isFinite(length) || length < 1e-12) return null;
+  const cosine = Math.max(
+    -1,
+    Math.min(1, (ax * bx + ay * by + az * bz) / length),
+  );
+  return 180 - (Math.acos(cosine) * 180) / Math.PI;
 }
 
-function isVSign(landmarks: Landmark[], scale: number, aspect: number) {
-  const extended = (mcp: number) => {
-    const pipAngle = jointCosine(
-      landmarks[mcp],
-      landmarks[mcp + 1],
-      landmarks[mcp + 2],
-      aspect,
+function classifyHand(
+  hand: HandObservation,
+  scale: number,
+  aspect: number,
+): { isThumbUp: boolean; pinchRatio: number } | null {
+  const world = hand.worldLandmarks;
+  if (
+    world !== undefined &&
+    (world.length !== 21 ||
+      world.some(
+        (point) =>
+          !point ||
+          !Number.isFinite(point.x) ||
+          !Number.isFinite(point.y) ||
+          !Number.isFinite(point.z),
+      ))
+  )
+    return null;
+  // World landmarks preserve finger bends when a palm turns side-on. The
+  // fallback uses aspect-correct image x/y, never image z in mixed units.
+  const geometry =
+    world ??
+    hand.landmarks.map((point) => ({ x: point.x * aspect, y: point.y, z: 0 }));
+  const separation = (a: Landmark, b: Landmark) =>
+    Math.hypot(a.x - b.x, a.y - b.y, (a.z ?? 0) - (b.z ?? 0));
+  const palmScale = separation(geometry[0], geometry[9]);
+  if (!Number.isFinite(palmScale) || palmScale < 1e-6) return null;
+  const pinchRatio = separation(geometry[4], geometry[8]) / palmScale;
+  if (!Number.isFinite(pinchRatio)) return null;
+  const bends = [1, 5, 9, 13, 17].map((start) => {
+    const first = jointBend(
+      geometry[start],
+      geometry[start + 1],
+      geometry[start + 2],
     );
-    const dipAngle = jointCosine(
-      landmarks[mcp + 1],
-      landmarks[mcp + 2],
-      landmarks[mcp + 3],
-      aspect,
+    const second = jointBend(
+      geometry[start + 1],
+      geometry[start + 2],
+      geometry[start + 3],
     );
-    return (
-      pipAngle !== null &&
-      pipAngle < -0.7 &&
-      dipAngle !== null &&
-      dipAngle < -0.7 &&
-      distance(landmarks[mcp], landmarks[mcp + 3], aspect) > scale * 0.7 &&
-      distance(landmarks[0], landmarks[mcp + 3], aspect) >
-        distance(landmarks[0], landmarks[mcp + 1], aspect) * 1.1
-    );
+    return first === null || second === null ? null : first + second;
+  });
+  // Supplied but invalid 3D data cannot silently fall back to a different
+  // classifier; an absent model output may use the screen-only fallback.
+  if (bends.some((bend) => bend === null))
+    return world === undefined ? { isThumbUp: false, pinchRatio } : null;
+  const thumb = bends[0]!;
+  const fingersCurled = bends.slice(1).every((bend) => bend! > 95);
+  const up = hand.landmarks[1].y - hand.landmarks[4].y;
+  const sideways = (hand.landmarks[1].x - hand.landmarks[4].x) * aspect;
+  // Reject a real pinch using the same 3D geometry as the bend classifier.
+  // Image-tip overlap alone must not reject a side-on thumb-up pose.
+  return {
+    pinchRatio,
+    isThumbUp:
+      thumb < 42 &&
+      fingersCurled &&
+      pinchRatio >= EXIT_PINCH &&
+      up / scale > 0.45 &&
+      up / Math.hypot(sideways, up) > 0.65,
   };
-  const curled = (mcp: number) => {
-    const angle = jointCosine(
-      landmarks[mcp],
-      landmarks[mcp + 1],
-      landmarks[mcp + 2],
-      aspect,
-    );
-    return (
-      angle !== null &&
-      angle > -0.35 &&
-      distance(landmarks[mcp], landmarks[mcp + 3], aspect) <
-        distance(landmarks[mcp], landmarks[mcp + 1], aspect) * 1.25
-    );
-  };
-  // Bent ring/little fingers distinguish an intentional V from a released
-  // pinch or an open palm; joint angles stay valid as the hand rotates.
-  return (
-    extended(5) &&
-    extended(9) &&
-    curled(13) &&
-    curled(17) &&
-    distance(landmarks[8], landmarks[12], aspect) > scale * 0.45
-  );
 }
 
 function readObservation(
@@ -121,14 +146,14 @@ function readObservation(
     }),
     { x: 0, y: 0 },
   );
-  // Correct normalized image x for the camera aspect, including joint angles.
-  const pinchRatio =
-    distance(hand.landmarks[4], hand.landmarks[8], aspect) / scale;
+  // Pinch, neutral release and thumb-up share one geometry source. In 3D a
+  // side-on projection cannot turn separated fingertips into a false grab.
+  const classification = classifyHand(hand, scale, aspect);
+  if (classification === null) return null;
   return {
     // Input stays unmirrored; interaction space matches the mirrored preview.
     point: { x: 1 - point.x, y: 1 - point.y },
-    pinchRatio,
-    isV: pinchRatio >= EXIT_PINCH && isVSign(hand.landmarks, scale, aspect),
+    ...classification,
   };
 }
 
@@ -165,7 +190,7 @@ export class GestureInterpreter {
     this.neutralSince = null;
     this.clearMotion();
     this.clearSwitchHold();
-    // A completed V stays latched across dropout or UI mode changes. Only
+    // A completed thumb-up stays latched across dropout or UI mode changes. Only
     // 120 ms of visible neutral/unpinched pose permits another switch.
   }
 
@@ -213,7 +238,7 @@ export class GestureInterpreter {
     )
       return this.release(handCount);
 
-    if (!observation.isV && observation.pinchRatio >= EXIT_PINCH) {
+    if (!observation.isThumbUp && observation.pinchRatio >= EXIT_PINCH) {
       this.neutralSince ??= timestampMs;
       if (timestampMs - this.neutralSince >= RELEASE_MS) {
         this.switchLatched = false;
@@ -221,15 +246,21 @@ export class GestureInterpreter {
       }
     } else this.neutralSince = null;
 
-    if (this.requireRelease) {
+    // An intentional held thumb-up may start directly after enable/reset. It
+    // remains exclusive of pinching even when a side-on projection collapses
+    // the thumb/index image distance. A completed switch still needs release.
+    if (
+      this.requireRelease &&
+      !(observation.isThumbUp && !this.switchLatched)
+    ) {
       this.track = { ...observation, pinched: false, pinchSince: timestampMs };
       this.clearMotion();
       this.clearSwitchHold();
-      if (observation.isV && this.switchLatched) this.switchProgress = 1;
+      if (observation.isThumbUp && this.switchLatched) this.switchProgress = 1;
       return this.result("stop", "release", handCount);
     }
 
-    if (observation.isV) {
+    if (observation.isThumbUp) {
       this.track = { ...observation, pinched: false, pinchSince: timestampMs };
       this.clearMotion();
       if (this.switchLatched) {

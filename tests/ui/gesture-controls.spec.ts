@@ -211,7 +211,7 @@ test("camera denial is recoverable and does not disable Unity or starting the es
   expect(errors).toEqual([]);
 });
 
-test("single-hand landmarks switch modes and drive actual Unity pan, orbit and zoom", async ({
+test("thumbs-up switches modes without clicks and single-hand input drives actual Unity pan, orbit and zoom", async ({
   page,
 }, info) => {
   // Only the recognizer output is synthetic. Interpreter, camera bridge and
@@ -226,31 +226,48 @@ test("single-hand landmarks switch modes and drive actual Unity pan, orbit and z
     p[8] = { x: x + (pinched ? -0.005 : 0.12), y: y - 0.15, z: 0 };
     return { landmarks: p };
   }
-  function victory() {
-    const xy = [
-      [0.5, 0.75],
-      [0.43, 0.69],
-      [0.38, 0.64],
-      [0.35, 0.61],
-      [0.33, 0.58],
-      [0.43, 0.58],
-      [0.4, 0.4],
-      [0.39, 0.3],
-      [0.38, 0.2],
-      [0.5, 0.56],
-      [0.52, 0.38],
-      [0.53, 0.27],
-      [0.54, 0.17],
-      [0.57, 0.58],
-      [0.6, 0.48],
-      [0.59, 0.57],
-      [0.56, 0.65],
-      [0.64, 0.64],
-      [0.68, 0.55],
-      [0.67, 0.64],
-      [0.62, 0.69],
-    ];
-    return { landmarks: xy.map(([x, y]) => ({ x, y, z: 0 })) };
+  function thumbUp(withWorld = false) {
+    const x = 0.5,
+      y = 0.5,
+      aspect = 4 / 3;
+    const p = Array.from({ length: 21 }, () => ({ x, y, z: 0 }));
+    p[0] = { x, y: y + 0.08, z: 0 };
+    p[9] = { x, y: y - 0.02, z: 0 };
+    p[5] = { x: x - 0.04 / aspect, y: y - 0.02, z: 0 };
+    p[13] = { x: x + 0.02 / aspect, y: y - 0.02, z: 0 };
+    p[17] = { ...p[13] };
+    const offsets: Record<number, [number, number]> = {
+      1: [-0.06, 0.025],
+      2: [-0.06, -0.02],
+      3: [-0.06, -0.075],
+      4: [-0.06, -0.13],
+      6: [-0.075, -0.045],
+      7: [-0.045, -0.055],
+      8: [-0.025, -0.025],
+      10: [-0.02, -0.065],
+      11: [0.015, -0.055],
+      12: [0.025, -0.02],
+      14: [0.035, -0.065],
+      15: [0.04, -0.025],
+      16: [0.025, 0.005],
+      18: [0.065, -0.04],
+      19: [0.055, -0.015],
+      20: [0.035, 0.005],
+    };
+    for (const [i, [dx, dy]] of Object.entries(offsets))
+      p[Number(i)] = { x: x + dx / aspect, y: y + dy, z: 0 };
+    return {
+      landmarks: p,
+      ...(withWorld
+        ? {
+            worldLandmarks: p.map((q) => ({
+              x: (q.x - x) * aspect * 0.5,
+              y: (q.y - y) * 0.5,
+              z: 0,
+            })),
+          }
+        : {}),
+    };
   }
   await page.route("**/handLandmarker.worker.ts?*", (route) =>
     route.fulfill({
@@ -299,14 +316,15 @@ test("single-hand landmarks switch modes and drive actual Unity pan, orbit and z
   const panChange = await mapDifference(page, before, pan);
   expect(panChange).toBeGreaterThan(0.01);
 
-  // Both mode transitions are completed with one V hand, without clicking UI.
+  // Both mode transitions are completed with one thumbs-up hand, without clicking UI.
   await fixture([hand()]);
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");
-  await fixture([victory()]);
+  await fixture([thumbUp()]);
   await expect(controls).toHaveAttribute("data-control-mode", "orbit");
   await expect(
     page.getByRole("button", { name: "Rotate", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await expect(status).toContainText("Switched to Rotate");
   await page.waitForTimeout(1600);
   await expect(controls).toHaveAttribute("data-control-mode", "orbit");
   await fixture([hand()]);
@@ -325,7 +343,7 @@ test("single-hand landmarks switch modes and drive actual Unity pan, orbit and z
 
   await fixture([hand()]);
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");
-  await fixture([victory()]);
+  await fixture([thumbUp(true)]);
   await expect(controls).toHaveAttribute("data-control-mode", "zoom");
   await fixture([hand()]);
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");

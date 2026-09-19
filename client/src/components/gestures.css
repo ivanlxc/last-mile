@@ -102,6 +102,29 @@
   border-color: #d2bc88;
   background: #44563a;
 }
+.gesture-switch-cue {
+  padding: 8px 9px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background: #2b3d2b;
+  color: #ebd19e;
+}
+.gesture-switch-cue > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.gesture-switch-cue p {
+  font-size: 11px;
+  margin: 5px 0;
+  color: #b6c5b8;
+}
+.gesture-switch-cue progress {
+  display: block;
+  width: 100%;
+  height: 4px;
+  accent-color: #e7c283;
+}
 .gesture-preview video {
   display: block;
   width: 100%;

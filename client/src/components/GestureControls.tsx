@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Camera, Hand, X } from "lucide-react";
+import { Camera, Hand, ThumbsUp, X } from "lucide-react";
 import {
   CameraRuntime,
   type CameraFrame,
@@ -56,8 +56,10 @@ const copy = {
     orbit: "Pinch thumb + index; move sideways to rotate, up/down to tilt.",
     zoom: "Pinch thumb + index; move up to zoom in, down to zoom out.",
     cycle:
-      "Hold a V sign for 0.7s to switch: Pan → Rotate → Zoom. Lower it before switching again.",
-    switching: "Hold V to switch mode",
+      "Thumb up for 0.7s: Pan → Rotate → Zoom. Open your hand before the next thumb up or pinch.",
+    switchTitle: "Switch by gesture",
+    switching: "Hold thumb up to switch",
+    switched: "Switched to",
     oneHand: "Show only one hand to control the map",
     release:
       "Release to stop. After losing tracking or using the mouse, open your hand before pinching again.",
@@ -96,8 +98,10 @@ const copy = {
     orbit: "拇指与食指捏合，左右移动旋转，上下移动调整俯仰。",
     zoom: "拇指与食指捏合，向上移动放大，向下移动缩小。",
     cycle:
-      "单手比 V 保持 0.7 秒，依次切换：平移 → 旋转 → 缩放。收起 V 后可再次切换。",
-    switching: "保持 V 手势切换模式",
+      "单手点赞保持 0.7 秒：平移 → 旋转 → 缩放。先张手，再次点赞或捏合操作。",
+    switchTitle: "点赞切换模式",
+    switching: "保持点赞切换模式",
+    switched: "已切换到",
     oneHand: "请只用一只手控制地图",
     release: "松开即停止。丢失跟踪或使用鼠标后，请先张手再捏合。",
     fallback: "鼠标随时可用。按 Esc 关闭摄像头。",
@@ -409,6 +413,9 @@ export default function GestureControls({
   const nextMode = { pan: t.orbitLabel, orbit: t.zoomLabel, zoom: t.panLabel }[
     mode
   ];
+  const modeLabel = { pan: t.panLabel, orbit: t.orbitLabel, zoom: t.zoomLabel }[
+    mode
+  ];
   const status =
     stats.hands > 1
       ? t.oneHand
@@ -421,7 +428,10 @@ export default function GestureControls({
             orbit: t.rotating,
             zoom: t.zooming,
             switching: `${t.switching} → ${nextMode} · ${Math.round(stats.switchProgress * 100)}%`,
-            release: t.rearm,
+            release:
+              stats.switchProgress === 1
+                ? `${t.switched}${chinese ? "" : " "}${modeLabel} · ${t.rearm}`
+                : t.rearm,
           }[stats.gesture];
   return (
     <div
@@ -482,6 +492,20 @@ export default function GestureControls({
             </button>
           ))}
         </div>
+        <div className="gesture-switch-cue">
+          <div>
+            <ThumbsUp size={18} aria-hidden="true" />
+            <strong>
+              {t.switchTitle} → {nextMode}
+            </strong>
+          </div>
+          <p>{t.cycle}</p>
+          <progress
+            max={1}
+            value={stats.gesture === "switching" ? stats.switchProgress : 0}
+            aria-label={t.switching}
+          />
+        </div>
         <div className="gesture-preview" hidden={state === "idle"}>
           <video
             ref={video}
@@ -512,7 +536,6 @@ export default function GestureControls({
         <p className="gesture-instruction">
           {{ pan: t.pan, orbit: t.orbit, zoom: t.zoom }[mode]}
         </p>
-        <p className="gesture-hint">{t.cycle}</p>
         <p className="gesture-hint">
           {t.release} {t.fallback}
         </p>

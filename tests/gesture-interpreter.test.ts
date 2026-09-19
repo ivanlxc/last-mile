@@ -18,18 +18,21 @@ function hand(x = 0.4, y = 0.5, pinchRatio = 0.2, aspect = 1): HandObservation {
   return { landmarks, handedness: "Left" };
 }
 
-// A palm-facing V with straight index/middle and bent ring/little fingers.
-// Coordinates stay independent of camera aspect and support rotated-hand tests.
-function vHand(x = 0.4, y = 0.5, aspect = 1): HandObservation {
+// A straight upward thumb with four bent fingers. The palm center matches
+// hand(), making transitions usable by browser tests without a tracking jump.
+function thumbUpHand(x = 0.4, y = 0.5, aspect = 1): HandObservation {
   const result = hand(x, y, 1, aspect);
   const offsets: Record<number, [number, number]> = {
-    4: [-0.07, 0.04],
-    6: [-0.055, -0.085],
-    7: [-0.065, -0.13],
-    8: [-0.075, -0.17],
-    10: [0.02, -0.09],
-    11: [0.03, -0.14],
-    12: [0.04, -0.19],
+    1: [-0.06, 0.025],
+    2: [-0.06, -0.02],
+    3: [-0.06, -0.075],
+    4: [-0.06, -0.13],
+    6: [-0.075, -0.045],
+    7: [-0.045, -0.055],
+    8: [-0.025, -0.025],
+    10: [-0.02, -0.065],
+    11: [0.015, -0.055],
+    12: [0.025, -0.02],
     14: [0.035, -0.065],
     15: [0.04, -0.025],
     16: [0.025, 0.005],
@@ -41,6 +44,17 @@ function vHand(x = 0.4, y = 0.5, aspect = 1): HandObservation {
     result.landmarks[Number(index)] = { x: x + dx / aspect, y: y + dy, z: 0 };
   }
   return result;
+}
+
+function withWorld(observation = thumbUpHand(), aspect = 1): HandObservation {
+  return {
+    ...observation,
+    worldLandmarks: observation.landmarks.map((point) => ({
+      x: (point.x - 0.4) * aspect * 0.5,
+      y: (point.y - 0.5) * 0.5,
+      z: 0,
+    })),
+  };
 }
 
 function arm(
@@ -59,11 +73,11 @@ function arm(
   return interpreter.update([hand(0.4, 0.5, 0.2, aspect)], 250, aspect);
 }
 
-function holdV(
+function holdThumbUp(
   interpreter: GestureInterpreter,
   start: number,
   end: number,
-  observation = vHand(),
+  observation = thumbUpHand(),
   aspect = 1,
 ) {
   for (let timestamp = start; timestamp < end; timestamp += 100)
@@ -261,25 +275,25 @@ describe("single-hand camera gesture interpreter", () => {
     expectStopped(interpreter.update([hand(0.3)], 300, 1));
   });
 
-  it("shows timed V progress and switches exactly once while V is held for two seconds", () => {
+  it("shows timed thumb-up progress and switches exactly once while thumb-up is held for two seconds", () => {
     const interpreter = new GestureInterpreter();
-    expect(interpreter.update([vHand()], 0, 1).status).toBe("switching");
-    const middle = holdV(interpreter, 100, 350);
+    expect(interpreter.update([thumbUpHand()], 0, 1).status).toBe("switching");
+    const middle = holdThumbUp(interpreter, 100, 350);
     expect(middle.modeSwitchProgress).toBeCloseTo(0.5);
     expect(middle.controlMode).toBe("pan");
-    const switched = holdV(interpreter, 450, 700);
+    const switched = holdThumbUp(interpreter, 450, 700);
     expect(switched.status).toBe("release");
     expect(switched.controlMode).toBe("orbit");
     expect(switched.modeSwitchProgress).toBe(1);
     expectStopped(switched);
-    const held = holdV(interpreter, 800, 2000);
+    const held = holdThumbUp(interpreter, 800, 2000);
     expect(held.controlMode).toBe("orbit");
     expectStopped(held);
   });
 
-  it("cycles pan → orbit → zoom → pan with neutral release between V holds", () => {
+  it("cycles pan → orbit → zoom → pan with neutral release between thumb-up holds", () => {
     const interpreter = new GestureInterpreter();
-    expect(holdV(interpreter, 0, 700).controlMode).toBe("orbit");
+    expect(holdThumbUp(interpreter, 0, 700).controlMode).toBe("orbit");
     for (const [base, mode] of [
       [800, "zoom"],
       [1800, "pan"],
@@ -290,104 +304,280 @@ describe("single-hand camera gesture interpreter", () => {
       expect(
         interpreter.update([hand(0.4, 0.5, 0.8)], base + 120, 1).status,
       ).toBe("idle");
-      expect(holdV(interpreter, base + 150, base + 850).controlMode).toBe(mode);
-    }
-  });
-
-  it("keeps V latched through a brief neutral misclassification and a dropped frame", () => {
-    const interpreter = new GestureInterpreter();
-    holdV(interpreter, 0, 700);
-    interpreter.update([hand(0.4, 0.5, 0.8)], 750, 1);
-    expect(holdV(interpreter, 783, 1500).controlMode).toBe("orbit");
-    interpreter.update([], 1533, 1);
-    expect(holdV(interpreter, 1566, 2300).controlMode).toBe("orbit");
-  });
-
-  it("does not treat V as the required neutral release after a mode change", () => {
-    const interpreter = new GestureInterpreter();
-    interpreter.setMode("zoom");
-    const held = holdV(interpreter, 0, 1000);
-    expect(held.controlMode).toBe("zoom");
-    expect(held.status).toBe("release");
-    expect(interpreter.update([hand()], 1100, 1).status).toBe("release");
-  });
-
-  it("cancels an incomplete V and starts a fresh hold next time", () => {
-    const interpreter = new GestureInterpreter();
-    expect(holdV(interpreter, 0, 400).status).toBe("switching");
-    const cancelled = interpreter.update([hand(0.4, 0.5, 0.8)], 450, 1);
-    expect(cancelled.modeSwitchProgress).toBe(0);
-    expect(cancelled.controlMode).toBe("pan");
-    expect(holdV(interpreter, 500, 1100).controlMode).toBe("pan");
-    expect(interpreter.update([vHand()], 1200, 1).controlMode).toBe("orbit");
-  });
-
-  it("cancels the V timer on a long gap or second hand", () => {
-    for (const gap of [true, false]) {
-      const interpreter = new GestureInterpreter();
-      holdV(interpreter, 0, 400);
-      const interrupted = gap
-        ? interpreter.update([vHand()], 700, 1)
-        : interpreter.update([vHand(), hand(0.7)], 500, 1);
-      expect(interrupted.status).toBe("release");
-      expect(interrupted.modeSwitchProgress).toBe(0);
-      expect(interpreter.getMode()).toBe("pan");
-      expect(holdV(interpreter, 750, 1500).controlMode).toBe("pan");
-    }
-  });
-
-  it("resets V progress when the hand moves out of its hold position", () => {
-    const interpreter = new GestureInterpreter();
-    holdV(interpreter, 0, 400);
-    const moved = interpreter.update([vHand(0.54)], 500, 1);
-    expect(moved.status).toBe("switching");
-    expect(moved.modeSwitchProgress).toBe(0);
-    expect(holdV(interpreter, 600, 1100, vHand(0.54)).controlMode).toBe("pan");
-    expect(interpreter.update([vHand(0.54)], 1200, 1).controlMode).toBe(
-      "orbit",
-    );
-  });
-
-  it("recognizes the same V with wide camera pixels or a rotated hand", () => {
-    for (const aspect of [1, 16 / 9]) {
-      const original = vHand(0.5, 0.5, aspect);
-      const rotated = {
-        ...original,
-        landmarks: original.landmarks.map((p) => ({
-          ...p,
-          x: 0.5 - (p.y - 0.5) / aspect,
-          y: 0.5 + (p.x - 0.5) * aspect,
-        })),
-      };
-      expect(
-        new GestureInterpreter().update([original], 0, aspect).status,
-      ).toBe("switching");
-      expect(new GestureInterpreter().update([rotated], 0, aspect).status).toBe(
-        "switching",
+      expect(holdThumbUp(interpreter, base + 150, base + 850).controlMode).toBe(
+        mode,
       );
     }
   });
 
-  it("rejects open palms, pinches, and partly extended fingers as V commands", () => {
+  it("keeps thumb-up latched through a brief neutral misclassification and a dropped frame", () => {
+    const interpreter = new GestureInterpreter();
+    holdThumbUp(interpreter, 0, 700);
+    interpreter.update([hand(0.4, 0.5, 0.8)], 750, 1);
+    expect(holdThumbUp(interpreter, 783, 1500).controlMode).toBe("orbit");
+    interpreter.update([], 1533, 1);
+    expect(holdThumbUp(interpreter, 1566, 2300).controlMode).toBe("orbit");
+  });
+
+  it("can begin an intentional thumb-up switch directly after enable or explicit mode selection", () => {
+    for (const selected of ["pan", "zoom"] as const) {
+      const interpreter = new GestureInterpreter();
+      interpreter.setMode(selected);
+      interpreter.reset(true);
+      expect(interpreter.update([thumbUpHand()], 0, 1).status).toBe(
+        "switching",
+      );
+      const held = holdThumbUp(interpreter, 100, 700);
+      expect(held.controlMode).toBe(selected === "pan" ? "orbit" : "pan");
+      expect(held.status).toBe("release");
+      expect(interpreter.update([hand()], 800, 1).status).toBe("release");
+    }
+  });
+
+  it("cancels an incomplete thumb-up and starts a fresh hold next time", () => {
+    const interpreter = new GestureInterpreter();
+    expect(holdThumbUp(interpreter, 0, 400).status).toBe("switching");
+    const cancelled = interpreter.update([hand(0.4, 0.5, 0.8)], 450, 1);
+    expect(cancelled.modeSwitchProgress).toBe(0);
+    expect(cancelled.controlMode).toBe("pan");
+    expect(holdThumbUp(interpreter, 500, 1100).controlMode).toBe("pan");
+    expect(interpreter.update([thumbUpHand()], 1200, 1).controlMode).toBe(
+      "orbit",
+    );
+  });
+
+  it("cancels the thumb-up timer on a long gap or second hand, requiring a fresh full hold", () => {
+    for (const gap of [true, false]) {
+      const interpreter = new GestureInterpreter();
+      holdThumbUp(interpreter, 0, 400);
+      const interrupted = gap
+        ? interpreter.update([thumbUpHand()], 700, 1)
+        : interpreter.update([thumbUpHand(), hand(0.7)], 500, 1);
+      expect(interrupted.status).toBe(gap ? "switching" : "release");
+      expect(interrupted.modeSwitchProgress).toBe(0);
+      expect(interpreter.getMode()).toBe("pan");
+      const freshStart = gap ? 700 : 750;
+      expect(holdThumbUp(interpreter, 750, freshStart + 650).controlMode).toBe(
+        "pan",
+      );
+      expect(
+        interpreter.update([thumbUpHand()], freshStart + 700, 1).controlMode,
+      ).toBe("orbit");
+    }
+  });
+
+  it("resets thumb-up progress when the hand moves out of its hold position", () => {
+    const interpreter = new GestureInterpreter();
+    holdThumbUp(interpreter, 0, 400);
+    const moved = interpreter.update([thumbUpHand(0.54)], 500, 1);
+    expect(moved.status).toBe("switching");
+    expect(moved.modeSwitchProgress).toBe(0);
+    expect(
+      holdThumbUp(interpreter, 600, 1100, thumbUpHand(0.54)).controlMode,
+    ).toBe("pan");
+    expect(interpreter.update([thumbUpHand(0.54)], 1200, 1).controlMode).toBe(
+      "orbit",
+    );
+  });
+
+  it("recognizes left/right thumbs-up at different image aspects with or without world geometry", () => {
+    for (const aspect of [1, 16 / 9]) {
+      for (const mirror of [false, true]) {
+        for (const useWorld of [false, true]) {
+          let observation = thumbUpHand(0.4, 0.5, aspect);
+          if (useWorld) observation = withWorld(observation, aspect);
+          if (mirror)
+            observation = {
+              ...observation,
+              handedness: "Right",
+              landmarks: observation.landmarks.map((p) => ({
+                ...p,
+                x: 0.8 - p.x,
+              })),
+              worldLandmarks: observation.worldLandmarks?.map((p) => ({
+                ...p,
+                x: -p.x,
+              })),
+            };
+          expect(
+            new GestureInterpreter().update([observation], 0, aspect).status,
+          ).toBe("switching");
+        }
+      }
+    }
+  });
+
+  it("uses 3D bends when a side-on projection looks straight or collapses into an apparent pinch", () => {
+    const observation = withWorld();
+    // Rotating world geometry preserves joint angles. The image is a side-on
+    // projection: the index tip may overlap the thumb without fingers touching.
+    observation.worldLandmarks = observation.worldLandmarks!.map((p) => ({
+      x: p.x * 0.2,
+      y: p.y,
+      z: p.x * Math.sqrt(0.96),
+    }));
+    observation.landmarks[8] = { ...observation.landmarks[4] };
+    for (const index of [6, 7, 10, 11, 14, 15, 18, 19])
+      observation.landmarks[index] = { x: 0.42, y: 0.46 };
+    const interpreter = new GestureInterpreter();
+    const result = holdThumbUp(interpreter, 0, 700, observation);
+    expect(result.controlMode).toBe("orbit");
+    expectStopped(result);
+    expect(result.status).toBe("release");
+  });
+
+  it("rejects sideways/downward thumbs, fists, open fingers, pinches and V signs", () => {
     const variants: HandObservation[] = [hand(0.4, 0.5, 0.8), hand()];
-    const openRing = vHand();
+    const original = thumbUpHand();
+    for (const angle of [Math.PI / 2, Math.PI])
+      variants.push({
+        ...original,
+        landmarks: original.landmarks.map((p) => ({
+          x:
+            0.4 + (p.x - 0.4) * Math.cos(angle) - (p.y - 0.5) * Math.sin(angle),
+          y:
+            0.5 + (p.x - 0.4) * Math.sin(angle) + (p.y - 0.5) * Math.cos(angle),
+          z: 0,
+        })),
+      });
+    const fist = thumbUpHand();
+    fist.landmarks[3] = { x: 0.37, y: 0.48 };
+    fist.landmarks[4] = { x: 0.39, y: 0.5 };
+    variants.push(fist);
+    const vSign = thumbUpHand();
+    for (const [start, x] of [
+      [5, 0.36],
+      [9, 0.4],
+    ]) {
+      vSign.landmarks[start + 1] = { x, y: 0.42 };
+      vSign.landmarks[start + 2] = { x, y: 0.36 };
+      vSign.landmarks[start + 3] = { x, y: 0.3 };
+    }
+    variants.push(vSign);
+    const openRing = thumbUpHand();
     openRing.landmarks[14] = { x: 0.43, y: 0.43 };
     openRing.landmarks[15] = { x: 0.44, y: 0.38 };
     openRing.landmarks[16] = { x: 0.45, y: 0.33 };
     variants.push(openRing);
-    const bentIndex = vHand();
-    bentIndex.landmarks[7] = { x: 0.36, y: 0.47 };
-    bentIndex.landmarks[8] = { x: 0.36, y: 0.5 };
-    variants.push(bentIndex);
-    const pinchedV = vHand();
-    pinchedV.landmarks[4] = { ...pinchedV.landmarks[8] };
-    variants.push(pinchedV);
     for (const observation of variants) {
-      const interpreter = new GestureInterpreter();
-      const result = holdV(interpreter, 0, 1000, observation);
+      const result = holdThumbUp(
+        new GestureInterpreter(),
+        0,
+        1000,
+        observation,
+      );
       expect(result.controlMode).toBe("pan");
       expect(result.modeSwitchProgress).toBe(0);
     }
+  });
+
+  it("fails closed for supplied invalid world data instead of accepting screen-only thumbs-up", () => {
+    const good = withWorld();
+    const malformed = [
+      [],
+      good.worldLandmarks!.slice(0, 20),
+      good.worldLandmarks!.map((point, i) =>
+        i === 4 ? { ...point, z: NaN } : point,
+      ),
+      good.worldLandmarks!.map((point, i) =>
+        i === 4 ? { ...point, x: Infinity } : point,
+      ),
+      good.worldLandmarks!.map((point) => ({ x: point.x, y: point.y })),
+      Array.from({ length: 21 }, () => ({ x: 0, y: 0, z: 0 })),
+    ];
+    for (const worldLandmarks of malformed) {
+      const observation = { ...good, worldLandmarks };
+      const result = holdThumbUp(
+        new GestureInterpreter(),
+        0,
+        1000,
+        observation,
+      );
+      expect(result.status).toBe("release");
+      expect(result.controlMode).toBe("pan");
+      expectStopped(result);
+    }
+  });
+
+  it("rejects a real 3D thumb/index pinch despite a thumb-up-looking image", () => {
+    const observation = withWorld();
+    observation.worldLandmarks![8] = { ...observation.worldLandmarks![4] };
+    const result = holdThumbUp(new GestureInterpreter(), 0, 1000, observation);
+    expect(result.controlMode).toBe("pan");
+    expect(result.modeSwitchProgress).toBe(0);
+  });
+
+  it("trusts valid world finger geometry over a misleading thumb-up screen projection", () => {
+    const observation = withWorld();
+    // A straight index in 3D must reject thumb-up even if the image looks curled.
+    observation.worldLandmarks![6] = { x: -0.02, y: -0.04, z: 0 };
+    observation.worldLandmarks![7] = { x: -0.02, y: -0.07, z: 0 };
+    observation.worldLandmarks![8] = { x: -0.02, y: -0.1, z: 0 };
+    expect(
+      holdThumbUp(new GestureInterpreter(), 0, 1000, observation).controlMode,
+    ).toBe("pan");
+  });
+
+  it.each(["pan", "orbit", "zoom"] as const)(
+    "does not grab in %s when fingertips overlap only in the image",
+    (mode) => {
+      const observation = withWorld();
+      // This index is extended in 3D, so the pose is neither a pinch nor a
+      // thumb-up. A side-on image still puts both fingertips at the same pixel.
+      observation.worldLandmarks![6] = { x: -0.02, y: -0.04, z: 0 };
+      observation.worldLandmarks![7] = { x: -0.02, y: -0.07, z: 0 };
+      observation.worldLandmarks![8] = { x: -0.02, y: -0.1, z: 0 };
+      observation.landmarks[8] = { ...observation.landmarks[4] };
+      const interpreter = new GestureInterpreter();
+      interpreter.setMode(mode);
+      interpreter.reset(true);
+      expect(interpreter.update([observation], 0, 1).status).toBe("release");
+      // The same 3D separation also counts as neutral release, even though
+      // the 2D-only test would have incorrectly kept the grab latched.
+      expect(interpreter.update([observation], 120, 1).status).toBe("idle");
+      for (const timestamp of [150, 250, 300]) {
+        observation.landmarks = observation.landmarks.map((point) => ({
+          ...point,
+          x: point.x - 0.02,
+          y: point.y - 0.02,
+        }));
+        const result = interpreter.update([observation], timestamp, 1);
+        expect(result.status).toBe("idle");
+        expectStopped(result);
+      }
+    },
+  );
+
+  it("arms, drags and releases using 3D pinch hysteresis when image fingertips look separated", () => {
+    const observation = withWorld();
+    const thumb = observation.worldLandmarks![4];
+    const setPinchRatio = (ratio: number) => {
+      // This fixture's world wrist-to-middle-MCP palm length is 0.05 m.
+      observation.worldLandmarks![8] = {
+        ...thumb,
+        x: thumb.x + ratio * 0.05,
+      };
+    };
+    const interpreter = new GestureInterpreter();
+    setPinchRatio(0.5);
+    expect(interpreter.update([observation], 0, 1).status).toBe("idle");
+    setPinchRatio(0.37);
+    expect(interpreter.update([observation], 20, 1).status).toBe("arming");
+    expect(interpreter.update([observation], 120, 1).status).toBe("pan");
+    setPinchRatio(0.5);
+    observation.landmarks = observation.landmarks.map((point) => ({
+      ...point,
+      x: point.x - 0.04,
+    }));
+    const moved = interpreter.update([observation], 150, 1);
+    expect(moved.status).toBe("pan");
+    expect(moved.input.dx).toBeGreaterThan(0);
+    setPinchRatio(0.59);
+    // Prevent a deliberate thumb-up while verifying ordinary pinch release.
+    observation.landmarks[1].y = observation.landmarks[4].y - 0.05;
+    const released = interpreter.update([observation], 180, 1);
+    expect(released.status).toBe("idle");
+    expectStopped(released);
   });
 
   it("rejects tracking teleports and changes in camera aspect ratio", () => {
