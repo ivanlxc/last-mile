@@ -84,6 +84,8 @@ scope.onmessage = (event): void => {
         y,
         z,
       })),
+      // Preserve the Tasks label convention on this unmirrored bitmap. The
+      // legacy Hands solution's selfie-label swap must not be applied here.
       handedness: result.handedness[index]?.[0]?.categoryName,
       confidence: result.handedness[index]?.[0]?.score,
     }));

@@ -354,9 +354,9 @@ test("a denied permission leaves typing usable and a second synthetic microphone
     ).__syntheticSpeechMic.denyNext = true;
   });
   await voice.click();
-  await expect(advisor.getByRole("status")).toContainText(
-    "Microphone access was not allowed",
-  );
+  await expect(
+    advisor.locator(".advisor-composer").getByRole("status"),
+  ).toContainText("Microphone access was not allowed");
   expect(await microphoneMetrics(page)).toEqual({ calls: 1, live: 0 });
   expect(speechHarness.providers).toHaveLength(0);
   await draft.fill("A typed question still works.");
@@ -410,9 +410,9 @@ test("reopening the advisor recovers a temporary speech configuration failure wi
     else await route.continue();
   });
   const { advisor, voice, draft } = await enterAdvisor(page, speechHarness);
-  await expect(advisor.getByRole("status")).toContainText(
-    "Voice is unavailable",
-  );
+  await expect(
+    advisor.locator(".advisor-composer").getByRole("status"),
+  ).toContainText("Voice is unavailable");
   await expect(voice).toBeDisabled();
   await draft.fill("Keep this draft through reconnection.");
   expect(attempts).toBeGreaterThan(0);

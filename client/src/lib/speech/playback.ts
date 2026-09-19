@@ -8,8 +8,12 @@ import { splitSpeechText } from "./readout";
 
 export type PlaybackState = {
   id: string | null;
-  status: "idle" | "loading" | "playing" | "ended" | "error";
+  status: "idle" | "loading" | "playing" | "blocked" | "ended" | "error";
   error: string | null;
+  /** Elapsed playback within the current part, never inferred from downloads. */
+  seconds?: number;
+  part?: number;
+  parts?: number;
 };
 type Dependencies = {
   fetch: typeof fetch;
@@ -36,6 +40,8 @@ export class SpeechPlayer {
   private audio: HTMLAudioElement | null = null;
   private audioUrl: string | null = null;
   private rejectPlayback: ((error: Error) => void) | null = null;
+  private resumePlayback: (() => void) | null = null;
+  private playbackStartTimer: ReturnType<typeof setTimeout> | null = null;
   private unsubscribeActivity: () => void;
 
   constructor(
@@ -79,9 +85,10 @@ export class SpeechPlayer {
         Math.min(config.maxTextLength, 2000),
       );
       if (!chunks.length) throw new Error("There is no text to read.");
-      for (const chunk of chunks) {
+      for (const [index, chunk] of chunks.entries()) {
         if (generation !== this.generation) return;
-        this.update({ id, status: "loading", error: null });
+        const progress = { part: index + 1, parts: chunks.length, seconds: 0 };
+        this.update({ id, status: "loading", error: null, ...progress });
         const response = await this.dependencies.fetch(
           "/api/v1/speech/synthesize",
           {
@@ -99,23 +106,115 @@ export class SpeechPlayer {
         this.audio = audio;
         this.audioUrl = this.dependencies.createUrl(blob);
         audio.src = this.audioUrl;
-        this.update({ id, status: "playing", error: null });
+        if (typeof document !== "undefined") {
+          audio.dataset.speechAudio = "";
+          audio.hidden = true;
+          audio.preload = "auto";
+          audio.setAttribute("playsinline", "");
+          audio.setAttribute("aria-hidden", "true");
+          document.body.append(audio);
+        }
         await new Promise<void>((resolve, reject) => {
           this.rejectPlayback = reject;
+          const isCurrent = () =>
+            generation === this.generation && this.audio === audio;
+          let attempt = 0;
+          let waitingForStart = false;
+          const startedPlaying = (thisAttempt: number) => {
+            if (!isCurrent() || thisAttempt !== attempt || !waitingForStart)
+              return;
+            waitingForStart = false;
+            this.clearStartTimer();
+            this.update({
+              id,
+              status: "playing",
+              error: null,
+              ...progress,
+              seconds: Math.floor(audio.currentTime || 0),
+            });
+          };
+          const failed = (error: unknown, thisAttempt: number) => {
+            if (!isCurrent() || thisAttempt !== attempt) return;
+            waitingForStart = false;
+            this.clearStartTimer();
+            if (
+              error &&
+              typeof error === "object" &&
+              "name" in error &&
+              error.name === "NotAllowedError"
+            ) {
+              this.update({
+                id,
+                status: "blocked",
+                error: null,
+                ...progress,
+                seconds: Math.floor(audio.currentTime || 0),
+              });
+              return;
+            }
+            reject(
+              new Error(
+                "Audio could not play. Try Listen again or read the text.",
+              ),
+            );
+          };
+          const startAudio = () => {
+            if (!isCurrent()) return;
+            const thisAttempt = ++attempt;
+            waitingForStart = true;
+            this.clearStartTimer();
+            this.update({
+              id,
+              status: "loading",
+              error: null,
+              ...progress,
+              seconds: Math.floor(audio.currentTime || 0),
+            });
+            // Called directly by the Play audio click when blocked. No promise
+            // or fetch may precede play(), or browser activation can be lost.
+            try {
+              const started = audio.play();
+              this.playbackStartTimer = setTimeout(() => {
+                if (!isCurrent() || thisAttempt !== attempt || !waitingForStart)
+                  return;
+                waitingForStart = false;
+                ++attempt;
+                this.playbackStartTimer = null;
+                // Some embedded browsers leave play() pending forever. Pause
+                // that attempt so a late resolution cannot start behind Play.
+                audio.pause();
+                this.update({
+                  id,
+                  status: "blocked",
+                  error: null,
+                  ...progress,
+                  seconds: Math.floor(audio.currentTime || 0),
+                });
+              }, 10_000);
+              void started.then(
+                () => startedPlaying(thisAttempt),
+                (error: unknown) => failed(error, thisAttempt),
+              );
+            } catch (error) {
+              failed(error, thisAttempt);
+            }
+          };
+          this.resumePlayback = startAudio;
           audio.onended = () => resolve();
+          audio.onplaying = () => startedPlaying(attempt);
+          audio.ontimeupdate = () => {
+            if (!isCurrent() || this.state.status !== "playing") return;
+            const seconds = Math.floor(audio.currentTime || 0);
+            if (seconds !== this.state.seconds)
+              this.update({ ...this.state, seconds });
+          };
           audio.onerror = () =>
             reject(
               new Error(
                 "Audio could not play. Try Listen again or read the text.",
               ),
             );
-          void audio
-            .play()
-            .catch(() =>
-              reject(
-                new Error("Audio playback was blocked. Try Listen again."),
-              ),
-            );
+          startAudio();
         });
         if (generation !== this.generation) return;
         this.releaseAudio();
@@ -140,6 +239,17 @@ export class SpeechPlayer {
     }
   }
 
+  /** Synchronous entry point for a fresh browser user gesture. */
+  resume(id: string) {
+    if (
+      this.state.id !== id ||
+      this.state.status !== "blocked" ||
+      getSpeechActivity().recording
+    )
+      return;
+    this.resumePlayback?.();
+  }
+
   stop(id?: string) {
     if (id && this.state.id !== id) return;
     ++this.generation;
@@ -159,16 +269,28 @@ export class SpeechPlayer {
   }
 
   private releaseAudio() {
+    this.clearStartTimer();
     this.rejectPlayback = null;
+    this.resumePlayback = null;
     if (this.audio) {
-      this.audio.onended = this.audio.onerror = null;
+      this.audio.onended =
+        this.audio.onerror =
+        this.audio.ontimeupdate =
+        this.audio.onplaying =
+          null;
       this.audio.pause();
       this.audio.removeAttribute("src");
       this.audio.load();
+      this.audio.remove();
       this.audio = null;
     }
     if (this.audioUrl) this.dependencies.revokeUrl(this.audioUrl);
     this.audioUrl = null;
+  }
+
+  private clearStartTimer() {
+    if (this.playbackStartTimer !== null) clearTimeout(this.playbackStartTimer);
+    this.playbackStartTimer = null;
   }
 
   private update(state: PlaybackState) {

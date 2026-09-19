@@ -9,6 +9,7 @@ export interface TrackedHand {
   landmarks: HandLandmark[];
   /** Coordinates relative to this hand's center, not a shared two-hand space. */
   worldLandmarks?: HandLandmark[];
+  /** Raw MediaPipe Tasks label on unmirrored input; do not swap as in legacy selfie examples. */
   handedness?: string;
   /** Handedness confidence, not a per-landmark tracking confidence. */
   confidence?: number;

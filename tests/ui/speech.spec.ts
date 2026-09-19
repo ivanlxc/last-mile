@@ -180,3 +180,105 @@ test("desktop read aloud: API failure, retry, cancellation, native playback, rep
   await expect(page.getByTestId("open-intel")).toBeEnabled();
   expect(pageErrors).toEqual([]);
 });
+
+test("desktop read aloud resumes the same prepared audio directly after a browser gesture block", async ({
+  page,
+  speechGame,
+}) => {
+  await page.addInitScript(() => {
+    const nativePlay = HTMLMediaElement.prototype.play;
+    const attempts: boolean[] = [];
+    HTMLMediaElement.prototype.play = function () {
+      if (this.hasAttribute("data-speech-audio")) {
+        attempts.push(navigator.userActivation.isActive);
+        if (attempts.length === 1)
+          return Promise.reject(
+            new DOMException(
+              "Test browser requires a new gesture",
+              "NotAllowedError",
+            ),
+          );
+      }
+      return nativePlay.call(this);
+    };
+    Object.assign(window, { __testSpeechPlayAttempts: attempts });
+  });
+  await page.route("**/api/v1/speech/config", (route) =>
+    route.fulfill({ json: speechConfig }),
+  );
+  let requests = 0;
+  await page.route("**/api/v1/speech/synthesize", (route) => {
+    requests++;
+    return route.fulfill({ contentType: "audio/wav", body: silentWave() });
+  });
+  await page.goto(speechGame);
+  await page
+    .getByRole("button", { name: "Enter mission briefing", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Start escort", exact: true }).click();
+  await page.getByTestId("open-story").click();
+  const story = page.getByRole("dialog");
+  await story.getByRole("button", { name: "Listen", exact: true }).click();
+  await expect(
+    story.getByRole("button", { name: "Play audio", exact: true }),
+  ).toBeVisible();
+  await expect(story.getByRole("status")).toHaveText(
+    "Audio is ready. Click Play audio to start.",
+  );
+  const nativeAudio = page.locator("audio[data-speech-audio]");
+  await expect(nativeAudio).toHaveCount(1);
+  const originalSource = await nativeAudio.getAttribute("src");
+  expect(requests).toBe(1);
+  await story.getByRole("button", { name: "Play audio", exact: true }).click();
+  await expect(story.getByRole("status")).toContainText("Playing ·");
+  expect(await nativeAudio.getAttribute("src")).toBe(originalSource);
+  expect(requests).toBe(1);
+  expect(
+    await page.evaluate(() =>
+      (
+        window as unknown as { __testSpeechPlayAttempts: boolean[] }
+      ).__testSpeechPlayAttempts.at(-1),
+    ),
+  ).toBe(true);
+  await expect
+    .poll(() =>
+      nativeAudio.evaluate((audio) => (audio as HTMLAudioElement).currentTime),
+    )
+    .toBeGreaterThan(0);
+  await expect(
+    story.getByRole("button", { name: "Replay", exact: true }),
+  ).toBeVisible();
+  await expect(nativeAudio).toHaveCount(0);
+  expect(requests).toBe(1);
+});
+
+test("desktop read aloud can refresh a disabled service without reloading the game", async ({
+  page,
+  speechGame,
+}) => {
+  let enabled = false;
+  let requests = 0;
+  await page.route("**/api/v1/speech/config", (route) => {
+    requests++;
+    return route.fulfill({ json: { ...speechConfig, enabled } });
+  });
+  await page.goto(speechGame);
+  await page
+    .getByRole("button", { name: "Enter mission briefing", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Start escort", exact: true }).click();
+  await page.getByTestId("open-story").click();
+  const story = page.getByRole("dialog");
+  await expect(story.getByRole("status")).toContainText(
+    "Read aloud is unavailable",
+  );
+  await expect(
+    story.getByRole("button", { name: "Listen", exact: true }),
+  ).toBeDisabled();
+  enabled = true;
+  await story.getByRole("button", { name: "Retry audio", exact: true }).click();
+  await expect(
+    story.getByRole("button", { name: "Listen", exact: true }),
+  ).toBeEnabled();
+  expect(requests).toBeGreaterThanOrEqual(2);
+});

@@ -7,8 +7,16 @@ export type SpeechConfig = {
   maxTextLength: number;
 };
 let pending: Promise<SpeechConfig> | undefined;
-export function getSpeechConfig(): Promise<SpeechConfig> {
-  return (pending ??= fetch("/api/v1/speech/config", {
+let cached: { value: SpeechConfig; expiresAt: number } | undefined;
+export function getSpeechConfig({
+  force = false,
+}: { force?: boolean } = {}): Promise<SpeechConfig> {
+  // Coalesce simultaneous controls, but never retain a disabled service for the
+  // lifetime of the page. Explicit retry/focus can refresh immediately.
+  if (pending) return pending;
+  if (!force && cached && cached.expiresAt > Date.now())
+    return Promise.resolve(cached.value);
+  const request = fetch("/api/v1/speech/config", {
     credentials: "same-origin",
     signal: AbortSignal.timeout(10_000),
   })
@@ -17,12 +25,22 @@ export function getSpeechConfig(): Promise<SpeechConfig> {
         throw new Error(
           "Voice is unavailable. You can still type your question.",
         );
-      return (await response.json()) as SpeechConfig;
+      const value = (await response.json()) as SpeechConfig;
+      cached = {
+        value,
+        expiresAt: Date.now() + (value.enabled ? 30_000 : 5_000),
+      };
+      return value;
     })
     .catch((error: unknown) => {
-      pending = undefined;
+      cached = undefined;
       throw error;
-    }));
+    })
+    .finally(() => {
+      if (pending === request) pending = undefined;
+    });
+  pending = request;
+  return request;
 }
 
 export async function speechError(response: Response): Promise<Error> {

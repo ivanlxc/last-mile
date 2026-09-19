@@ -54,7 +54,12 @@ describe("spoken evidence keeps its qualifications", () => {
         },
       ],
       investigationSuggestions: [
-        { channel: "localAgency", publicTargetId: "agency", claimRefs: ["c1"], questionToResolve: "Is permission current?" },
+        {
+          channel: "localAgency",
+          publicTargetId: "agency",
+          claimRefs: ["c1"],
+          questionToResolve: "Is permission current?",
+        },
       ],
       changeSummary: "An agency report was added.",
     };
@@ -76,12 +81,16 @@ describe("spoken evidence keeps its qualifications", () => {
 
 class FakeAudio {
   src = "";
+  currentTime = 0;
   onended: (() => void) | null = null;
   onerror: (() => void) | null = null;
+  onplaying: (() => void) | null = null;
+  ontimeupdate: (() => void) | null = null;
   play = vi.fn(async () => {});
   pause = vi.fn();
   load = vi.fn();
   removeAttribute = vi.fn();
+  remove = vi.fn();
 }
 
 describe("shared speech playback ownership", () => {
@@ -89,8 +98,12 @@ describe("shared speech playback ownership", () => {
   let audios: FakeAudio[];
   let fetcher: ReturnType<typeof vi.fn<typeof fetch>>;
   let revokeUrl: ReturnType<typeof vi.fn<(url: string) => void>>;
+  let nextPlayError: Error | undefined;
+  let hangNextPlay: boolean;
   beforeEach(() => {
     audios = [];
+    nextPlayError = undefined;
+    hangNextPlay = false;
     fetcher = vi.fn(
       async () =>
         ({
@@ -104,6 +117,14 @@ describe("shared speech playback ownership", () => {
       config: async () => config,
       audio: () => {
         const audio = new FakeAudio();
+        if (nextPlayError) {
+          audio.play.mockRejectedValueOnce(nextPlayError);
+          nextPlayError = undefined;
+        }
+        if (hangNextPlay) {
+          audio.play.mockImplementationOnce(() => new Promise(() => {}));
+          hangNextPlay = false;
+        }
         audios.push(audio);
         return audio as unknown as HTMLAudioElement;
       },
@@ -114,6 +135,7 @@ describe("shared speech playback ownership", () => {
   afterEach(() => {
     player.dispose();
     setSpeechActivity({ recording: false, playing: false });
+    vi.useRealTimers();
   });
 
   it("fires completion only after every chunk ends and revokes every object URL", async () => {
@@ -194,6 +216,85 @@ describe("shared speech playback ownership", () => {
     await player.play("report:1", "Report text.", onComplete);
     expect(player.snapshot().error).toBe("Voice is temporarily unavailable.");
     expect(getSpeechActivity().playing).toBe(false);
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("resumes a blocked first and later part synchronously without refetching or dropping qualifications", async () => {
+    nextPlayError = new DOMException("Gesture required", "NotAllowedError");
+    const onComplete = vi.fn();
+    const playing = player.play(
+      "report:1",
+      "Check the observation scope. ".repeat(100),
+      onComplete,
+    );
+    await drain();
+    expect(player.snapshot().status).toBe("blocked");
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(revokeUrl).not.toHaveBeenCalled();
+    player.resume("report:1");
+    expect(audios[0].play).toHaveBeenCalledTimes(2); // Same click stack.
+    await drain();
+    expect(player.snapshot().status).toBe("playing");
+    audios[0].currentTime = 1.5;
+    audios[0].ontimeupdate?.();
+    expect(player.snapshot().seconds).toBe(1);
+    nextPlayError = new DOMException(
+      "Another gesture required",
+      "NotAllowedError",
+    );
+    audios[0].onended?.();
+    await drain();
+    expect(player.snapshot()).toMatchObject({
+      status: "blocked",
+      part: 2,
+      parts: 2,
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(revokeUrl).toHaveBeenCalledTimes(1);
+    audios[1].currentTime = 0.75;
+    player.resume("report:1");
+    expect(audios[1].play).toHaveBeenCalledTimes(2);
+    expect(audios[1].currentTime).toBe(0.75);
+    await drain();
+    audios[1].onended?.();
+    await playing;
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(revokeUrl).toHaveBeenCalledTimes(2);
+    expect(onComplete).toHaveBeenCalledOnce();
+  });
+
+  it("recovers a forever-pending play promise after ten seconds without losing the downloaded audio", async () => {
+    vi.useFakeTimers();
+    hangNextPlay = true;
+    const playing = player.play("report:1", "Review the observation scope.");
+    await drain();
+    expect(player.snapshot().status).toBe("loading");
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(player.snapshot().status).toBe("blocked");
+    expect(audios[0].pause).toHaveBeenCalledOnce();
+    expect(revokeUrl).not.toHaveBeenCalled();
+    player.resume("report:1");
+    expect(audios[0].play).toHaveBeenCalledTimes(2);
+    await drain();
+    expect(player.snapshot().status).toBe("playing");
+    audios[0].onended?.();
+    await playing;
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("microphone start releases a blocked voice and prevents any later resume", async () => {
+    nextPlayError = new DOMException("Gesture required", "NotAllowedError");
+    const onComplete = vi.fn();
+    const playing = player.play("report:1", "Full report text.", onComplete);
+    await drain();
+    expect(player.snapshot().status).toBe("blocked");
+    setSpeechActivity({ recording: true });
+    await playing;
+    player.resume("report:1");
+    expect(audios[0].play).toHaveBeenCalledOnce();
+    expect(audios[0].remove).toHaveBeenCalledOnce();
+    expect(revokeUrl).toHaveBeenCalledOnce();
     expect(onComplete).not.toHaveBeenCalled();
   });
 });

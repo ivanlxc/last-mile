@@ -214,7 +214,7 @@ test("camera denial is recoverable and does not disable Unity or starting the es
   expect(errors).toEqual([]);
 });
 
-test("thumbs-up switches modes without clicks and single-hand input drives actual Unity pan, orbit and zoom", async ({
+test("back-facing thumbs-up switches modes without clicks and single-hand input drives actual Unity pan, orbit and zoom", async ({
   page,
 }, info) => {
   // Only the recognizer output is synthetic. Interpreter, camera bridge and
@@ -261,6 +261,7 @@ test("thumbs-up switches modes without clicks and single-hand input drives actua
       p[Number(i)] = { x: x + dx / aspect, y: y + dy, z: 0 };
     return {
       landmarks: p,
+      handedness: "Right",
       ...(withWorld
         ? {
             worldLandmarks: p.map((q) => ({
@@ -297,7 +298,14 @@ test("thumbs-up switches modes without clicks and single-hand input drives actua
   const status = page.locator(".gesture-status");
   await expect(controls).toHaveAttribute("data-gesture-state", "running");
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");
-  const fixture = (hands: ReturnType<typeof hand>[]) =>
+  const fixture = (
+    hands: Array<
+      ReturnType<typeof hand> & {
+        handedness?: string;
+        worldLandmarks?: Array<{ x: number; y: number; z: number }>;
+      }
+    >,
+  ) =>
     page.evaluate((data) => {
       const channel = new BroadcastChannel("last-mile-test-gesture");
       channel.postMessage(data);
@@ -322,6 +330,12 @@ test("thumbs-up switches modes without clicks and single-hand input drives actua
   // Both mode transitions are completed with one thumbs-up hand, without clicking UI.
   await fixture([hand()]);
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");
+  // Same geometry with the opposite handedness is palm-facing, not a switch.
+  await fixture([{ ...thumbUp(), handedness: "Left" }]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "turn-hand");
+  await expect(status).toContainText("back of your hand");
+  await page.waitForTimeout(850);
+  await expect(controls).toHaveAttribute("data-control-mode", "pan");
   await fixture([thumbUp()]);
   await expect(controls).toHaveAttribute("data-control-mode", "orbit");
   await expect(
@@ -346,7 +360,14 @@ test("thumbs-up switches modes without clicks and single-hand input drives actua
 
   await fixture([hand()]);
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");
-  await fixture([thumbUp(true)]);
+  const leftBack = thumbUp(true);
+  leftBack.handedness = "Left";
+  leftBack.landmarks = leftBack.landmarks.map((p) => ({ ...p, x: 1 - p.x }));
+  leftBack.worldLandmarks = leftBack.worldLandmarks!.map((p) => ({
+    ...p,
+    x: -p.x,
+  }));
+  await fixture([leftBack]);
   await expect(controls).toHaveAttribute("data-control-mode", "zoom");
   await fixture([hand()]);
   await expect(status).toHaveAttribute("data-gesture-mode", "idle");

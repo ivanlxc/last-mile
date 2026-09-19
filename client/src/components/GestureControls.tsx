@@ -56,9 +56,10 @@ const copy = {
     orbit: "Pinch thumb + index; move sideways to rotate, up/down to tilt.",
     zoom: "Pinch thumb + index; move up to zoom in, down to zoom out.",
     cycle:
-      "Thumb up for 0.7s: Pan → Rotate → Zoom. Open your hand before the next thumb up or pinch.",
+      "Back of hand toward the camera, thumb up for 0.7s: Pan → Rotate → Zoom. Relax your hand before the next thumb up or pinch.",
     switchTitle: "Switch by gesture",
-    switching: "Hold thumb up to switch",
+    switching: "Hold back-facing thumb up to switch",
+    turnHand: "Turn the back of your hand toward the camera",
     switched: "Switched to",
     oneHand: "Show only one hand to control the map",
     release:
@@ -98,9 +99,10 @@ const copy = {
     orbit: "拇指与食指捏合，左右移动旋转，上下移动调整俯仰。",
     zoom: "拇指与食指捏合，向上移动放大，向下移动缩小。",
     cycle:
-      "单手点赞保持 0.7 秒：平移 → 旋转 → 缩放。先张手，再次点赞或捏合操作。",
+      "手背朝向摄像头，单手点赞保持 0.7 秒：平移 → 旋转 → 缩放。先放松手，再次点赞或捏合操作。",
     switchTitle: "点赞切换模式",
-    switching: "保持点赞切换模式",
+    switching: "手背朝向摄像头，保持点赞切换模式",
+    turnHand: "请将手背朝向摄像头",
     switched: "已切换到",
     oneHand: "请只用一只手控制地图",
     release: "松开即停止。丢失跟踪或使用鼠标后，请先张手再捏合。",
@@ -438,6 +440,7 @@ export default function GestureControls({
             pan: t.moving,
             orbit: t.rotating,
             zoom: t.zooming,
+            "turn-hand": t.turnHand,
             switching: `${t.switching} → ${nextMode} · ${Math.round(stats.switchProgress * 100)}%`,
             release:
               stats.switchProgress === 1

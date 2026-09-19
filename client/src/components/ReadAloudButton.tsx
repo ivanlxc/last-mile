@@ -30,19 +30,22 @@ export function ReadAloudButton({
     getSpeechActivity,
   );
   const [enabled, setEnabled] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [unavailable, setUnavailable] = useState("Read aloud is connecting.");
   const complete = useRef(onComplete);
   complete.current = onComplete;
   const ours = state.id === id;
   const playing =
     ours && (state.status === "playing" || state.status === "loading");
+  const blocked = ours && state.status === "blocked";
+  const hasAudioSession = playing || blocked;
   const english = locale === "en-US";
 
   useEffect(() => {
     if (disabled) return;
     let mounted = true;
-    const refresh = () =>
-      void getSpeechConfig().then(
+    const refresh = (force = false) =>
+      void getSpeechConfig({ force }).then(
         (config) => {
           if (!mounted) return;
           setEnabled(config.enabled);
@@ -59,15 +62,16 @@ export function ReadAloudButton({
             );
         },
       );
-    refresh();
-    window.addEventListener("online", refresh);
-    window.addEventListener("focus", refresh);
+    refresh(retry > 0);
+    const refreshNow = () => refresh(true);
+    window.addEventListener("online", refreshNow);
+    window.addEventListener("focus", refreshNow);
     return () => {
       mounted = false;
-      window.removeEventListener("online", refresh);
-      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refreshNow);
+      window.removeEventListener("focus", refreshNow);
     };
-  }, [disabled]);
+  }, [disabled, retry]);
   // A changed report/advice cannot continue speaking its previous contents.
   useEffect(() => () => stopSpeech(id), [id, text]);
   useEffect(() => {
@@ -75,7 +79,7 @@ export function ReadAloudButton({
   }, [disabled, english, id]);
 
   const reason = !english
-    ? "English audio only · switch to English to listen"
+    ? "朗读仅支持英文；请返回首页开始英文任务。"
     : activity.recording
       ? "Stop recording before playing audio"
       : unavailable;
@@ -85,14 +89,20 @@ export function ReadAloudButton({
         type="button"
         className="read-aloud-button"
         disabled={
-          disabled || !english || !enabled || !text.trim() || activity.recording
+          disabled ||
+          !english ||
+          (!hasAudioSession && !enabled) ||
+          !text.trim() ||
+          activity.recording
         }
-        aria-pressed={playing}
+        aria-pressed={hasAudioSession}
         title={reason || "Read the full text aloud in English"}
         onClick={() =>
-          playing
-            ? stopSpeech(id)
-            : void speechPlayer.play(id, text, () => complete.current?.())
+          blocked
+            ? speechPlayer.resume(id)
+            : playing
+              ? stopSpeech(id)
+              : void speechPlayer.play(id, text, () => complete.current?.())
         }
       >
         {ours && state.status === "loading" ? (
@@ -102,12 +112,55 @@ export function ReadAloudButton({
         ) : (
           <Volume2 size={14} />
         )}
-        {playing
-          ? "Stop audio"
-          : ours && state.status === "ended"
-            ? "Replay"
-            : "Listen"}
+        {blocked
+          ? "Play audio"
+          : playing
+            ? "Stop audio"
+            : ours && state.status === "ended"
+              ? "Replay"
+              : "Listen"}
       </button>
+      {blocked && (
+        <button
+          type="button"
+          className="read-aloud-button"
+          onClick={() => stopSpeech(id)}
+        >
+          Stop
+        </button>
+      )}
+      {ours && (playing || blocked) && (
+        <span className="voice-feedback" role="status">
+          {blocked
+            ? "Audio is ready. Click Play audio to start."
+            : state.status === "loading"
+              ? "Preparing audio…"
+              : `Playing · ${Math.floor((state.seconds ?? 0) / 60)}:${String((state.seconds ?? 0) % 60).padStart(2, "0")}`}
+          {state.parts && state.parts > 1
+            ? ` · part ${state.part} of ${state.parts}`
+            : ""}
+        </span>
+      )}
+      {!english && !disabled && (
+        <span className="voice-feedback">{reason}</span>
+      )}
+      {english && !enabled && !disabled && !hasAudioSession && (
+        <>
+          <span className="voice-feedback" role="status">
+            {unavailable}
+          </span>
+          <button
+            type="button"
+            className="read-aloud-button"
+            onClick={() => {
+              setUnavailable("Checking audio…");
+              setRetry((value) => value + 1);
+            }}
+          >
+            Retry audio
+          </button>
+        </>
+      )}
       {ours && state.error && (
         <span className="speech-error" role="status">
           {state.error}

@@ -41,7 +41,7 @@ export function useVoiceInput({
     if (!active) return;
     let mounted = true;
     const refresh = () =>
-      void getSpeechConfig().then(
+      void getSpeechConfig({ force: true }).then(
         (value) => {
           if (mounted) {
             setConfig(value);

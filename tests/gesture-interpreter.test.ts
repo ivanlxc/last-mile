@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import palmThumbUp from "./fixtures/gestures/tasks-palm-thumb-up.json";
 import {
   GestureInterpreter,
   type GestureControlMode,
@@ -22,6 +23,8 @@ function hand(x = 0.4, y = 0.5, pinchRatio = 0.2, aspect = 1): HandObservation {
 // hand(), making transitions usable by browser tests without a tracking jump.
 function thumbUpHand(x = 0.4, y = 0.5, aspect = 1): HandObservation {
   const result = hand(x, y, 1, aspect);
+  // Raw Tasks Right + positive ordered palm normal is the dorsal-facing pose.
+  result.handedness = "Right";
   const offsets: Record<number, [number, number]> = {
     1: [-0.06, 0.025],
     2: [-0.06, -0.02],
@@ -389,7 +392,7 @@ describe("single-hand camera gesture interpreter", () => {
           if (mirror)
             observation = {
               ...observation,
-              handedness: "Right",
+              handedness: "Left",
               landmarks: observation.landmarks.map((p) => ({
                 ...p,
                 x: 0.8 - p.x,
@@ -407,14 +410,135 @@ describe("single-hand camera gesture interpreter", () => {
     }
   });
 
-  it("uses 3D bends when a side-on projection looks straight or collapses into an apparent pinch", () => {
+  it("rejects the official palm-facing thumb-up model output and its left-hand reflection", () => {
+    // This is actual output from the installed Tasks model on a manually
+    // inspected official photograph; reflection simulates the opposite hand.
+    for (const mirror of [false, true]) {
+      for (const useWorld of [false, true]) {
+        const observation: HandObservation = {
+          landmarks: palmThumbUp.hand.landmarks.map((p) => ({
+            ...p,
+            x: mirror ? 1 - p.x : p.x,
+          })),
+          worldLandmarks: useWorld
+            ? palmThumbUp.hand.worldLandmarks.map((p) => ({
+                ...p,
+                x: mirror ? -p.x : p.x,
+              }))
+            : undefined,
+          handedness: mirror ? "Left" : "Right",
+          confidence: palmThumbUp.hand.confidence,
+        };
+        const result = holdThumbUp(
+          new GestureInterpreter(),
+          0,
+          1500,
+          observation,
+          palmThumbUp.aspect,
+        );
+        expect(result.controlMode).toBe("pan");
+        expect(result.modeSwitchProgress).toBe(0);
+        expect(result.status).toBe("turn-hand");
+        expectStopped(result);
+      }
+    }
+  });
+
+  it("accepts a relaxed back-facing closed hand without requiring a tightly squeezed fist", () => {
     const observation = withWorld();
-    // Rotating world geometry preserves joint angles. The image is a side-on
+    for (const start of [5, 9, 13, 17]) {
+      const p = observation.worldLandmarks![start];
+      // A folded MCP with 75° PIP + 10° DIP bend is a natural loose fist.
+      observation.worldLandmarks![start + 1] = { ...p, y: p.y + 0.012 };
+      observation.worldLandmarks![start + 2] = {
+        x: p.x,
+        y: p.y + 0.012 + Math.cos((75 * Math.PI) / 180) * 0.012,
+        z: Math.sin((75 * Math.PI) / 180) * 0.012,
+      };
+      const dip = observation.worldLandmarks![start + 2];
+      observation.worldLandmarks![start + 3] = {
+        x: p.x,
+        y: dip.y + Math.cos((85 * Math.PI) / 180) * 0.008,
+        z: dip.z! + Math.sin((85 * Math.PI) / 180) * 0.008,
+      };
+    }
+    const result = holdThumbUp(new GestureInterpreter(), 0, 700, observation);
+    expect(result.controlMode).toBe("orbit");
+    expectStopped(result);
+  });
+
+  it("requires a fresh back-facing hold after turning toward the palm and never rearms a latched switch by flipping the thumb", () => {
+    const back = withWorld();
+    const palm = { ...back, handedness: "Left" };
+    const interpreter = new GestureInterpreter();
+    expect(holdThumbUp(interpreter, 0, 400, back).controlMode).toBe("pan");
+    expect(holdThumbUp(interpreter, 450, 1000, palm).status).toBe("turn-hand");
+    expect(holdThumbUp(interpreter, 1100, 1700, back).controlMode).toBe("pan");
+    expect(interpreter.update([back], 1800, 1).controlMode).toBe("orbit");
+    holdThumbUp(interpreter, 1900, 2300, palm);
+    expect(holdThumbUp(interpreter, 2400, 3400, back).controlMode).toBe(
+      "orbit",
+    );
+  });
+
+  it("does not guess a facing direction for missing/uncertain handedness or an edge-on hand", () => {
+    const edge = withWorld();
+    edge.landmarks = edge.landmarks.map((p) => ({
+      ...p,
+      x: 0.4 + (p.x - 0.4) * 0.1,
+    }));
+    edge.worldLandmarks = edge.worldLandmarks!.map((p) => ({
+      x: p.x * 0.1,
+      y: p.y,
+      z: p.x * Math.sqrt(0.99),
+    }));
+    const variants = [
+      { ...withWorld(), handedness: undefined },
+      { ...withWorld(), handedness: "unknown" },
+      { ...withWorld(), confidence: 0.55 },
+      edge,
+    ];
+    for (const observation of variants) {
+      const result = holdThumbUp(
+        new GestureInterpreter(),
+        0,
+        1000,
+        observation,
+      );
+      expect(result.status).toBe("turn-hand");
+      expect(result.controlMode).toBe("pan");
+      expectStopped(result);
+    }
+    // Handedness is irrelevant to grabbing/panning: orientation only gates the
+    // discrete thumb-up mode switch.
+    const interpreter = new GestureInterpreter();
+    const pinch = { ...hand(), handedness: undefined };
+    expect(interpreter.update([pinch], 0, 1).status).toBe("arming");
+    expect(interpreter.update([pinch], 100, 1).status).toBe("pan");
+  });
+
+  it("does not accumulate switch time across changes in handedness", () => {
+    const right = thumbUpHand();
+    const left = {
+      ...right,
+      handedness: "Left",
+      landmarks: right.landmarks.map((p) => ({ ...p, x: 0.8 - p.x })),
+    };
+    const interpreter = new GestureInterpreter();
+    holdThumbUp(interpreter, 0, 400, right);
+    expect(holdThumbUp(interpreter, 450, 1000, left).controlMode).toBe("pan");
+    expect(holdThumbUp(interpreter, 1100, 1700, right).controlMode).toBe("pan");
+    expect(interpreter.update([right], 1800, 1).controlMode).toBe("orbit");
+  });
+
+  it("uses 3D bends when an oblique back-facing projection looks straight or overlaps fingertips", () => {
+    const observation = withWorld();
+    // Rotating world geometry preserves joint angles. The image is an oblique
     // projection: the index tip may overlap the thumb without fingers touching.
     observation.worldLandmarks = observation.worldLandmarks!.map((p) => ({
-      x: p.x * 0.2,
+      x: p.x * 0.5,
       y: p.y,
-      z: p.x * Math.sqrt(0.96),
+      z: p.x * Math.sqrt(0.75),
     }));
     observation.landmarks[8] = { ...observation.landmarks[4] };
     for (const index of [6, 7, 10, 11, 14, 15, 18, 19])
