@@ -1,4 +1,10 @@
 import {
+  openIntel,
+  openAdvisor,
+  openMission,
+  closeMission,
+} from "./layout-helpers";
+import {
   test as base,
   expect,
   type Page,
@@ -178,6 +184,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await page.locator(".brief-footer .primary").click();
   await campaign.advance(30000);
   await expect(page.locator(".scene-location")).toContainText("N01");
+  await openAdvisor(page);
   await expect(page.locator(".advice-content")).toBeVisible();
   await english(page);
   await page.reload();
@@ -189,16 +196,19 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
       r.url().endsWith("/display-receipts") &&
       r.request().postDataJSON()?.payload?.displayKind === "context_displayed",
   );
+  await openMission(page);
   await page.locator(".resource-context").click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await english(page);
   expect((await contextReceipt).status()).toBe(200);
   await shot(page, info, "04-English-resource-boundaries");
   await close(page);
-  await page.locator(".scene-art-top button").click();
+  await closeMission(page);
+  await page.getByTestId("open-story").click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await english(page);
   await close(page);
+  await openIntel(page);
   const satellite = (await projection()).taskOptions.find(
     (o) => o.investigationKind === "satellite_scan" && o.available,
   )!;
@@ -223,8 +233,10 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await english(page);
   await page.locator(".upload-button").click();
   await expect(page.locator(".upload-button")).toBeDisabled();
+  await openAdvisor(page);
   await expect(page.locator(".ai-boundary")).toContainText("1 / 5");
   await page.locator(".quick-questions button").first().click();
+  await openAdvisor(page);
   await expect(page.locator(".advice-content")).toBeVisible();
   await page.locator(".evidence-toggle").click();
   await english(page);
@@ -237,12 +249,12 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
       .locator(".route-choice")
       .filter({ hasText: option.label })
       .click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.locator(".decision-inline")).toBeVisible();
     await english(page);
     const accepted = page.waitForResponse(
       (r) => r.url().endsWith("/actions") && r.request().method() === "POST",
     );
-    await page.locator("dialog .decision-submit .primary").click();
+    await page.locator(".decision-inline .decision-submit .primary").click();
     expect((await accepted).status()).toBe(202);
     for (let n = 0; n < 60; n++) {
       await campaign.advance(5000);
@@ -256,6 +268,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   }
   await route("E1_MAIN", "E2");
   await expect(page.locator(".scene-location")).toContainText("N02");
+  await openIntel(page);
   await page.locator(".intel-panel .tab-bar button").first().click();
   await english(page);
   await shot(page, info, "06-English-market");
@@ -298,7 +311,7 @@ test("English complete campaign: translated evidence, modals, sources, advisor a
   await english(page);
   await shot(page, info, "08-English-bridge");
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.locator(".map-tools button").first().click();
+  await page.getByRole("button", { name: "2D route map", exact: true }).click();
   await expect(page.locator(".map2d")).toBeVisible();
   await fit(page);
   await english(page);

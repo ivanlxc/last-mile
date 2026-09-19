@@ -14,7 +14,7 @@ import type { P } from "../lib/api";
 import type { Game } from "../lib/useGame";
 import { useVisibleReceipt } from "../lib/useVisibleReceipt";
 import { Modal } from "./Modal";
-export function AdvisorPanel({ game }: { game: Game }) {
+export function AdvisorPanel({ game, active = true }: { game: Game; active?: boolean }) {
   const { t } = useI18n();
   const s = game.state!,
     job = s.latestAdviceJob,
@@ -32,6 +32,8 @@ export function AdvisorPanel({ game }: { game: Game }) {
   const ref = useVisibleReceipt(
     output ? job!.jobId : "",
     () => void game.receipt("advice_displayed", { jobId: job!.jobId }),
+    0.55,
+    active,
   );
   const running = job?.status === "queued" || job?.status === "running";
   const ask = async (
@@ -94,7 +96,6 @@ export function AdvisorPanel({ game }: { game: Game }) {
         {output ? (
           <div
             className={`advice-content ${!current ? "stale" : ""}`}
-            ref={ref}
           >
             {!current && (
               <div className="notice-amber">
@@ -113,7 +114,7 @@ export function AdvisorPanel({ game }: { game: Game }) {
               <span>{t("ui.evidenceAnalysis")}</span>
               <span>V{s.inboxVersion}</span>
             </div>
-            <h3>{output.summary}</h3>
+            <div ref={ref}><h3>{output.summary}</h3></div>
             <div className="advice-rationale">
               {output.recommendation.rationale}
             </div>
@@ -263,7 +264,7 @@ export function AdvisorPanel({ game }: { game: Game }) {
         </form>
         <small>{t("ui.freeTextIsUnverifiedTimeAndResource")}</small>
       </div>
-      {source && (
+      {source && active && (
         <Modal title={source.card.title} onClose={() => setSource(null)}>
           <CitationReport report={source} game={game} />
         </Modal>

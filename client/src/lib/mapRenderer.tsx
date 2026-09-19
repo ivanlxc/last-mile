@@ -39,6 +39,8 @@ interface MapRendererContextValue {
   canStart: boolean;
   runtimeError: string | null;
   selectedNodeId: string | null;
+  inputBlocked: boolean;
+  setInputBlocked(blocked: boolean): void;
   selectNode(id: string | null): void;
   recheck(): void;
   attach(slot: HTMLElement): () => void;
@@ -62,6 +64,21 @@ export function MapRendererProvider({
   const [runtimeError, setRuntimeError] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [readyKey, setReadyKey] = useState<string | null>(null);
+  const [mountedKey, setMountedKey] = useState<string | null>(null);
+  const [inputBlocked, setInputBlocked] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  useEffect(() => {
+    const update = () => setModalOpen(!!document.querySelector("dialog[open]"));
+    const observer = new MutationObserver(update);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["open"],
+    });
+    update();
+    return () => observer.disconnect();
+  }, []);
   const [host] = useState(() => {
     const element = document.createElement("div");
     element.className = "unity-persistent-host";
@@ -69,19 +86,18 @@ export function MapRendererProvider({
   });
   const parking = useRef<HTMLDivElement>(null);
   const runtimeKey = `${state?.sessionId ?? "none"}:${probe}`;
-  const selectMode = useCallback(
-    (next: MapRenderer) => {
-      if (mode !== next) setReadyKey(null);
-      setMode(next);
-      setRuntimeError(null);
-      try {
-        localStorage.setItem(STORAGE_KEY, next);
-      } catch {
-        /* Optional. */
-      }
-    },
-    [mode],
-  );
+  useEffect(() => {
+    if (mode === "unity") setMountedKey(runtimeKey);
+  }, [mode, runtimeKey]);
+  const selectMode = useCallback((next: MapRenderer) => {
+    setMode(next);
+    setRuntimeError(null);
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* Optional. */
+    }
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
@@ -129,7 +145,7 @@ export function MapRendererProvider({
   const ready =
     mode === "unity" && availability === "available" && readyKey === runtimeKey;
   const active =
-    mode === "unity" &&
+    (mode === "unity" || mountedKey === runtimeKey) &&
     availability === "available" &&
     state?.lifecycle !== "sealed" &&
     renderState;
@@ -143,6 +159,8 @@ export function MapRendererProvider({
     canStart: mode !== "unity" || ready,
     runtimeError,
     selectedNodeId,
+    inputBlocked: inputBlocked || modalOpen,
+    setInputBlocked,
     selectNode,
     recheck: () => {
       setRuntimeError(null);
@@ -160,10 +178,13 @@ export function MapRendererProvider({
           <UnityViewport
             key={runtimeKey}
             state={renderState}
+            active={mode === "unity"}
+            inputBlocked={inputBlocked || modalOpen}
             onReady={() => setReadyKey(runtimeKey)}
             onFailure={(message) => {
               setRuntimeError(message);
               setReadyKey(null);
+              setMountedKey(null);
               setMode("three");
             }}
             onSelectLocation={selectNode}

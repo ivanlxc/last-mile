@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import {
+  openIntel,
+  openAdvisor,
+  openMission,
+  closeMission,
+  openDecisionNotes,
+} from "./layout-helpers";
 
 test("single player: briefing → report → upload → advisor → WAIT → sealed review → export", async ({
   page,
@@ -35,6 +42,7 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
     animations: "disabled",
   });
   await page.getByRole("button", { name: "开始护送" }).click();
+  await openIntel(page);
   await expect(page.getByRole("heading", { name: "现场情报" })).toBeVisible();
   // Actual 30-second R00 travel. No clock or network mocks.
   await expect(
@@ -44,6 +52,7 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
     const [minutes, seconds] = value.split(":").map(Number);
     return minutes! * 60 + seconds!;
   };
+  await openMission(page);
   const beforeReload = seconds(
     await page.locator(".mission-clock strong").innerText(),
   );
@@ -58,12 +67,11 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
   expect(resumed.sceneId).toBe("E1");
   expect(resumed.missionTimeMs).toBeGreaterThanOrEqual(30000);
   expect(resumed.missionDeadlineMs).toBeNull();
+  await openMission(page);
   await expect(page.locator(".mission-clock small")).toHaveText(
     "累计用时 · 不限时",
   );
-  await expect(
-    page.getByRole("heading", { name: "门后的答案", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".scene-location")).toContainText("N01");
   const afterReload = seconds(
     await page.locator(".mission-clock strong").innerText(),
   );
@@ -83,6 +91,8 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
     .getByRole("dialog")
     .getByRole("button", { name: "关闭", exact: true })
     .click();
+  await closeMission(page);
+  await openIntel(page);
   await page.getByRole("button", { name: "路线情况", exact: true }).click();
   await expect(
     page.getByRole("button", { name: /^已收到\s*1$/ }),
@@ -100,6 +110,7 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
   await expect(
     page.getByRole("button", { name: "已正式上传给 AI" }),
   ).toBeDisabled();
+  await openAdvisor(page);
   await expect(page.locator(".ai-boundary")).toContainText("1 / 5");
   const questionResponse = page.waitForResponse(
     (r) =>
@@ -124,6 +135,7 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
   await expect(
     page.getByRole("heading", { name: "留在现场，继续协调" }),
   ).toBeVisible();
+  await openDecisionNotes(page);
   await page
     .getByLabel("此刻，你为什么这样决定？")
     .fill("测试：核对材料范围后继续协调。");
@@ -131,6 +143,7 @@ test("single player: briefing → report → upload → advisor → WAIT → sea
   await expect(
     page.getByText("原地协调中", { exact: false }).first(),
   ).toBeVisible();
+  await openMission(page);
   await page.getByRole("button", { name: "结束本局", exact: true }).click();
   await page.getByRole("button", { name: "结束并复盘", exact: true }).click();
   await expect(

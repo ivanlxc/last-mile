@@ -1,6 +1,13 @@
 import { useI18n } from "../lib/i18n";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { Box, Map as MapIcon, LocateFixed, Expand, X } from "lucide-react";
+import {
+  Box,
+  Map as MapIcon,
+  LocateFixed,
+  Expand,
+  X,
+  MapPin,
+} from "lucide-react";
 import type {
   KnownLocation,
   SceneId,
@@ -14,11 +21,13 @@ export function TacticalMap({
   location,
   sceneId,
   large = false,
+  stage = false,
   onInvestigate,
 }: {
   location: KnownLocation;
   sceneId: SceneId | null;
   large?: boolean;
+  stage?: boolean;
   onInvestigate?: () => void;
 }) {
   const { t, nodeLabel, locale } = useI18n();
@@ -26,10 +35,17 @@ export function TacticalMap({
   const copy = mapRendererCopy(locale);
   const [expanded, setExpanded] = useState(false);
   const [setup, setSetup] = useState(false);
+  const [locations, setLocations] = useState(false);
+  const [threeLoaded, setThreeLoaded] = useState(renderer.mode === "three");
+  useEffect(() => {
+    if (renderer.mode === "three") setThreeLoaded(true);
+  }, [renderer.mode]);
   const mapRoot = useRef<HTMLElement>(null);
   useEffect(() => {
     const element = mapRoot.current;
-    const expandForGestures = () => setExpanded(true);
+    const expandForGestures = () => {
+      if (!stage) setExpanded(true);
+    };
     element?.addEventListener("last-mile-gesture-open", expandForGestures);
     // The persistent Unity view may have moved here from the briefing screen.
     if (element?.querySelector('.gesture-toggle[aria-expanded="true"]'))
@@ -42,14 +58,14 @@ export function TacticalMap({
   );
   const selection = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    selection.current?.scrollIntoView({ block: "nearest" });
+    if (!stage) selection.current?.scrollIntoView({ block: "nearest" });
   }, [renderer.selectedNodeId]);
   const three = renderer.mode === "three";
   const unity = renderer.mode === "unity";
   return (
     <section
       ref={mapRoot}
-      className={`tactical-map renderer-map ${selected ? "has-selection" : ""} ${large ? "large" : ""} ${expanded ? "expanded" : ""}`}
+      className={`tactical-map renderer-map ${stage ? "stage-map" : ""} ${selected ? "has-selection" : ""} ${large ? "large" : ""} ${expanded ? "expanded" : ""}`}
       aria-label={t("ui.convoyTerrainModel")}
     >
       <div className="map-heading">
@@ -88,38 +104,55 @@ export function TacticalMap({
           >
             Unity
           </button>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            title={expanded ? t("ui.collapseMap") : t("ui.expandMap")}
-            aria-label={expanded ? t("ui.collapseMap") : t("ui.expandMap")}
-          >
-            {expanded ? <X size={16} /> : <Expand size={16} />}
-          </button>
+          {stage && (
+            <button
+              aria-label={copy.locations}
+              aria-expanded={locations}
+              onClick={() => setLocations(!locations)}
+              title={copy.locations}
+            >
+              <MapPin size={16} />
+            </button>
+          )}
+          {!stage && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              title={expanded ? t("ui.collapseMap") : t("ui.expandMap")}
+              aria-label={expanded ? t("ui.collapseMap") : t("ui.expandMap")}
+            >
+              {expanded ? <X size={16} /> : <Expand size={16} />}
+            </button>
+          )}
         </div>
       </div>
       <div className="map-viewport">
-        {unity ? (
+        <div className="map-renderer-layer" hidden={!unity}>
           <UnityMapSlot />
-        ) : three ? (
-          <Suspense
-            fallback={
-              <div className="map-loading">
-                <span className="spinner" /> {t("ui.loadingTerrain")}{" "}
-              </div>
-            }
-          >
-            <Map3D
-              location={location}
-              onFailure={() => renderer.selectMode("two")}
-            />
-          </Suspense>
-        ) : (
+        </div>
+        {threeLoaded && (
+          <div className="map-renderer-layer" hidden={!three}>
+            <Suspense
+              fallback={
+                <div className="map-loading">
+                  <span className="spinner" /> {t("ui.loadingTerrain")}
+                </div>
+              }
+            >
+              <Map3D
+                location={location}
+                active={three && !renderer.inputBlocked}
+                onFailure={() => renderer.selectMode("two")}
+              />
+            </Suspense>
+          </div>
+        )}
+        <div className="map-renderer-layer" hidden={unity || three}>
           <Map2D
             location={location}
             sceneId={sceneId}
             onSelectLocation={renderer.selectNode}
           />
-        )}
+        </div>
         <span className="map-north">
           N <i>↑</i>
         </span>
@@ -162,6 +195,7 @@ export function TacticalMap({
       </div>
       <div
         className="map-point-choices"
+        hidden={stage && !locations}
         role="group"
         aria-label={copy.locations}
       >

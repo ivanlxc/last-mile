@@ -1,3 +1,4 @@
+import { openIntel, openMission, closeMission } from "./layout-helpers";
 import {
   test as base,
   expect,
@@ -125,11 +126,10 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   const sessionId = created.sessionId;
   const projection = async () => await campaign.projection(sessionId);
   await page.getByRole("button", { name: "开始护送" }).click();
+  await openIntel(page);
   await expect(page.getByRole("heading", { name: "现场情报" })).toBeVisible();
   await campaign.advance(30000);
-  await expect(
-    page.getByRole("heading", { name: "门后的答案", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".scene-location")).toContainText("N01");
   expect((await projection()).location.nodeId).toBe("N01");
   await screenshot(page, info, "01-E1-west-gate");
   const receipt = page.waitForResponse(
@@ -137,6 +137,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
       r.url().endsWith("/display-receipts") &&
       r.request().postDataJSON()?.payload?.displayKind === "context_displayed",
   );
+  await openMission(page);
   await page
     .getByRole("button", { name: "资源与信息边界", exact: true })
     .click();
@@ -145,6 +146,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   ).toBeVisible();
   expect((await receipt).status()).toBe(200);
   await closeModal(page);
+  await closeMission(page);
   // A confirmation modal must not spend resources until its explicit submit.
   const satellite = (await projection()).taskOptions.find(
     (o) => o.investigationKind === "satellite_scan" && o.available,
@@ -152,6 +154,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   const initialSatellite = (await projection()).resources.find(
     (r) => r.channel === "satellite",
   )!.remaining;
+  await page.getByRole("button", { name: "查看地点", exact: true }).click();
   // Map selection is an intent: future locations cannot trigger investigations
   // and neither selecting a hotspot nor opening a confirmation spends resources.
   await page
@@ -169,7 +172,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   await screenshot(page, info, "01b-map-location-selection");
   await page.getByRole("button", { name: "调查此地点", exact: true }).click();
   await page
-    .getByRole("dialog")
+    .getByTestId("intel-drawer")
     .locator(".investigation-card")
     .filter({ hasText: satellite.label })
     .click();
@@ -189,6 +192,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
       .remaining,
   ).toBe(initialSatellite);
   // Existing intelligence-panel entry remains available after cancelling.
+  await openIntel(page);
   await page
     .locator(".intel-panel .investigation-card")
     .filter({ hasText: satellite.label })
@@ -220,13 +224,13 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
       .locator(".route-choice")
       .filter({ hasText: option.label })
       .click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.locator(".decision-inline")).toBeVisible();
     const accepted = page.waitForResponse(
       (r) => r.url().endsWith("/actions") && r.request().method() === "POST",
     );
     await page.getByRole("button", { name: "确认行动", exact: true }).click();
     expect((await accepted).status()).toBe(202);
-    await expect(page.getByRole("dialog")).not.toBeVisible();
+    await expect(page.locator(".decision-inline")).not.toBeVisible();
     for (let n = 0; n < 60; n += 1) {
       await campaign.advance(5000);
       const p = await projection();
@@ -240,11 +244,10 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     else expect((await projection()).lifecycle).toBe("sealed");
   }
   await route("E1_MAIN", "E2");
-  await expect(
-    page.getByRole("heading", { name: "回声的重量", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".scene-location")).toContainText("N02");
   expect((await projection()).location.nodeId).toBe("N02");
   await screenshot(page, info, "02-E2-market");
+  await openIntel(page);
   await page
     .locator(".role-switch button")
     .filter({ hasText: "萨米拉" })
@@ -387,6 +390,7 @@ for (const locale of ["en-US", "zh-CN"] as const) {
     await expect(page.locator(".route-choice").first()).toBeEnabled();
     const beforeReading = await projection();
     expect(beforeReading.missionDeadlineMs).toBeNull();
+    await openMission(page);
     await expect(page.locator(".mission-clock small")).toHaveText(
       locale === "zh-CN" ? "累计用时 · 不限时" : "Elapsed · no limit",
     );
@@ -434,6 +438,7 @@ for (const locale of ["en-US", "zh-CN"] as const) {
     expect(afterReading.actionOptions).toEqual(beforeReading.actionOptions);
     await page.reload();
     await expect(page.locator(".route-choice").first()).toBeEnabled();
+    await openMission(page);
     await expect.poll(displayedSeconds).toBeGreaterThanOrEqual(1830);
     await expect(page.locator(".mission-clock")).not.toHaveClass(/critical/);
     await expect(page.locator(".medical-hud")).not.toHaveClass(/warning/);
@@ -441,6 +446,7 @@ for (const locale of ["en-US", "zh-CN"] as const) {
       /窗口剩余|Window remaining|Priority transfer needed|需要优先转送/,
     );
 
+    await closeMission(page);
     await page.locator(".wait-button").click();
     await expect(page.locator(".decision-cost")).toContainText(
       locale === "zh-CN" ? "任务用时" : "Mission time",

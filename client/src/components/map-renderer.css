@@ -149,3 +149,12 @@
     max-width: none;
   }
 }
+
+.map-renderer-layer {
+  position: absolute;
+  inset: 0;
+}
+.map-renderer-layer[hidden],
+.map-point-choices[hidden] {
+  display: none;
+}

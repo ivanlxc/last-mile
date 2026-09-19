@@ -42,7 +42,7 @@ function overviewPoint(
 
 // This smoke test runs the generated engine, with no network or bridge fixtures.
 // Keep the ordinary browser suite usable before a developer installs Unity.
-test("real Unity Web build renders Blender art, selects, moves the convoy and releases the canvas", async ({
+test("real Unity Web build renders Blender art, selects, moves the convoy and preserves the canvas across map modes", async ({
   page,
 }, testInfo) => {
   test.setTimeout(180000);
@@ -139,9 +139,7 @@ test("real Unity Web build renders Blender art, selects, moves the convoy and re
   const start = page.getByRole("button", { name: "Start escort", exact: true });
   await expect(start).toBeEnabled();
   await start.click();
-  await expect(
-    page.getByRole("heading", { name: "Field intelligence", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".map-first-command")).toBeVisible();
   await expect(page.locator('[data-unity-status="ready"]')).toBeVisible();
   expect(
     await originalCanvas!.evaluate(
@@ -162,11 +160,12 @@ test("real Unity Web build renders Blender art, selects, moves the convoy and re
       return (await response.json()).missionTimeMs as number;
     })
     .toBeGreaterThan(initial.missionTimeMs + 1000);
+  await page.getByTestId("open-mission").click();
   const clock = await page.locator(".mission-clock strong").innerText();
   await expect(page.locator(".mission-clock strong")).not.toHaveText(clock);
 
-  await page.getByRole("button", { name: "Expand map", exact: true }).click();
-  await expect(page.locator(".tactical-map.expanded")).toBeVisible();
+  await page.getByTestId("open-mission").click();
+  await expect(page.locator(".tactical-map.stage-map")).toBeVisible();
   await canvas.screenshot({
     path: testInfo.outputPath("unity-expanded-scene.png"),
   });
@@ -315,11 +314,11 @@ test("real Unity Web build renders Blender art, selects, moves the convoy and re
   });
   expect(stoppedChangedPixelFraction).toBeLessThan(0.005);
   await canvas.press("Home");
-  await page.getByRole("button", { name: "Collapse map", exact: true }).click();
 
   // Use real keyboard events after focusing the Unity canvas, rather than fill(),
   // which would miss Unity accidentally capturing every page keystroke.
   await canvas.click({ position: { x: 20, y: 20 }, delay: 120 });
+  await page.getByTestId("open-advisor").click();
   const question = page.getByRole("textbox", {
     name: "Ask the AI advisor",
     exact: true,
@@ -332,11 +331,19 @@ test("real Unity Web build renders Blender art, selects, moves the convoy and re
     fullPage: true,
   });
   await page.getByRole("button", { name: "2D route map", exact: true }).click();
-  await expect(page.locator("canvas.unity-canvas")).toHaveCount(0);
+  await expect(page.locator("canvas.unity-canvas")).toBeHidden();
   await expect(page.locator(".map2d")).toBeVisible();
   expect(await originalCanvas!.evaluate((element) => element.isConnected)).toBe(
-    false,
+    true,
   );
+  await page.getByRole("button", { name: "Unity scene", exact: true }).click();
+  await expect(canvas).toBeVisible();
+  expect(
+    await originalCanvas!.evaluate(
+      (element) => document.querySelector(".unity-canvas") === element,
+    ),
+  ).toBe(true);
+  await expect(question).toHaveValue("Check the available evidence.");
 
   await testInfo.attach("real-unity-console-errors", {
     body: JSON.stringify(consoleErrors, null, 2),

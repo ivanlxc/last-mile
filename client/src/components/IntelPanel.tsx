@@ -1,5 +1,5 @@
 import { useI18n } from "../lib/i18n";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Radio,
   ScanLine,
@@ -26,7 +26,13 @@ const icons = {
   localAgency: Building2,
   witness: Users,
 };
-export function IntelPanel({ game }: { game: Game }) {
+export function IntelPanel({
+  game,
+  active = true,
+}: {
+  game: Game;
+  active?: boolean;
+}) {
   const { t, characters, scenes, channelLabels, duration } = useI18n();
   const disabledLabels = {
     no_resource: t("ui.missionAllowanceExhausted"),
@@ -47,13 +53,19 @@ export function IntelPanel({ game }: { game: Game }) {
   const quota = s.reportQuotas.find(
       (q) => q.role === role && q.sceneId === s.sceneId,
     ),
-    active = s.activeTasks.find((t) => t.targetRole === role);
+    activeTask = s.activeTasks.find((t) => t.targetRole === role);
   const askReport = (topicId: string) =>
     void game.command("/tasks", {
       taskKind: "request_report",
       targetRole: role,
       topicId,
     });
+  useEffect(() => {
+    if (!active) {
+      setTrace(null);
+      setProvenance(false);
+    }
+  }, [active]);
   return (
     <section className="intel-panel panel">
       <div className="section-heading">
@@ -121,12 +133,12 @@ export function IntelPanel({ game }: { game: Game }) {
               </i>
             </span>
           </div>
-          {active ? (
+          {activeTask ? (
             <div className="task-running">
               <span className="pulse-dot" />
               <div>
                 <strong>
-                  {active.taskKind === "request_report"
+                  {activeTask.taskKind === "request_report"
                     ? t("ui.preparingTheBriefing")
                     : t("ui.investigationInProgress")}
                 </strong>
@@ -163,7 +175,7 @@ export function IntelPanel({ game }: { game: Game }) {
                     key={t.id}
                     disabled={
                       game.busy ||
-                      !!active ||
+                      !!activeTask ||
                       !(
                         s.phase === "scene" ||
                         s.activeOperation?.operationKind === "wait"
@@ -259,6 +271,7 @@ export function IntelPanel({ game }: { game: Game }) {
                 key={r.reportId}
                 report={r}
                 game={game}
+                active={active}
                 expanded={expanded === r.reportId}
                 toggle={() =>
                   setExpanded(expanded === r.reportId ? null : r.reportId)
@@ -298,11 +311,13 @@ export function IntelPanel({ game }: { game: Game }) {
 function ReportCard({
   report: r,
   game,
+  active,
   expanded,
   toggle,
 }: {
   report: P.ReportView;
   game: Game;
+  active: boolean;
   expanded: boolean;
   toggle: () => void;
 }) {
@@ -312,6 +327,8 @@ function ReportCard({
     ref = useVisibleReceipt(
       expanded ? r.reportId : "",
       () => void game.receipt("report_opened", { reportId: r.reportId }),
+      0.55,
+      active,
     );
   return (
     <article className={`report-card ${expanded ? "expanded" : ""}`}>
@@ -334,8 +351,10 @@ function ReportCard({
         <ChevronDown size={16} className={expanded ? "rotate" : ""} />
       </button>
       {expanded && (
-        <div ref={ref} className="report-body">
-          <p>{r.card.body}</p>
+        <div className="report-body">
+          <div ref={ref} className="report-opening">
+            <p>{r.card.body}</p>
+          </div>
           <dl>
             <dt>{t("ui.observationScopeLabel")}</dt>
             <dd>{r.card.observationScope}</dd>

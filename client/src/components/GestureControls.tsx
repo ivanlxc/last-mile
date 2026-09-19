@@ -161,8 +161,10 @@ function errorText(error: CameraRuntimeError, zh: boolean) {
 export default function GestureControls({
   chinese,
   onInput,
+  suspended = false,
 }: {
   chinese: boolean;
+  suspended?: boolean;
   onInput(input: GestureCameraDelta): void;
 }) {
   const t = copy[chinese ? "zh" : "en"];
@@ -186,8 +188,8 @@ export default function GestureControls({
   const skeleton = useRef<HTMLCanvasElement>(null);
   const runtime = useRef<CameraRuntime | null>(null);
   const interpreter = useRef(new GestureInterpreter());
-  const latest = useRef({ chinese, onInput, sensitivity, state });
-  latest.current = { chinese, onInput, sensitivity, state };
+  const latest = useRef({ chinese, onInput, sensitivity, state, suspended });
+  latest.current = { chinese, onInput, sensitivity, state, suspended };
   const pointerHeld = useRef(false);
   const manualUntil = useRef(0);
 
@@ -279,7 +281,10 @@ export default function GestureControls({
         const now = performance.now();
         lastFrameAt = now;
         stale = false;
-        const mouse = pointerHeld.current || now < manualUntil.current;
+        const mouse =
+          latest.current.suspended ||
+          pointerHeld.current ||
+          now < manualUntil.current;
         if (mouse) reset();
         const result = mouse
           ? {
@@ -400,6 +405,12 @@ export default function GestureControls({
     };
   }, []);
 
+  useEffect(() => {
+    if (suspended) {
+      interpreter.current.reset(true);
+      onInput(STOP);
+    }
+  }, [suspended, onInput]);
   const start = () => {
     setError("");
     interpreter.current.reset(true);

@@ -2,7 +2,6 @@ import { useI18n } from "../lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
-  ArrowRight,
   Clock3,
   Users,
   Radio,
@@ -10,12 +9,16 @@ import {
   HelpCircle,
   LogOut,
   Route,
-  Flag,
   Satellite,
   ScanLine,
   Building2,
   MessageCircle,
   ChevronRight,
+  ChevronDown,
+  PanelLeft,
+  Sparkles,
+  BookOpen,
+  X,
 } from "lucide-react";
 import type { Game } from "../lib/useGame";
 import type { P } from "../lib/api";
@@ -27,8 +30,8 @@ import { AdvisorPanel } from "./AdvisorPanel";
 import { DecisionModal } from "./DecisionModal";
 import { Modal } from "./Modal";
 import { ContextModal } from "./ContextModal";
-import { InvestigationModal } from "./InvestigationModal";
-import { mapRendererCopy } from "../lib/mapRendererCopy";
+import { useMapRenderer } from "../lib/mapRenderer";
+import "./map-first.css";
 const icons = {
   satellite: Satellite,
   drone: ScanLine,
@@ -49,15 +52,75 @@ export function GameView({
     [exit, setExit] = useState(false),
     [showScene, setShowScene] = useState(false),
     [context, setContext] = useState(false);
+  const [missionOpen, setMissionOpen] = useState(false);
+  const missionMenu = useRef<HTMLDetailsElement>(null);
+  const [drawer, setDrawer] = useState<"intel" | "advisor" | null>(null);
+  const [seenReportCount, setSeenReportCount] = useState(s.reports.length);
+  const intelTrigger = useRef<HTMLButtonElement>(null);
+  const advisorTrigger = useRef<HTMLButtonElement>(null);
+  const drawerClose = useRef<HTMLButtonElement>(null);
+  const decisionTrigger = useRef<HTMLButtonElement | null>(null);
+  const renderer = useMapRenderer();
+  const chinese = locale === "zh-CN";
+  const closeDrawer = () => {
+    const trigger = drawer === "intel" ? intelTrigger : advisorTrigger;
+    setDrawer(null);
+    trigger.current?.focus();
+  };
+  const closeDecision = () => {
+    const actionId = decision?.actionId;
+    setDecision(null);
+    requestAnimationFrame(() => {
+      const target = actionId
+        ? document.querySelector<HTMLButtonElement>(
+            `[data-action-id="${CSS.escape(actionId)}"]`,
+          )
+        : null;
+      (target && !target.disabled ? target : intelTrigger.current)?.focus();
+    });
+  };
+  useEffect(() => {
+    if (drawer) drawerClose.current?.focus();
+  }, [drawer]);
+  useEffect(() => {
+    if (drawer === "intel") setSeenReportCount(s.reports.length);
+  }, [drawer, s.reports.length]);
+  useEffect(() => {
+    renderer.setInputBlocked(!!drawer || !!decision || missionOpen);
+    return () => renderer.setInputBlocked(false);
+  }, [drawer, decision, missionOpen, renderer.setInputBlocked]);
+  useEffect(() => {
+    const key = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || document.querySelector("dialog[open]"))
+        return;
+      if (missionOpen) {
+        setMissionOpen(false);
+        return;
+      }
+      if (decision) {
+        event.preventDefault();
+        closeDecision();
+      } else if (drawer) {
+        event.preventDefault();
+        closeDrawer();
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [decision, drawer, missionOpen]);
+  useEffect(() => {
+    if (!missionOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !missionMenu.current?.contains(event.target)
+      )
+        setMissionOpen(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    return () => document.removeEventListener("pointerdown", outside);
+  }, [missionOpen]);
   const [displayClock, setDisplayClock] = useState(s.missionTimeMs);
-  const [mapInvestigations, setMapInvestigations] = useState(false);
-  const [mapInvestigationId, setMapInvestigationId] = useState<string | null>(
-    null,
-  );
-  const mapInvestigation = s.taskOptions.find(
-    (option) => option.targetId === mapInvestigationId,
-  );
-  const mapCopy = mapRendererCopy(locale);
   const sample = useRef({ mission: s.missionTimeMs, at: performance.now() });
   useEffect(() => {
     sample.current = { mission: s.missionTimeMs, at: performance.now() };
@@ -81,339 +144,351 @@ export function GameView({
   useEffect(() => {
     if (s.sceneId !== previousScene.current) {
       setDecision(null);
-      setMapInvestigations(false);
-      setMapInvestigationId(null);
       previousScene.current = s.sceneId;
     }
   }, [s.sceneId]);
   const choices = s.actionOptions.filter((a) => a.kind === "route");
   const waiting = s.activeOperation?.operationKind === "wait";
   return (
-    <main className="command-center">
+    <main className="command-center map-first-command">
       <header className="command-header">
         <Brand small />
-        <span className="session-language" title={t("language.fixed")}>
-          {locale === "en-US" ? "EN" : "中文"}
-        </span>
-        <nav className="chapter-nav" aria-label={t("ui.chapterProgress")}>
-          {Object.entries(scenes).map(([id, c], i) => (
-            <div
-              className={
-                s.sceneId === id
-                  ? "current"
-                  : s.sceneId && Number(s.sceneId.slice(1)) > i + 1
-                    ? "past"
-                    : ""
-              }
-              key={id}
-            >
-              <b>{c.number}</b>
-              <span>
-                {i === 0
-                  ? t("ui.westGate")
-                  : i === 1
-                    ? t("ui.market")
-                    : t("ui.mainBridge")}
-              </span>
-              {i < 2 && <ChevronRight size={12} />}
-            </div>
-          ))}
-        </nav>
+        <div className="chapter-current">
+          <span className="eyebrow">
+            {scene ? `ACT ${scene.number}` : "PROLOGUE"}
+          </span>
+          <h1>{scene?.english ?? "LAST LIGHT"}</h1>
+          <span className="scene-location">
+            {scene?.location ?? t("ui.assemblyYardWestGate")}
+          </span>
+        </div>
         <div className="command-hud">
           <div className="civilian-hud">
-            <Users size={17} />
-            <strong>20</strong>
-            <span>{t("ui.civilians")}</span>
+            <Users size={16} />
+            <strong>{s.civilianCount}</strong>
+            <span>{chinese ? "名乘员" : "aboard"}</span>
           </div>
           <div
             className={`medical-hud ${s.medical.status !== "stable" ? "warning" : ""}`}
             title={s.medical.note}
           >
-            <HeartPulse size={17} />
+            <HeartPulse size={16} />
             <span>
               {s.medical.status === "stable"
                 ? t("ui.stable")
                 : t("ui.priorityTransferNeeded")}
             </span>
           </div>
-          <div className="mission-clock">
-            <Clock3 size={17} />
-            <div>
-              <small>{t("ui.elapsedMissionTime")}</small>
-              <strong>{timer(displayClock)}</strong>
+          <details
+            className="mission-details"
+            ref={missionMenu}
+            open={missionOpen}
+            onToggle={(event) => setMissionOpen(event.currentTarget.open)}
+          >
+            <summary data-testid="open-mission">
+              {chinese ? "任务" : "Mission"}
+              <ChevronDown size={14} />
+            </summary>
+            <div className="mission-popover">
+              <nav className="chapter-nav" aria-label={t("ui.chapterProgress")}>
+                {Object.entries(scenes).map(([id, c], i) => (
+                  <div className={s.sceneId === id ? "current" : ""} key={id}>
+                    <b>{c.number}</b>
+                    <span>
+                      {i === 0
+                        ? t("ui.westGate")
+                        : i === 1
+                          ? t("ui.market")
+                          : t("ui.mainBridge")}
+                    </span>
+                  </div>
+                ))}
+              </nav>
+              <div className="mission-clock">
+                <Clock3 size={17} />
+                <div>
+                  <small>{t("ui.elapsedMissionTime")}</small>
+                  <strong>{timer(displayClock)}</strong>
+                </div>
+              </div>
+              <div className="global-resources">
+                {s.resources.map((r) => {
+                  const Icon = icons[r.channel];
+                  return (
+                    <div key={r.channel}>
+                      <Icon size={14} />
+                      <span>{channelLabels[r.channel]}</span>
+                      <strong className={!r.remaining ? "empty" : ""}>
+                        {r.remaining}
+                        <small>/{r.initial}</small>
+                      </strong>
+                    </div>
+                  );
+                })}
+              </div>
+              {(s.pendingTasks.manifest === "pending" ||
+                s.pendingTasks.inspection === "pending") && (
+                <p className="mission-pending">
+                  {t("ui.handoffTasks")}:{" "}
+                  {[
+                    s.pendingTasks.manifest === "pending"
+                      ? t("ui.manifestEntry")
+                      : null,
+                    s.pendingTasks.inspection === "pending"
+                      ? t("ui.vehicleInspection")
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              )}
+              <button
+                className="resource-context"
+                onClick={() => setContext(true)}
+              >
+                {t("ui.resourcesAndLimits")}
+                <ArrowUpRight size={14} />
+              </button>
+              <button onClick={onGuide}>
+                {t("ui.fieldGuide")}
+                <HelpCircle size={14} />
+              </button>
+              <button onClick={() => setExit(true)}>
+                {t("ui.endThisSession")}
+                <LogOut size={14} />
+              </button>
+              <small className="session-language">
+                {locale === "en-US" ? "EN" : "中文"} · {t("language.fixed")}
+              </small>
             </div>
-          </div>
-          <button
-            className="icon-button"
-            aria-label={t("ui.fieldGuide")}
-            onClick={onGuide}
-          >
-            <HelpCircle size={18} />
-          </button>
-          <button
-            className="icon-button"
-            aria-label={t("ui.endThisSession")}
-            onClick={() => setExit(true)}
-          >
-            <LogOut size={17} />
-          </button>
+          </details>
         </div>
       </header>
-      <div className="resource-strip">
-        <span className="operation-name">
-          <span className="pulse-dot" /> {t("ui.daybreak07")} <i> / </i>{" "}
+      <div className="map-command-toolbar">
+        <div className="map-panel-tools">
+          <button
+            data-testid="open-intel"
+            ref={intelTrigger}
+            className={drawer === "intel" ? "active" : ""}
+            aria-expanded={drawer === "intel"}
+            aria-controls="intel-drawer"
+            onClick={() =>
+              drawer === "intel" ? closeDrawer() : setDrawer("intel")
+            }
+          >
+            <PanelLeft size={17} />
+            {chinese ? "情报" : "Intel"}
+            {s.reports.length > seenReportCount && (
+              <span className="toolbar-badge">
+                {s.reports.length - seenReportCount}
+              </span>
+            )}
+          </button>
+          <button
+            data-testid="open-story"
+            onClick={() => setShowScene(true)}
+            aria-label={t("ui.readTheSceneStory")}
+          >
+            <BookOpen size={16} />
+            {chinese ? "故事" : "Story"}
+          </button>
+        </div>
+        <span className="operation-name" role="status">
+          <span className="pulse-dot" />
           {travelling
             ? t("ui.convoyMoving")
             : waiting
               ? t("ui.coordinatingInPlace")
               : t("ui.awaitingOrders")}
         </span>
-        <div className="global-resources">
-          <button className="resource-context" onClick={() => setContext(true)}>
-            {" "}
-            {t("ui.resourcesAndLimits")} <HelpCircle size={11} />
-          </button>
-          {s.resources.map((r) => {
-            const Icon = icons[r.channel];
-            return (
-              <div
-                key={r.channel}
-                title={t("resources.sharedTitle", {
-                  channel: channelLabels[r.channel],
-                })}
-              >
-                <Icon size={14} />
-                <span>{channelLabels[r.channel]}</span>
-                <strong className={!r.remaining ? "empty" : ""}>
-                  {r.remaining}
-                  <small>/{r.initial}</small>
-                </strong>
-              </div>
-            );
-          })}
-        </div>
-        <span className={`connection ${!game.connected ? "disconnected" : ""}`}>
-          <i />
-          {game.connected
-            ? t("ui.commandLinkOnline")
-            : t("ui.reconnectingClockContinues")}
-        </span>
-      </div>
-      <div className="play-layout">
-        <section className="world-column">
-          <div
-            className="scene-art"
-            style={{
-              backgroundImage: `url(${scene?.image ?? "/assets/hero.png"})`,
-            }}
-            key={scene?.image ?? "entry"}
+        <div className="map-toolbar-feedback">
+          {s.activeTasks.length > 0 && (
+            <button className="task-status" onClick={() => setDrawer("intel")}>
+              <span className="spinner" />
+              {s.activeTasks.length} {chinese ? "项调查进行中" : "in progress"}
+            </button>
+          )}
+          <span
+            className={`connection ${!game.connected ? "disconnected" : ""}`}
+            title={
+              game.connected
+                ? t("ui.commandLinkOnline")
+                : t("ui.reconnectingClockContinues")
+            }
           >
-            <div className="scene-art-top">
-              <span>
-                {scene
-                  ? `ACT ${scene.number} / ${scene.english}`
-                  : "PROLOGUE / LAST LIGHT"}
-              </span>
-              <button
-                onClick={() => setShowScene(true)}
-                aria-label={t("ui.readTheSceneStory")}
-              >
-                <ArrowUpRight size={18} />
-              </button>
-            </div>
-            <div className="scene-title">
-              <span className="scene-location">
-                {scene?.location ?? t("ui.assemblyYardWestGate")}
-              </span>
-              <h1>{scene?.title ?? t("ui.theLastDeparture")}</h1>
-              <p>
-                {scene?.intro ?? t("ui.theReceptionStationLightsAreOnYour")}
-              </p>
-            </div>
-            <span className="art-caption">
-              {t("ui.storyIllustrationNotReconnaissance")}
+            <i />
+            <span>
+              {game.connected
+                ? chinese
+                  ? "在线"
+                  : "Connected"
+                : chinese
+                  ? "重新连接中"
+                  : "Reconnecting…"}
             </span>
+          </span>
+          <button
+            data-testid="open-advisor"
+            ref={advisorTrigger}
+            className={`advisor-trigger ${drawer === "advisor" ? "active" : ""}`}
+            aria-expanded={drawer === "advisor"}
+            aria-controls="advisor-drawer"
+            onClick={() =>
+              drawer === "advisor" ? closeDrawer() : setDrawer("advisor")
+            }
+          >
+            <Sparkles size={16} />
+            {t("ui.aiAdvisor")}
+            {["queued", "running"].includes(
+              s.latestAdviceJob?.status ?? "",
+            ) && <span className="spinner" />}
+          </button>
+        </div>
+      </div>
+      <div className={`map-stage ${drawer ? `with-${drawer}` : ""}`}>
+        <aside
+          data-testid="intel-drawer"
+          id="intel-drawer"
+          className="map-drawer intel-drawer"
+          hidden={drawer !== "intel"}
+          aria-label={t("ui.fieldIntelligence")}
+        >
+          <div className="drawer-bar">
+            <span>{chinese ? "情报与调查" : "INTELLIGENCE"}</span>
+            <button
+              ref={drawer === "intel" ? drawerClose : undefined}
+              className="icon-button"
+              aria-label={chinese ? "关闭情报" : "Close intelligence"}
+              onClick={closeDrawer}
+            >
+              <X size={18} />
+            </button>
           </div>
-          <div className="radio-line">
-            <div className="radio-avatar">
-              <Radio size={17} />
-            </div>
-            <div>
-              <strong>
-                {scene?.speaker ?? t("ui.daybreakReceptionStation")}{" "}
-                <span>{t("ui.radio")}</span>
-              </strong>
-              <p>
-                {travelling
-                  ? (s.activeOperation?.publicProgressLabel ??
-                    t("ui.theConvoyIsHeadingToTheNext"))
-                  : waiting
-                    ? t("ui.holdPositionInvestigationsAndAnalysisContinueAnd")
-                    : (scene?.radio ??
-                      t("ui.daybreak07TheReceptionWindowIsOpen"))}
-              </p>
-            </div>
-          </div>
+          <IntelPanel game={game} active={drawer === "intel"} />
+        </aside>
+        <div className="map-stage-main">
           <TacticalMap
             location={s.location}
             sceneId={s.sceneId}
+            stage
             onInvestigate={
               s.phase === "scene" || waiting
-                ? () => setMapInvestigations(true)
+                ? () => setDrawer("intel")
                 : undefined
             }
           />
-          {(s.pendingTasks.manifest === "pending" ||
-            s.pendingTasks.inspection === "pending") && (
-            <div className="pending-strip">
-              <Flag size={13} />
-              <span>{t("ui.handoffTasks")}</span>
-              {s.pendingTasks.manifest === "pending" && (
-                <b>{t("ui.manifestEntry")}</b>
-              )}
-              {s.pendingTasks.inspection === "pending" && (
-                <b>{t("ui.vehicleInspection")}</b>
-              )}
-            </div>
-          )}
-        </section>
-        <IntelPanel game={game} />
-        <AdvisorPanel game={game} />
-      </div>
-      <footer className="action-dock">
-        <div className="action-label">
-          <Route size={19} />
-          <span>
-            {" "}
-            {t("ui.nextAction")}
-            <small>{t("ui.theFinalDecisionIsYours")}</small>
-          </span>
         </div>
-        <div className="route-choices">
-          {choices.length ? (
-            choices.map((action, i) => (
-              <button
-                className="route-choice"
-                key={action.actionId}
-                disabled={!action.available || game.busy}
-                onClick={() => setDecision(action)}
-              >
-                <span className="route-letter">
-                  {String.fromCharCode(65 + i)}
-                </span>
-                <div>
-                  <strong>{action.label}</strong>
-                  <small>
-                    {duration(action.cost.knownDurationMs)}{" "}
-                    <i>
-                      ·{" "}
-                      {action.cost.uncertainty === "none"
-                        ? t("ui.fixedDuration")
-                        : t("ui.additionalDelayPossibleLabel")}
-                    </i>
-                  </small>
-                </div>
-                <ArrowUpRight size={21} />
-              </button>
-            ))
-          ) : (
-            <div className="travel-message">
-              <span className="travel-track">
-                <i />
-              </span>
-              <div>
-                <strong>
-                  {s.activeOperation?.publicProgressLabel ??
-                    t("ui.convoyInTransit")}
-                </strong>
-                <small>{t("ui.chooseARouteAtTheNextDecision")}</small>
-              </div>
-            </div>
-          )}
-        </div>
-        <button
-          className="wait-button"
-          disabled={
-            !s.actionOptions.find((a) => a.actionId === "WAIT")?.available ||
-            game.busy
-          }
-          onClick={() => {
-            const a = s.actionOptions.find((a) => a.actionId === "WAIT");
-            if (a) setDecision(a);
-          }}
+        <aside
+          data-testid="advisor-drawer"
+          id="advisor-drawer"
+          className="map-drawer advisor-drawer"
+          hidden={drawer !== "advisor"}
+          aria-label={t("ui.aiAdvisor")}
         >
-          <Clock3 size={17} />
-          <span>
-            {" "}
-            {t("ui.waitHere")}
-            <small>{t("ui.153060Sec")}</small>
-          </span>
-        </button>
+          <div className="drawer-bar">
+            <span>{chinese ? "决策支持" : "DECISION SUPPORT"}</span>
+            <button
+              ref={drawer === "advisor" ? drawerClose : undefined}
+              className="icon-button"
+              aria-label={chinese ? "关闭 AI 助手" : "Close AI advisor"}
+              onClick={closeDrawer}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <AdvisorPanel game={game} active={drawer === "advisor"} />
+        </aside>
+      </div>
+      <footer className={`action-dock ${decision ? "reviewing-action" : ""}`}>
+        {decision ? (
+          <DecisionModal
+            inline
+            missionTimeMs={displayClock}
+            game={game}
+            action={decision}
+            onClose={closeDecision}
+          />
+        ) : (
+          <>
+            <div className="action-label">
+              <Route size={19} />
+              <span>{t("ui.nextAction")}</span>
+            </div>
+            <div className="route-choices">
+              {choices.length ? (
+                choices.map((action, i) => (
+                  <button
+                    className="route-choice"
+                    data-action-id={action.actionId}
+                    key={action.actionId}
+                    disabled={!action.available || game.busy}
+                    onClick={(event) => {
+                      decisionTrigger.current = event.currentTarget;
+                      setDecision(action);
+                    }}
+                  >
+                    <span className="route-letter">
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    <div>
+                      <strong>{action.label}</strong>
+                      <small>
+                        {duration(action.cost.knownDurationMs)}{" "}
+                        <i>
+                          ·{" "}
+                          {action.cost.uncertainty === "none"
+                            ? t("ui.fixedDuration")
+                            : t("ui.additionalDelayPossibleLabel")}
+                        </i>
+                      </small>
+                    </div>
+                    <ArrowUpRight size={18} />
+                  </button>
+                ))
+              ) : (
+                <div className="travel-message">
+                  <span className="travel-track">
+                    <i />
+                  </span>
+                  <div>
+                    <strong>
+                      {s.activeOperation?.publicProgressLabel ??
+                        t("ui.convoyInTransit")}
+                    </strong>
+                    <small>{t("ui.chooseARouteAtTheNextDecision")}</small>
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              className="wait-button"
+              data-action-id="WAIT"
+              disabled={
+                !s.actionOptions.find((a) => a.actionId === "WAIT")
+                  ?.available || game.busy
+              }
+              onClick={(event) => {
+                const a = s.actionOptions.find((a) => a.actionId === "WAIT");
+                if (a) {
+                  decisionTrigger.current = event.currentTarget;
+                  setDecision(a);
+                }
+              }}
+            >
+              <Clock3 size={17} />
+              <span>
+                {t("ui.waitHere")}
+                <small>{t("ui.153060Sec")}</small>
+              </span>
+            </button>
+          </>
+        )}
       </footer>
       {context && (
         <ContextModal
           game={game}
           missionTimeMs={displayClock}
           onClose={() => setContext(false)}
-        />
-      )}
-      {decision && (
-        <DecisionModal
-          missionTimeMs={displayClock}
-          game={game}
-          action={decision}
-          onClose={() => setDecision(null)}
-        />
-      )}
-      {mapInvestigations && (
-        <Modal
-          title={mapCopy.investigations}
-          onClose={() => setMapInvestigations(false)}
-        >
-          <p>{mapCopy.investigationNote}</p>
-          {s.taskOptions.map((option) => {
-            const Icon = icons[option.resourceChannel];
-            return (
-              <button
-                key={option.targetId}
-                className="investigation-card"
-                disabled={
-                  game.busy ||
-                  (!option.available &&
-                    option.disabledReason !== "needs_report_reference")
-                }
-                onClick={() => {
-                  setMapInvestigations(false);
-                  setMapInvestigationId(option.targetId);
-                }}
-              >
-                <div className="investigation-icon">
-                  <Icon size={18} />
-                </div>
-                <div>
-                  <strong>{option.label}</strong>
-                  <span>
-                    {channelLabels[option.resourceChannel]} ·{" "}
-                    {duration(option.cost.knownDurationMs)}
-                  </span>
-                </div>
-                <ChevronRight size={16} />
-              </button>
-            );
-          })}
-          {!s.taskOptions.length && (
-            <p className="muted">
-              {t("ui.theConvoyIsMovingAssignInvestigationsAt")}
-            </p>
-          )}
-        </Modal>
-      )}
-      {mapInvestigation && (
-        <InvestigationModal
-          key={mapInvestigation.targetId}
-          game={game}
-          option={mapInvestigation}
-          onClose={() => setMapInvestigationId(null)}
         />
       )}
       {exit && (
@@ -456,6 +531,26 @@ export function GameView({
           <blockquote>
             {scene?.atmosphere ?? t("ui.staticBrieflyFillsTheRadioTheDriver")}
           </blockquote>
+          <div className="radio-line">
+            <div className="radio-avatar">
+              <Radio size={17} />
+            </div>
+            <div>
+              <strong>
+                {scene?.speaker ?? t("ui.daybreakReceptionStation")}{" "}
+                <span>{t("ui.radio")}</span>
+              </strong>
+              <p>
+                {travelling
+                  ? (s.activeOperation?.publicProgressLabel ??
+                    t("ui.theConvoyIsHeadingToTheNext"))
+                  : waiting
+                    ? t("ui.holdPositionInvestigationsAndAnalysisContinueAnd")
+                    : (scene?.radio ??
+                      t("ui.daybreak07TheReceptionWindowIsOpen"))}
+              </p>
+            </div>
+          </div>
           <p className="muted small-text">
             {" "}
             {t("ui.theIllustrationSetsTheSceneItDoes")}{" "}

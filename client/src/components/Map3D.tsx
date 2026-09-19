@@ -8,9 +8,11 @@ import { mapData, locationPoint } from "../lib/map";
 export default function Map3D({
   location,
   onFailure,
+  active = true,
 }: {
   location: KnownLocation;
   onFailure: () => void;
+  active?: boolean;
 }) {
   const { t } = useI18n();
   const host = useRef<HTMLDivElement>(null),
@@ -18,6 +20,8 @@ export default function Map3D({
     failure = useRef(onFailure);
   position.current = location;
   failure.current = onFailure;
+  const visible = useRef(active);
+  visible.current = active;
   const [ready, setReady] = useState(false);
   useEffect(() => {
     if (!host.current) return;
@@ -152,6 +156,8 @@ export default function Map3D({
     const animate = () => {
       if (disposed) return;
       raf = requestAnimationFrame(animate);
+      controls.enabled = visible.current;
+      if (!visible.current) return;
       const p = locationPoint(position.current);
       const target = new THREE.Vector3(p[0], p[1] + 0.65, p[2]);
       if (!initialized) {

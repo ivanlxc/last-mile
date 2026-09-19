@@ -150,9 +150,7 @@ test("test-only Unity bridge gates start, survives briefing transition, and acce
   );
   await start.click();
   expect((await started).status()).toBe(200);
-  await expect(
-    page.getByRole("heading", { name: "Field intelligence", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".map-first-command")).toBeVisible();
   await expect
     .poll(() =>
       page.evaluate(
@@ -190,6 +188,38 @@ test("test-only Unity bridge gates start, survives briefing transition, and acce
       ),
     )
     .toBe("N01");
+  await page.getByTestId("open-advisor").click();
+  await page.evaluate(() =>
+    (window as unknown as FixtureWindow).__unityFixture.emit({
+      type: "select-location",
+      nodeId: "N02",
+    }),
+  );
+  await expect(page.locator(".map-selection")).toContainText("West gate");
+  await page
+    .getByRole("button", { name: "Close AI advisor", exact: true })
+    .click();
+  await page.getByRole("button", { name: "2D route map", exact: true }).click();
+  await expect(page.locator(".unity-canvas")).toBeHidden();
+  await page.evaluate(() =>
+    (window as unknown as FixtureWindow).__unityFixture.emit({
+      type: "select-location",
+      nodeId: "N02",
+    }),
+  );
+  await expect(page.locator(".map-selection")).toContainText("West gate");
+  await page.getByRole("button", { name: "Unity scene", exact: true }).click();
+  await expect(page.locator(".unity-canvas")).toBeVisible();
+  expect(
+    await page.evaluate(() => {
+      const f = (window as unknown as FixtureWindow).__unityFixture;
+      return {
+        createCount: f.createCount,
+        quitCount: f.quitCount,
+        instanceId: f.configured.at(-1),
+      };
+    }),
+  ).toEqual(before);
   await page.evaluate(() => {
     const fixture = (window as unknown as FixtureWindow).__unityFixture;
     fixture.emit({ type: "select-location", nodeId: "private-node-test-only" });
@@ -236,9 +266,7 @@ test("a reported Unity failure releases the engine and keeps escort available th
   const start = page.getByRole("button", { name: "Start escort", exact: true });
   await expect(start).toBeEnabled();
   await start.click();
-  await expect(
-    page.getByRole("heading", { name: "Field intelligence", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".map-first-command")).toBeVisible();
 });
 
 test("an absent Unity build explains setup and does not block starting a mission", async ({
@@ -270,7 +298,5 @@ test("an absent Unity build explains setup and does not block starting a mission
   const start = page.getByRole("button", { name: "Start escort", exact: true });
   await expect(start).toBeEnabled();
   await start.click();
-  await expect(
-    page.getByRole("heading", { name: "Field intelligence", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".map-first-command")).toBeVisible();
 });

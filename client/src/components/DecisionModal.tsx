@@ -1,6 +1,6 @@
 import { useI18n } from "../lib/i18n";
-import { useState } from "react";
-import { ArrowRight, Clock3, ChevronDown, AlertCircle } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ArrowRight, Clock3, ChevronDown, AlertCircle, X } from "lucide-react";
 import type { P } from "../lib/api";
 import type { Game } from "../lib/useGame";
 import { timer } from "../lib/narrative";
@@ -10,13 +10,15 @@ export function DecisionModal({
   missionTimeMs,
   action,
   onClose,
+  inline = false,
 }: {
   game: Game;
   missionTimeMs: number;
   action: P.ActionOption;
   onClose: () => void;
+  inline?: boolean;
 }) {
-  const { t, duration, reasonLabels } = useI18n();
+  const { t, locale, duration, reasonLabels } = useI18n();
   const s = game.state!,
     wait = action.actionId === "WAIT";
   const [reason, setReason] = useState(""),
@@ -57,8 +59,9 @@ export function DecisionModal({
     });
     if (result) onClose();
   };
+  const Container = inline ? InlineDecision : Modal;
   return (
-    <Modal
+    <Container
       title={wait ? t("ui.stayHereAndKeepCoordinating") : action.label}
       onClose={onClose}
     >
@@ -92,119 +95,132 @@ export function DecisionModal({
           ))}
         </div>
       )}
-      <label className="field-label" htmlFor="reason">
-        {" "}
-        {t("ui.whyAreYouChoosingThisNow")} <small>{t("ui.optional")}</small>
-      </label>
-      <textarea
-        id="reason"
-        maxLength={1000}
-        rows={3}
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder={t("ui.noteYourMainEvidenceAnUnresolvedQuestion")}
-      />
-      {validAdvice && (
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={based}
-            onChange={(e) => setBased(e.target.checked)}
-          />{" "}
-          {t("ui.iConsideredTheCurrentAIAnalysis")}{" "}
-        </label>
-      )}
-      <details
-        className="decision-details"
-        open={annotate}
-        onToggle={(e) => setAnnotate(e.currentTarget.open)}
-      >
+      <details className="decision-notes" open={inline ? undefined : true}>
         <summary>
-          {" "}
           {t("ui.addDecisionContext")}{" "}
           <small>{t("ui.optionalForTheReview")}</small>
           <ChevronDown size={14} />
         </summary>
-        <div className="reason-chips">
-          {Object.entries(reasonLabels).map(([key, label]) => (
-            <button
-              className={
-                codes.includes(key as (typeof codes)[number]) ? "selected" : ""
-              }
-              key={key}
-              onClick={() =>
-                setCodes((c) =>
-                  c.includes(key as (typeof codes)[number])
-                    ? c.filter((x) => x !== key)
-                    : [
-                        ...c.filter(
-                          (x) =>
-                            !(
-                              key === "new_question" && x === "no_new_question"
-                            ) &&
-                            !(
-                              key === "no_new_question" && x === "new_question"
+        <div className="decision-notes-content">
+          <label className="field-label" htmlFor="reason">
+            {" "}
+            {t("ui.whyAreYouChoosingThisNow")} <small>{t("ui.optional")}</small>
+          </label>
+          <textarea
+            id="reason"
+            maxLength={1000}
+            rows={3}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder={t("ui.noteYourMainEvidenceAnUnresolvedQuestion")}
+          />
+          {validAdvice && (
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={based}
+                onChange={(e) => setBased(e.target.checked)}
+              />{" "}
+              {t("ui.iConsideredTheCurrentAIAnalysis")}{" "}
+            </label>
+          )}
+          <details
+            className="decision-details"
+            open={annotate}
+            onToggle={(e) => setAnnotate(e.currentTarget.open)}
+          >
+            <summary>
+              {" "}
+              {t("ui.addDecisionContext")}{" "}
+              <small>{t("ui.optionalForTheReview")}</small>
+              <ChevronDown size={14} />
+            </summary>
+            <div className="reason-chips">
+              {Object.entries(reasonLabels).map(([key, label]) => (
+                <button
+                  className={
+                    codes.includes(key as (typeof codes)[number])
+                      ? "selected"
+                      : ""
+                  }
+                  key={key}
+                  onClick={() =>
+                    setCodes((c) =>
+                      c.includes(key as (typeof codes)[number])
+                        ? c.filter((x) => x !== key)
+                        : [
+                            ...c.filter(
+                              (x) =>
+                                !(
+                                  key === "new_question" &&
+                                  x === "no_new_question"
+                                ) &&
+                                !(
+                                  key === "no_new_question" &&
+                                  x === "new_question"
+                                ),
                             ),
-                        ),
-                        key as (typeof codes)[number],
-                      ],
-                )
-              }
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={limitation}
-            onChange={(e) => setLimitation(e.target.checked)}
-          />{" "}
-          {t("ui.iConsideredTheLimitsOfTheInformation")}{" "}
-        </label>
-        <label className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={costs}
-            onChange={(e) => setCosts(e.target.checked)}
-          />{" "}
-          {t("ui.iComparedTheKnownTimeCosts")}{" "}
-        </label>
-        <label className="field-label" htmlFor="new-question">
-          {" "}
-          {t("ui.aQuestionStillUnresolved")}{" "}
-        </label>
-        <input
-          id="new-question"
-          maxLength={100}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder={t("ui.forExampleIsOurVehicleClearanceStill")}
-        />
-        {s.reports.filter((r) => r.sceneId === s.sceneId).length > 0 && (
-          <>
-            <span className="field-label">{t("ui.reportsReferenced")}</span>
-            {s.reports
-              .filter((r) => r.sceneId === s.sceneId)
-              .map((r) => (
-                <label className="checkbox-row" key={r.reportId}>
-                  <input
-                    type="checkbox"
-                    checked={refs.includes(r.reportId)}
-                    onChange={() =>
-                      setRefs((ids) =>
-                        ids.includes(r.reportId)
-                          ? ids.filter((id) => id !== r.reportId)
-                          : [...ids, r.reportId],
-                      )
-                    }
-                  />
-                  {r.card.title}
-                </label>
+                            key as (typeof codes)[number],
+                          ],
+                    )
+                  }
+                >
+                  {label}
+                </button>
               ))}
-          </>
-        )}
+            </div>
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={limitation}
+                onChange={(e) => setLimitation(e.target.checked)}
+              />{" "}
+              {t("ui.iConsideredTheLimitsOfTheInformation")}{" "}
+            </label>
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={costs}
+                onChange={(e) => setCosts(e.target.checked)}
+              />{" "}
+              {t("ui.iComparedTheKnownTimeCosts")}{" "}
+            </label>
+            <label className="field-label" htmlFor="new-question">
+              {" "}
+              {t("ui.aQuestionStillUnresolved")}{" "}
+            </label>
+            <input
+              id="new-question"
+              maxLength={100}
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder={t("ui.forExampleIsOurVehicleClearanceStill")}
+            />
+            {s.reports.filter((r) => r.sceneId === s.sceneId).length > 0 && (
+              <>
+                <span className="field-label">{t("ui.reportsReferenced")}</span>
+                {s.reports
+                  .filter((r) => r.sceneId === s.sceneId)
+                  .map((r) => (
+                    <label className="checkbox-row" key={r.reportId}>
+                      <input
+                        type="checkbox"
+                        checked={refs.includes(r.reportId)}
+                        onChange={() =>
+                          setRefs((ids) =>
+                            ids.includes(r.reportId)
+                              ? ids.filter((id) => id !== r.reportId)
+                              : [...ids, r.reportId],
+                          )
+                        }
+                      />
+                      {r.card.title}
+                    </label>
+                  ))}
+              </>
+            )}
+          </details>
+        </div>
       </details>
       {pending && (
         <label className="checkbox-row cancellation">
@@ -236,6 +252,42 @@ export function DecisionModal({
           <ArrowRight size={17} />
         </button>
       </div>
-    </Modal>
+    </Container>
+  );
+}
+
+function InlineDecision({
+  title,
+  children,
+  onClose,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  const { t } = useI18n();
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    heading.current?.focus();
+  }, []);
+  return (
+    <section
+      className="inline-decision decision-inline"
+      aria-labelledby="inline-decision-title"
+    >
+      <div className="inline-decision-heading">
+        <h2 id="inline-decision-title" ref={heading} tabIndex={-1}>
+          {title}
+        </h2>
+        <button
+          className="icon-button"
+          aria-label={t("ui.close")}
+          onClick={onClose}
+        >
+          <X size={18} />
+        </button>
+      </div>
+      <div className="inline-decision-body">{children}</div>
+    </section>
   );
 }

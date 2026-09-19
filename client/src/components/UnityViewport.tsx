@@ -14,6 +14,8 @@ import "./unity.css";
 
 export interface UnityViewportProps {
   state: UnityRenderState;
+  active?: boolean;
+  inputBlocked?: boolean;
   onReady?: () => void;
   onFailure: (message: string) => void;
   onSelectLocation?: (nodeId: string) => void;
@@ -61,6 +63,32 @@ export default function UnityViewport(props: UnityViewportProps) {
     canvas.tabIndex = 0;
     canvas.setAttribute("aria-label", "LAST MILE Unity tactical map");
     container.append(canvas);
+    const guardInput = (event: Event) => {
+      if (latest.current.active === false || latest.current.inputBlocked) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    };
+    const guardedEvents = [
+      "pointerdown",
+      "pointermove",
+      "pointerup",
+      "mousedown",
+      "mousemove",
+      "mouseup",
+      "wheel",
+      "touchstart",
+      "touchmove",
+      "touchend",
+      "keydown",
+      "keyup",
+    ];
+    guardedEvents.forEach((type) =>
+      canvas.addEventListener(type, guardInput, {
+        capture: true,
+        passive: false,
+      }),
+    );
     setStatus("loading");
     setProgress(0);
     setError("");
@@ -79,6 +107,9 @@ export default function UnityViewport(props: UnityViewportProps) {
       clearTimeout(deadline);
       window.removeEventListener("last-mile-unity", receive);
       observer?.disconnect();
+      guardedEvents.forEach((type) =>
+        canvas.removeEventListener(type, guardInput, true),
+      );
       canvas.remove();
       if (flush.current === sendState) flush.current = null;
       if (cameraInput.current === sendCamera) cameraInput.current = null;
@@ -120,6 +151,11 @@ export default function UnityViewport(props: UnityViewportProps) {
     };
     const sendCamera = (input: GestureCameraDelta) => {
       if (disposed || !ready || !engine) return;
+      if (
+        input.mode !== "stop" &&
+        (latest.current.active === false || latest.current.inputBlocked)
+      )
+        return;
       if (![input.dx, input.dy, input.zoomLog].every(Number.isFinite)) return;
       if (input.mode === "stop" && !cameraMoving) return;
       if (
@@ -156,7 +192,12 @@ export default function UnityViewport(props: UnityViewportProps) {
         setProgress(1);
         setStatus("ready");
         latest.current.onReady?.();
-      } else if (message.type === "select-location" && ready) {
+      } else if (
+        message.type === "select-location" &&
+        ready &&
+        latest.current.active !== false &&
+        !latest.current.inputBlocked
+      ) {
         latest.current.onSelectLocation?.(message.nodeId);
       } else if (message.type === "error") {
         fail(new Error(message.message || "Unity reported an error."));
@@ -226,12 +267,26 @@ export default function UnityViewport(props: UnityViewportProps) {
     flush.current?.();
   }, [props.state]);
 
+  const interactive = props.active !== false && !props.inputBlocked;
+  useEffect(() => {
+    const canvas = host.current?.querySelector("canvas");
+    if (canvas) {
+      canvas.tabIndex = interactive ? 0 : -1;
+      if (!interactive) canvas.blur();
+    }
+    if (!interactive)
+      cameraInput.current?.({ mode: "stop", dx: 0, dy: 0, zoomLog: 0 });
+  }, [interactive, status]);
   const chinese = props.state.locale === "zh-CN";
   return (
     <div className="unity-viewport" data-unity-status={status}>
-      <div className="unity-canvas-host" ref={host} />
-      {status === "ready" && (
-        <GestureControls chinese={chinese} onInput={sendCameraInput} />
+      <div className="unity-canvas-host" ref={host} inert={!interactive} />
+      {status === "ready" && props.active !== false && (
+        <GestureControls
+          chinese={chinese}
+          suspended={!!props.inputBlocked}
+          onInput={sendCameraInput}
+        />
       )}
       {status !== "ready" && (
         <div className="unity-loading" role="status" aria-live="polite">

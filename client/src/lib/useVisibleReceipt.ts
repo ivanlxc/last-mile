@@ -4,13 +4,15 @@ export function useVisibleReceipt(
   key: string,
   send: () => void,
   minimumVisible = 0.55,
+  enabled = true,
 ) {
   const target = useRef<HTMLDivElement>(null);
   const latest = useRef(send);
+  const displayed = useRef(new Set<string>());
   latest.current = send;
   useEffect(() => {
     const element = target.current;
-    if (!element || !key) return;
+    if (!element || !key || !enabled || displayed.current.has(key)) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let intersecting = false,
       done = false;
@@ -19,6 +21,7 @@ export function useVisibleReceipt(
       if (intersecting && !done && document.visibilityState === "visible")
         timer = setTimeout(() => {
           done = true;
+          displayed.current.add(key);
           latest.current();
         }, 550);
     };
@@ -37,6 +40,6 @@ export function useVisibleReceipt(
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", schedule);
     };
-  }, [key, minimumVisible]);
+  }, [key, minimumVisible, enabled]);
   return target;
 }

@@ -1,3 +1,4 @@
+import { openMission, closeMission } from "./layout-helpers";
 import { expect, test, type Page } from "@playwright/test";
 import { existsSync } from "node:fs";
 
@@ -146,8 +147,10 @@ test("real MediaPipe Worker and real Unity coexist; camera stays opt-in and is r
     "data-gesture-state",
     "running",
   );
+  await openMission(page);
   const clock = await page.locator(".mission-clock strong").innerText();
   await expect(page.locator(".mission-clock strong")).not.toHaveText(clock);
+  await closeMission(page);
   await page.keyboard.press("Escape");
   await expect(page.locator(".gesture-controls")).toHaveAttribute(
     "data-gesture-state",
