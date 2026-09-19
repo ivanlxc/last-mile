@@ -24,6 +24,8 @@ afterEach(async () => {
 async function fixture() {
   let elapsed = 0;
   const service = await createGameService({
+    // These fixtures exercise timed in-flight tasks and event ordering explicitly.
+    actionTiming: "realtime",
     dbPath: ":memory:",
     autoTick: false,
     recoverOnStartup: false,

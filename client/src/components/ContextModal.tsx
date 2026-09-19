@@ -67,7 +67,9 @@ export function ContextModal({
                 <strong>
                   {a.label}
                   <span>
-                    {duration(a.cost.knownDurationMs)}{" "}
+                    {t("ui.simulatedDuration", {
+                      time: duration(a.cost.knownDurationMs),
+                    })}{" "}
                     {t("ui.additionalDelayPossible")}
                   </span>
                 </strong>

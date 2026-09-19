@@ -75,4 +75,52 @@ describe("authoritative clock and convoy samples", () => {
     expect(result.stateVersion).toBe(previous.stateVersion);
     expect(result.location).toEqual(sample.data.location);
   });
+  it("updates player time while an instant session's mission clock stays still", () => {
+    const instant: P.SessionProjection = {
+      ...previous,
+      actionTiming: "instant",
+      playerElapsedMs: 5000,
+    };
+    const result = applyClockSample(instant, {
+      ...sample,
+      data: {
+        ...sample.data,
+        missionTimeMs: instant.missionTimeMs,
+        playerElapsedMs: 12000,
+        location: instant.location,
+      },
+    })!;
+    expect(result.missionTimeMs).toBe(instant.missionTimeMs);
+    expect(result.playerElapsedMs).toBe(12000);
+    expect(result.actionTiming).toBe("instant");
+    expect(result.location).toEqual(instant.location);
+    expect(instant.playerElapsedMs).toBe(5000);
+  });
+  it("keeps recorded player time when a historical packet omits it", () => {
+    const instant = { ...previous, playerElapsedMs: 12000 };
+    expect(applyClockSample(instant, sample)?.playerElapsedMs).toBe(12000);
+    expect(applyClockSample(previous, sample)).not.toHaveProperty(
+      "playerElapsedMs",
+    );
+  });
+  it.each([-1, 4999, 5000.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
+    "rejects invalid or older player-time samples: %s",
+    (playerElapsedMs) => {
+      const instant = { ...previous, playerElapsedMs: 5000 };
+      expect(
+        applyClockSample(instant, {
+          ...sample,
+          data: { ...sample.data, playerElapsedMs },
+        }),
+      ).toBe(instant);
+    },
+  );
+  it("rejects negative elapsed samples even if the previous packet predates that field", () => {
+    expect(
+      applyClockSample(previous, {
+        ...sample,
+        data: { ...sample.data, playerElapsedMs: -1 },
+      }),
+    ).toBe(previous);
+  });
 });

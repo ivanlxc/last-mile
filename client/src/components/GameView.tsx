@@ -57,6 +57,8 @@ export function GameView({
   const [missionOpen, setMissionOpen] = useState(false);
   const missionMenu = useRef<HTMLDetailsElement>(null);
   const [drawer, setDrawer] = useState<"intel" | "advisor" | null>(null);
+  const [completedOperation, setCompletedOperation] =
+    useState<P.OperationView | null>(null);
   const [seenReportCount, setSeenReportCount] = useState(s.reports.length);
   const [seenStory, setSeenStory] = useState<string | null>(null);
   const intelTrigger = useRef<HTMLButtonElement>(null);
@@ -125,19 +127,20 @@ export function GameView({
     document.addEventListener("pointerdown", outside);
     return () => document.removeEventListener("pointerdown", outside);
   }, [missionOpen]);
-  const [displayClock, setDisplayClock] = useState(s.missionTimeMs);
-  const sample = useRef({ mission: s.missionTimeMs, at: performance.now() });
+  const elapsedTimeMs = s.playerElapsedMs ?? s.missionTimeMs;
+  const [displayClock, setDisplayClock] = useState(elapsedTimeMs);
+  const sample = useRef({ elapsed: elapsedTimeMs, at: performance.now() });
   useEffect(() => {
-    sample.current = { mission: s.missionTimeMs, at: performance.now() };
-    setDisplayClock(s.missionTimeMs);
-  }, [s.sessionId, s.runEpoch, s.missionTimeMs]);
+    sample.current = { elapsed: elapsedTimeMs, at: performance.now() };
+    setDisplayClock(elapsedTimeMs);
+  }, [s.sessionId, s.runEpoch, elapsedTimeMs]);
   useEffect(() => {
     // Idle reading does not require persisted clock packets. Interpolate only
     // the display; every new server sample reanchors this shared elapsed clock.
     const interval = setInterval(() => {
       if (!document.hidden)
         setDisplayClock(
-          sample.current.mission +
+          sample.current.elapsed +
             Math.max(0, performance.now() - sample.current.at),
         );
     }, 200);
@@ -219,6 +222,13 @@ export function GameView({
                 <div>
                   <small>{t("ui.elapsedMissionTime")}</small>
                   <strong>{timer(displayClock)}</strong>
+                  {s.actionTiming === "instant" && (
+                    <small>
+                      {t("ui.simulatedDuration", {
+                        time: timer(s.missionTimeMs),
+                      })}
+                    </small>
+                  )}
                 </div>
               </div>
               <div className="global-resources">
@@ -362,6 +372,24 @@ export function GameView({
           </button>
         </div>
       </div>
+      {completedOperation && (
+        <div className="action-completion" role="status">
+          <Radio size={15} />
+          <span>
+            {completedOperation.operationKind === "wait"
+              ? t("ui.timeAdvanced")
+              : completedOperation.publicProgressLabel ||
+                t("ui.actionCompleted")}
+          </span>
+          <button
+            className="icon-button"
+            aria-label={t("ui.close")}
+            onClick={() => setCompletedOperation(null)}
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
       <div className={`map-stage ${drawer ? `with-${drawer}` : ""}`}>
         <aside
           data-testid="intel-drawer"
@@ -424,6 +452,7 @@ export function GameView({
             game={game}
             action={decision}
             onClose={closeDecision}
+            onCompleted={setCompletedOperation}
           />
         ) : (
           <>
@@ -442,6 +471,7 @@ export function GameView({
                     onClick={(event) => {
                       decisionTrigger.current = event.currentTarget;
                       setDrawer(null);
+                      setCompletedOperation(null);
                       setDecision(action);
                     }}
                   >
@@ -451,7 +481,9 @@ export function GameView({
                     <div>
                       <strong>{action.label}</strong>
                       <small>
-                        {duration(action.cost.knownDurationMs)}{" "}
+                        {t("ui.simulatedDuration", {
+                          time: duration(action.cost.knownDurationMs),
+                        })}{" "}
                         <i>
                           ·{" "}
                           {action.cost.uncertainty === "none"
@@ -490,6 +522,7 @@ export function GameView({
                 if (a) {
                   decisionTrigger.current = event.currentTarget;
                   setDrawer(null);
+                  setCompletedOperation(null);
                   setDecision(a);
                 }
               }}

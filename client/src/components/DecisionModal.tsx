@@ -10,12 +10,14 @@ export function DecisionModal({
   missionTimeMs,
   action,
   onClose,
+  onCompleted,
   inline = false,
 }: {
   game: Game;
   missionTimeMs: number;
   action: P.ActionOption;
   onClose: () => void;
+  onCompleted: (operation: P.OperationView) => void;
   inline?: boolean;
 }) {
   const { t, locale, duration, reasonLabels } = useI18n();
@@ -32,7 +34,8 @@ export function DecisionModal({
     [based, setBased] = useState(false),
     [refs, setRefs] = useState<string[]>([]),
     [cancel, setCancel] = useState(false),
-    [waitMs, setWaitMs] = useState(15000);
+    [waitMs, setWaitMs] = useState(15000),
+    [submitted, setSubmitted] = useState(false);
   const pending = s.activeTasks.length > 0 && !wait;
   const advice = s.latestAdviceJob;
   const validAdvice =
@@ -40,8 +43,9 @@ export function DecisionModal({
     advice.inputVersion === s.assistantContextVersion &&
     !["superseded", "cancelled"].includes(advice.status);
   const submit = async () => {
+    setSubmitted(true);
     const changed = codes.length > 0 || limitation || costs || !!question;
-    const result = await game.command("/actions", {
+    const result = await game.command<P.ActionAccepted>("/actions", {
       actionId: action.actionId,
       waitDurationMs: wait ? waitMs : null,
       reason,
@@ -57,7 +61,11 @@ export function DecisionModal({
       referencedReportIds: refs,
       cancelPendingInvestigations: pending ? cancel : false,
     });
-    if (result) onClose();
+    if (result) {
+      if (result.operation.status === "completed")
+        onCompleted(result.operation);
+      onClose();
+    }
   };
   const Container = inline ? InlineDecision : Modal;
   return (
@@ -74,7 +82,7 @@ export function DecisionModal({
           </strong>
         </div>
         <div>
-          <span>{t("ui.missionTime")}</span>
+          <span>{t("ui.playTime")}</span>
           <strong>{timer(missionTimeMs)}</strong>
         </div>
       </div>
@@ -252,6 +260,11 @@ export function DecisionModal({
           <ArrowRight size={17} />
         </button>
       </div>
+      {submitted && game.error && (
+        <p className="command-inline-error" role="alert">
+          {game.error}
+        </p>
+      )}
     </Container>
   );
 }

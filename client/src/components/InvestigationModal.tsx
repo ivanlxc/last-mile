@@ -9,10 +9,12 @@ export function InvestigationModal({
   game,
   option,
   onClose,
+  onCompleted,
 }: {
   game: Game;
   option: P.TaskOption;
   onClose: () => void;
+  onCompleted: (reportId: string) => void;
 }) {
   const { t, duration, characters, channelLabels, channelScope } = useI18n();
   const questions = [
@@ -31,10 +33,12 @@ export function InvestigationModal({
   const [source, setSource] = useState(""),
     [question, setQuestion] = useState(""),
     [limitation, setLimitation] = useState(false),
-    [costs, setCosts] = useState(false);
+    [costs, setCosts] = useState(false),
+    [submitted, setSubmitted] = useState(false);
   const submit = async () => {
+    setSubmitted(true);
     const changed = question || limitation || costs;
-    const r = await game.command("/tasks", {
+    const r = await game.command<P.TaskAccepted>("/tasks", {
       taskKind: "investigate_and_report",
       targetRole: option.targetRole,
       topicId: option.topicId,
@@ -56,7 +60,11 @@ export function InvestigationModal({
           }
         : null,
     });
-    if (r) onClose();
+    if (r) {
+      if (r.task.status === "completed" && r.task.reportId)
+        onCompleted(r.task.reportId);
+      onClose();
+    }
   };
   return (
     <Modal title={option.label} onClose={onClose}>
@@ -166,9 +174,17 @@ export function InvestigationModal({
           onClick={() => void submit()}
         >
           {" "}
-          {t("ui.startInvestigation")} <ArrowRight size={16} />
+          {game.busy
+            ? t("ui.preparingTheBriefing")
+            : t("ui.startInvestigation")}
+          <ArrowRight size={16} />
         </button>
       </div>
+      {submitted && game.error && (
+        <p className="command-inline-error" role="alert">
+          {game.error}
+        </p>
+      )}
     </Modal>
   );
 }

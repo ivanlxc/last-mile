@@ -1,5 +1,5 @@
 import { useI18n } from "../lib/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Radio,
   ScanLine,
@@ -49,19 +49,37 @@ export function IntelPanel({
     [role, setRole] = useState<"analyst" | "liaison">("analyst"),
     [expanded, setExpanded] = useState<string | null>(null),
     [trace, setTrace] = useState<P.TaskOption | null>(null),
-    [provenance, setProvenance] = useState(false);
+    [provenance, setProvenance] = useState(false),
+    [pendingTopic, setPendingTopic] = useState<string | null>(null),
+    [receivedReportId, setReceivedReportId] = useState<string | null>(null);
   const scene = s.sceneId ? scenes[s.sceneId] : null,
     current = s.reports.filter((r) => r.sceneId === s.sceneId);
   const quota = s.reportQuotas.find(
       (q) => q.role === role && q.sceneId === s.sceneId,
     ),
     activeTask = s.activeTasks.find((t) => t.targetRole === role);
-  const askReport = (topicId: string) =>
-    void game.command("/tasks", {
+  const showReport = (reportId: string) => {
+    setExpanded(reportId);
+    setReceivedReportId(reportId);
+    setTab("reports");
+  };
+  const askReport = async (topicId: string) => {
+    setPendingTopic(topicId);
+    const result = await game.command<P.TaskAccepted>("/tasks", {
       taskKind: "request_report",
       targetRole: role,
       topicId,
     });
+    setPendingTopic(null);
+    if (result?.task.status === "completed" && result.task.reportId)
+      showReport(result.task.reportId);
+  };
+  useEffect(() => {
+    setTab("investigate");
+    setExpanded(null);
+    setReceivedReportId(null);
+    setTrace(null);
+  }, [s.sceneId]);
   useEffect(() => {
     if (!active) {
       setTrace(null);
@@ -100,6 +118,11 @@ export function IntelPanel({
           {t("ui.received")} <span>{current.length}</span>
         </button>
       </div>
+      {receivedReportId && tab === "reports" && (
+        <p className="report-delivery-status" role="status">
+          <Check size={14} /> {t("ui.reportReceived")}
+        </p>
+      )}
       {tab === "investigate" ? (
         <>
           <div className="role-switch">
@@ -184,10 +207,14 @@ export function IntelPanel({
                       ) ||
                       !quota?.remaining
                     }
-                    onClick={() => askReport(t.id)}
+                    onClick={() => void askReport(t.id)}
                   >
                     {t.label}
-                    <ArrowUpRight size={13} />
+                    {pendingTopic === t.id ? (
+                      <span className="spinner" />
+                    ) : (
+                      <ArrowUpRight size={13} />
+                    )}
                   </button>
                 )) ?? (
                 <p className="muted">
@@ -227,7 +254,10 @@ export function IntelPanel({
                         {o.investigationKind === "provenance_trace"
                           ? t("ui.traceAReceivedReportSSource")
                           : channelLabels[o.resourceChannel]}{" "}
-                        · {duration(o.cost.knownDurationMs)}
+                        ·{" "}
+                        {t("ui.simulatedDuration", {
+                          time: duration(o.cost.knownDurationMs),
+                        })}
                       </span>
                       {!o.available && o.disabledReason && (
                         <em>{disabledLabels[o.disabledReason]}</em>
@@ -302,6 +332,7 @@ export function IntelPanel({
           game={game}
           option={trace}
           onClose={() => setTrace(null)}
+          onCompleted={showReport}
         />
       )}
       {provenance && (
@@ -324,6 +355,13 @@ function ReportCard({
   toggle: () => void;
 }) {
   const { t, locale, characters } = useI18n();
+  const heading = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (expanded && active) {
+      heading.current?.scrollIntoView({ block: "nearest" });
+      heading.current?.focus({ preventScroll: true });
+    }
+  }, [r.reportId, expanded, active]);
   const s = game.state!,
     uploaded = s.sceneUploads.some((u) => u.reportId === r.reportId),
     ref = useVisibleReceipt(
@@ -333,8 +371,11 @@ function ReportCard({
       active,
     );
   return (
-    <article className={`report-card ${expanded ? "expanded" : ""}`}>
-      <button className="report-heading" onClick={toggle}>
+    <article
+      className={`report-card ${expanded ? "expanded" : ""}`}
+      data-report-id={r.reportId}
+    >
+      <button ref={heading} className="report-heading" onClick={toggle}>
         <div>
           <span className="report-meta">
             {characters[r.sourceRole].name} · {r.card.sourceLabel}

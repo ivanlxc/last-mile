@@ -119,7 +119,8 @@ test("desktop read aloud: API failure, retry, cancellation, native playback, rep
     "Speech is temporarily unavailable",
   );
   await expect(listen).toBeEnabled();
-  await expect(story).toContainText("Daybreak");
+  // Instant entry is already at West Gate; failure must leave its story readable.
+  await expect(story).toContainText("Beyond the gate");
 
   await listen.click();
   await expect.poll(() => submittedTexts.length).toBe(2);

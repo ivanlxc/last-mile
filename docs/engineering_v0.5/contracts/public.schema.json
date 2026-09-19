@@ -1977,6 +1977,12 @@
           "minimum": 0,
           "maximum": 9007199254740991
         },
+        "playerElapsedMs": {
+          "description": "Actual elapsed player time at sealing, independent of simulated mission duration. Optional for historical outcomes; never inferred retroactively.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
         "taskSuccess": {
           "type": "boolean"
         },
@@ -2659,6 +2665,21 @@
           ]
         },
         "missionTimeMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Authoritative mission simulation time. In instant sessions it advances for resolved actions and stays fixed during reading; playerElapsedMs tracks actual play time separately."
+        },
+        "actionTiming": {
+          "description": "Instant sessions resolve authored action durations immediately in simulation time. Realtime sessions retain historical wall-clock scheduling. Optional for historical records.",
+          "type": "string",
+          "enum": [
+            "instant",
+            "realtime"
+          ]
+        },
+        "playerElapsedMs": {
+          "description": "Actual elapsed player time in milliseconds, tracked independently of simulated action durations. Optional for historical records.",
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
@@ -4218,6 +4239,12 @@
           "type": "object",
           "properties": {
             "missionTimeMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "playerElapsedMs": {
+              "description": "Actual elapsed player time in milliseconds, tracked independently of simulated action durations. Optional for historical records.",
               "type": "integer",
               "minimum": 0,
               "maximum": 9007199254740991

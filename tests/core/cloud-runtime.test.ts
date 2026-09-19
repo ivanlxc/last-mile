@@ -297,11 +297,23 @@ describe("cloud admission and durable global model limits", () => {
     });
     await settle();
     expect(calls).toBe(2);
+    // Immediate travel has already reached E2 and queued its advisor. The
+    // cancelled E1 call still occupies a physical slot until it returns.
+    expect(
+      (
+        await x.store.one(
+          "SELECT COUNT(*) AS n FROM agent_jobs WHERE status='queued'",
+        )
+      ).n,
+    ).toBe(2);
     releases[0]!();
     await eventually(() => calls === 3);
     expect(peak).toBe(2);
     releases[1]!();
     releases[2]!();
+    await eventually(() => calls === 4);
+    expect(peak).toBe(2);
+    releases[3]!();
     await eventually(
       async () =>
         (
@@ -312,14 +324,14 @@ describe("cloud admission and durable global model limits", () => {
     );
     expect(
       await x.store.one(
-        "SELECT status,result_json FROM agent_jobs WHERE session_id=?",
+        "SELECT status,result_json FROM agent_jobs WHERE session_id=? AND scene_id='E1'",
         made[0]!.sessionId,
       ),
     ).toMatchObject({ status: "cancelled", result_json: null });
     expect(
       (await x.store.one("SELECT attempt_count FROM cloud_daily_usage"))
         .attempt_count,
-    ).toBe(3);
+    ).toBe(4);
   });
 });
 

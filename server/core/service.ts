@@ -92,6 +92,8 @@ export interface GameServiceOptions {
   };
   contentDir?: string;
   clock?: Clock;
+  /** New games resolve authored action durations immediately. Realtime is for legacy replay tests. */
+  actionTiming?: "instant" | "realtime";
   launchId?: string;
   tokenHash?: string;
   agents?: AgentGateway;

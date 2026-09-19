@@ -73,7 +73,6 @@ class FictionalSpeechProvider extends EventEmitter {
 type Harness = {
   providers: FictionalSpeechProvider[];
   disable(): void;
-  arrive(sessionId: string): Promise<void>;
 };
 const test = base.extend<{ speechHarness: Harness }>({
   speechHarness: async ({}, use) => {
@@ -84,14 +83,13 @@ const test = base.extend<{ speechHarness: Harness }>({
     const speech = loadSpeechConfig({
       DEEPGRAM_API_KEY: "fictional-ui-test-key",
     });
-    let elapsed = 0;
     const service = await createGameService({
       dbPath: ":memory:",
       autoTick: false,
       recoverOnStartup: false,
       clock: {
-        nowMs: () => Date.UTC(2026, 8, 19) + elapsed,
-        monotonicMs: () => elapsed,
+        nowMs: () => Date.UTC(2026, 8, 19),
+        monotonicMs: () => 0,
       },
       agents: createAiService({ env: {} }),
       selectCase: () => "A",
@@ -119,10 +117,6 @@ const test = base.extend<{ speechHarness: Harness }>({
         providers,
         disable: () => {
           speech.enabled = false;
-        },
-        arrive: async (sessionId) => {
-          elapsed += 31_000;
-          await service.tick(sessionId);
         },
       });
     } finally {
@@ -200,7 +194,7 @@ async function microphoneMetrics(page: Page) {
     };
   });
 }
-async function enterAdvisor(page: Page, harness: Harness) {
+async function enterAdvisor(page: Page) {
   await installMicMetrics(page);
   await page.goto("/");
   await page.getByRole("button", { name: "English", exact: true }).click();
@@ -212,9 +206,8 @@ async function enterAdvisor(page: Page, harness: Harness) {
   await page
     .getByRole("button", { name: "Enter mission briefing", exact: true })
     .click();
-  const { sessionId } = await (await creation).json();
+  await creation;
   await page.getByRole("button", { name: "Start escort", exact: true }).click();
-  await harness.arrive(sessionId);
   await page.getByTestId("open-advisor").click();
   const advisor = page.getByTestId("advisor-drawer");
   await expect(advisor).toBeVisible();
@@ -244,10 +237,7 @@ test("real AudioWorklet PCM becomes a reviewed draft; only explicit Send posts a
     )
       questions.push(request.postData() ?? "");
   });
-  const { advisor, draft, voice, send } = await enterAdvisor(
-    page,
-    speechHarness,
-  );
+  const { advisor, draft, voice, send } = await enterAdvisor(page);
   expect(await microphoneMetrics(page)).toEqual({ calls: 0, live: 0 });
   await page.getByTestId("sound-settings").click();
   await expect(
@@ -332,7 +322,7 @@ test("closing the advisor stops synthetic microphone capture, drains finals, and
     )
       questions++;
   });
-  const { advisor, draft, voice } = await enterAdvisor(page, speechHarness);
+  const { advisor, draft, voice } = await enterAdvisor(page);
   await voice.click();
   await expect(advisor.locator(".voice-live")).toContainText(firstSentence);
   await page
@@ -351,10 +341,7 @@ test("a denied permission leaves typing usable and a second synthetic microphone
   page,
   speechHarness,
 }) => {
-  const { advisor, draft, voice, send } = await enterAdvisor(
-    page,
-    speechHarness,
-  );
+  const { advisor, draft, voice, send } = await enterAdvisor(page);
   await page.evaluate(() => {
     (
       window as unknown as { __syntheticSpeechMic: MicMetrics }
@@ -384,10 +371,7 @@ test("an unconfigured speech service keeps text questions available without requ
   speechHarness,
 }) => {
   speechHarness.disable();
-  const { advisor, draft, voice, send } = await enterAdvisor(
-    page,
-    speechHarness,
-  );
+  const { advisor, draft, voice, send } = await enterAdvisor(page);
   await expect(voice).toBeDisabled();
   await expect(advisor).toContainText(
     "Voice is not configured. You can still type.",
@@ -416,7 +400,7 @@ test("reopening the advisor recovers a temporary speech configuration failure wi
       });
     else await route.continue();
   });
-  const { advisor, voice, draft } = await enterAdvisor(page, speechHarness);
+  const { advisor, voice, draft } = await enterAdvisor(page);
   await expect(
     advisor.locator(".advisor-composer").getByRole("status"),
   ).toContainText("Voice is unavailable");

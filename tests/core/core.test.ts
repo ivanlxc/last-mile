@@ -36,6 +36,8 @@ async function setup(
 ) {
   const clock = new FakeClock();
   const svc = await createGameService({
+    // Preserve scheduler/partial-travel regression coverage; normal play is instant.
+    actionTiming: "realtime",
     clock,
     dbPath,
     selectCase: () => caseId,

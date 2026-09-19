@@ -1,4 +1,31 @@
 /* Map-first command shell: the existing renderers and their assets fill the stage. */
+.action-completion {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 24px;
+  color: #d0dbc9;
+  background: #25372b;
+  border-bottom: 1px solid #6d835d55;
+  font-size: 12px;
+}
+.action-completion > span {
+  flex: 1;
+}
+.report-delivery-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 20px 0;
+  color: #becba9;
+  font-size: 11px;
+}
+.command-inline-error {
+  color: #eab292;
+  font-size: 12px;
+  line-height: 1.5;
+}
 .command-center.map-first-command {
   height: 100dvh;
   min-height: 540px;

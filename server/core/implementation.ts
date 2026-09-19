@@ -49,6 +49,12 @@ const active = (v: { status: string }) =>
   ["accepted", "queued", "running"].includes(v.status);
 const LIVE = new Set(["briefing", "running"]);
 const CHANNELS: Channel[] = ["satellite", "drone", "localAgency", "witness"];
+type SimulationEvent = {
+  due: number;
+  priority: number;
+  id: string;
+  kind: "operation" | "task" | "medical" | "deadline";
+};
 function ERR(
   code: P.ErrorCode,
   status: number,
@@ -422,7 +428,8 @@ export class CoreGameService implements GameService {
     );
   }
   private missionNow(s: State) {
-    if (s.lifecycle !== "running") return s.mission;
+    if (s.lifecycle !== "running" || s.actionTiming === "instant")
+      return s.mission;
     const a = this.anchors.get(s.sessionId);
     const deadline = this.missionDeadline(s);
     return a
@@ -437,12 +444,25 @@ export class CoreGameService implements GameService {
         )
       : s.mission;
   }
+  private playerElapsedNow(s: State): number | undefined {
+    if (s.playerElapsedMs === undefined) return undefined;
+    const anchor = this.anchors.get(s.sessionId);
+    // Without a live monotonic anchor (for example after a crash), retain the
+    // last durable sample. Offline time must not become player thinking time.
+    if (s.lifecycle !== "running" || !anchor) return s.playerElapsedMs;
+    return Math.max(
+      s.playerElapsedMs,
+      Math.floor(Math.max(0, this.clock.monotonicMs() - anchor.mono)),
+    );
+  }
   private missionDeadline(s: State): number | null {
     // Existing sealed snapshots predate the explicit unlimited policy. Preserve
     // their original meaning without retroactively changing a historical run.
     return s.missionDeadlineMs === undefined ? 600000 : s.missionDeadlineMs;
   }
   private async save(s: State) {
+    if (s.playerElapsedMs !== undefined)
+      s.playerElapsedMs = this.playerElapsedNow(s);
     await this.store.run(
       "UPDATE sessions SET lifecycle=?,phase=?,scene_id=?,state_version=?,inbox_version=?,assistant_context_version=?,mission_ms=?,world_state_json=?,terminal_seal_id=?,updated_at_ms=? WHERE session_id=?",
       s.lifecycle,
@@ -841,6 +861,10 @@ export class CoreGameService implements GameService {
       sceneId: s.sceneId,
       missionTimeMs: now,
       missionDeadlineMs: this.missionDeadline(s),
+      ...(s.actionTiming ? { actionTiming: s.actionTiming } : {}),
+      ...(s.playerElapsedMs !== undefined
+        ? { playerElapsedMs: this.playerElapsedNow(s) }
+        : {}),
       serverNow: iso(this.clock.nowMs()),
       location: this.location(s, now),
       civilianCount: 20,
@@ -959,11 +983,16 @@ export class CoreGameService implements GameService {
           cost: {
             knownDurationMs: a.knownDurationMs,
             uncertainty: a.uncertainty,
-            description: "公开基础时间；未知现场条件可能带来额外等待",
+            description:
+              s.actionTiming === "instant"
+                ? "公开基础剧情耗时；现场条件可能增加模拟耗时，行动立即结算"
+                : "公开基础时间；未知现场条件可能带来额外等待",
           },
           knownRisk: a.knownRisk,
           irreversibleNotice:
-            "确认后车队执行整段路线；未完成的调查将取消，已用渠道不返还。",
+            s.actionTiming === "instant"
+              ? "确认后立即结算整段路线；沿途选择与已用资源无法撤回。"
+              : "确认后车队执行整段路线；未完成的调查将取消，已用渠道不返还。",
           available: !locked && !refused,
           disabledReason: locked
             ? "phase_locked"
@@ -974,15 +1003,21 @@ export class CoreGameService implements GameService {
       }) as P.ActionOption[];
     list.push({
       actionId: "WAIT",
-      label: "原地等待",
+      label: s.actionTiming === "instant" ? "推进剧情时间" : "原地等待",
       kind: "wait",
       knownRouteIds: [],
       cost: {
         knownDurationMs: null,
         uncertainty: "none",
-        description: "选择 15、30 或 60 秒；调查继续运行",
+        description:
+          s.actionTiming === "instant"
+            ? "立即推进 15、30 或 60 秒剧情时间"
+            : "选择 15、30 或 60 秒；调查继续运行",
       },
-      knownRisk: "等待期间累计用时继续增加，岗位调查继续运行。",
+      knownRisk:
+        s.actionTiming === "instant"
+          ? "车队留在原地，剧情时间立即增加，无需现实等待。"
+          : "等待期间累计用时继续增加，岗位调查继续运行。",
       irreversibleNotice: null,
       available: !locked,
       disabledReason: locked ? "phase_locked" : null,
@@ -1125,6 +1160,34 @@ export class CoreGameService implements GameService {
           response = await this.export(s, b, meta);
           break;
       }
+      if (
+        s.actionTiming === "instant" &&
+        ["startSession", "createTask", "commitAction"].includes(operationId)
+      ) {
+        await this.resolveInstantWork(s);
+        if (operationId === "createTask") {
+          const accepted = response as P.TaskAccepted;
+          const task = s.tasks.find(
+            (t) => t.view.taskId === accepted.task.taskId,
+          )!;
+          response = {
+            ...accepted,
+            stateVersion: s.version,
+            task: task.view,
+            reservedReportSlots: active(task.view) ? 1 : 0,
+          };
+        } else if (operationId === "commitAction") {
+          const accepted = response as P.ActionAccepted;
+          const op = s.operations.find(
+            (o) => o.view.operationId === accepted.operation.operationId,
+          )!;
+          response = {
+            ...accepted,
+            stateVersion: s.version,
+            operation: this.operationView(s, op, s.mission),
+          };
+        }
+      }
       if (!management) {
         if (
           s.lifecycle !== "completed" &&
@@ -1240,6 +1303,8 @@ export class CoreGameService implements GameService {
         phase: "briefing",
         sceneId: null,
         mission: 0,
+        actionTiming: this.options.actionTiming ?? "instant",
+        playerElapsedMs: 0,
         missionDeadlineMs: this.world.policy.missionDurationMs,
         createdAt: now,
         startWall: null,
@@ -2258,7 +2323,9 @@ export class CoreGameService implements GameService {
       currentLocation: s.location,
       publicProgressLabel:
         op.view.operationKind === "wait"
-          ? "等待结束"
+          ? s.actionTiming === "instant"
+            ? "剧情时间已推进"
+            : "等待结束"
           : op.plan.endNodeId === "N07"
             ? "抵达接收站"
             : s.flags.bridgeRefused && op.plan.actionId === "E3_BRIDGE"
@@ -2305,6 +2372,97 @@ export class CoreGameService implements GameService {
     }
     if (op.plan.nextSceneId) await this.enter(s, op.plan.nextSceneId);
   }
+  private nextSimulationEvent(s: State): SimulationEvent | undefined {
+    const candidates: SimulationEvent[] = [];
+    const op = this.op(s);
+    if (op)
+      candidates.push({
+        due: op.steps[op.index].endMs,
+        priority: op.view.operationKind === "wait" ? 30 : 10,
+        id: op.view.operationId,
+        kind: "operation",
+      });
+    for (const t of s.tasks.filter((t) => active(t.view)))
+      candidates.push({
+        due: t.due,
+        priority: 20,
+        id: t.view.taskId,
+        kind: "task",
+      });
+    if (
+      s.medical.targetAtMissionMs !== null &&
+      s.medical.status !== "target_missed"
+    )
+      candidates.push({
+        due: s.medical.targetAtMissionMs,
+        priority: 40,
+        id: "medical",
+        kind: "medical",
+      });
+    const deadline = this.missionDeadline(s);
+    if (deadline !== null)
+      candidates.push({
+        due: deadline,
+        priority: 90,
+        id: "deadline",
+        kind: "deadline",
+      });
+    return candidates.sort(
+      (a, b) =>
+        a.due - b.due || a.priority - b.priority || a.id.localeCompare(b.id),
+    )[0];
+  }
+  private async applySimulationEvent(s: State, next: SimulationEvent) {
+    s.mission = next.due;
+    s.version++;
+    if (next.kind === "task")
+      await this.finishTask(
+        s,
+        s.tasks.find((t) => t.view.taskId === next.id)!,
+      );
+    else if (next.kind === "operation")
+      await this.advanceOperation(s, this.op(s)!);
+    else if (next.kind === "medical") {
+      s.medical = {
+        status: "target_missed",
+        targetAtMissionMs: s.medical.targetAtMissionMs,
+        note: "已到转送目标时刻，需要优先转送；请尽快抵达接收站。",
+      };
+      await this.event(s, "medical.target_missed", {});
+      this.log(
+        s,
+        "consequence",
+        "已到转送目标时刻，需要优先转送；请继续完成护送。",
+      );
+    } else await this.seal(s, "mission_deadline");
+  }
+  private async resolveInstantWork(s: State) {
+    // Run only work already accepted by this command. Do not advance to an
+    // unrelated medical target, choose another route, or age an AI job deadline.
+    const horizon = Math.max(
+      s.mission,
+      ...s.tasks.filter((t) => active(t.view)).map((t) => t.due),
+      ...s.operations
+        .filter((o) => active(o.view))
+        .map((o) => o.steps.at(-1)!.endMs),
+    );
+    // Each simulation transition retains the storage invariant of one version
+    // increment per save. These writes share the command's outer transaction;
+    // no intermediate accepted state can escape on failure or become visible.
+    await this.save(s);
+    let steps = 0;
+    while (s.lifecycle === "running") {
+      const next = this.nextSimulationEvent(s);
+      if (!next || next.due > horizon) break;
+      if (++steps > 256) {
+        s.version++;
+        await this.seal(s, "technical_interruption");
+        break;
+      }
+      await this.applySimulationEvent(s, next);
+      if (s.lifecycle === "running") await this.save(s);
+    }
+  }
   private async tickInternal(sessionId?: string, missionLimit?: number) {
     if (this.closed) return;
     const ids = sessionId ? [sessionId] : [...this.liveSessions];
@@ -2314,51 +2472,7 @@ export class CoreGameService implements GameService {
       const now = missionLimit ?? this.missionNow(s);
       let steps = 0;
       while (s.lifecycle === "running") {
-        const op = this.op(s);
-        const candidates: {
-          due: number;
-          priority: number;
-          id: string;
-          kind: "operation" | "task" | "medical" | "deadline";
-        }[] = [];
-        if (op)
-          candidates.push({
-            due: op.steps[op.index].endMs,
-            priority: op.view.operationKind === "wait" ? 30 : 10,
-            id: op.view.operationId,
-            kind: "operation",
-          });
-        for (const t of s.tasks.filter((t) => active(t.view)))
-          candidates.push({
-            due: t.due,
-            priority: 20,
-            id: t.view.taskId,
-            kind: "task",
-          });
-        if (
-          s.medical.targetAtMissionMs !== null &&
-          s.medical.status !== "target_missed"
-        )
-          candidates.push({
-            due: s.medical.targetAtMissionMs,
-            priority: 40,
-            id: "medical",
-            kind: "medical",
-          });
-        const deadline = this.missionDeadline(s);
-        if (deadline !== null)
-          candidates.push({
-            due: deadline,
-            priority: 90,
-            id: "deadline",
-            kind: "deadline",
-          });
-        const next = candidates.sort(
-          (a, b) =>
-            a.due - b.due ||
-            a.priority - b.priority ||
-            a.id.localeCompare(b.id),
-        )[0];
+        const next = this.nextSimulationEvent(s);
         if (!next || next.due > now) break;
         if (++steps > 256) {
           await this.tx(async () => {
@@ -2370,28 +2484,7 @@ export class CoreGameService implements GameService {
         }
         await this.tx(async () => {
           s = await this.load(sid);
-          s.mission = next.due;
-          s.version++;
-          if (next.kind === "task")
-            await this.finishTask(
-              s,
-              s.tasks.find((t) => t.view.taskId === next.id)!,
-            );
-          else if (next.kind === "operation")
-            await this.advanceOperation(s, this.op(s)!);
-          else if (next.kind === "medical") {
-            s.medical = {
-              status: "target_missed",
-              targetAtMissionMs: s.medical.targetAtMissionMs,
-              note: "已到转送目标时刻，需要优先转送；请尽快抵达接收站。",
-            };
-            await this.event(s, "medical.target_missed", {});
-            this.log(
-              s,
-              "consequence",
-              "已到转送目标时刻，需要优先转送；请继续完成护送。",
-            );
-          } else await this.seal(s, "mission_deadline");
+          await this.applySimulationEvent(s, next);
           if (s.lifecycle === "running") {
             await this.contextRecord(s);
             await this.save(s);
@@ -2416,6 +2509,9 @@ export class CoreGameService implements GameService {
             async () =>
               await this.publicEvent(s, "clock.sample", {
                 missionTimeMs: now,
+                ...(s.playerElapsedMs !== undefined
+                  ? { playerElapsedMs: this.playerElapsedNow(s) }
+                  : {}),
                 serverNow: iso(this.clock.nowMs()),
                 missionDeadlineMs: this.missionDeadline(s),
                 // Motion advances between rule-changing projections. Send the
@@ -2465,12 +2561,17 @@ export class CoreGameService implements GameService {
     const arrived =
       s.arrivalMs !== null && (deadline === null || s.arrivalMs <= deadline);
     const pending = this.pending(s);
+    if (s.playerElapsedMs !== undefined)
+      s.playerElapsedMs = this.playerElapsedNow(s);
     const outcome: P.OutcomeView = {
       sessionId: s.sessionId,
       runEpoch: s.runEpoch,
       sealedHash: "0".repeat(64),
       sealedAt: iso(this.clock.nowMs()),
       sealedAtMissionMs: s.mission,
+      ...(s.playerElapsedMs !== undefined
+        ? { playerElapsedMs: s.playerElapsedMs }
+        : {}),
       taskSuccess: arrived,
       terminationReason: reason,
       arrivedAtMissionMs: s.arrivalMs,

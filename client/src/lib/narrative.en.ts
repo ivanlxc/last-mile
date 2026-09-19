@@ -8,7 +8,7 @@ export const campaign = {
   premise: "Twenty people. One road home. No complete answers.",
   briefing: [
     "Dusk falls over Sahel Valley after a temporary ceasefire. Communications remain patchy. Daybreak Reception Point awaits on the far bank. Guide the convoy through three decision scenes and bring everyone there.",
-    "Twenty civilians are on board. Some carry their house keys; others have only their papers. Explore the map, read intelligence and discuss your choices without an overall time limit. Elapsed mission time is recorded; investigations and travel still take their stated time.",
+    "Twenty civilians are on board. Some carry their house keys; others have only their papers. Explore the map, read intelligence and discuss your choices without an overall time limit. Investigations and travel resolve immediately. Play time and simulated mission time are recorded separately.",
     "You command the convoy. Noah, your intelligence officer, handles imagery and road conditions. Samira, your liaison, contacts local agencies and witnesses. Your AI advisor can analyze the material you share. The final decision is yours.",
   ],
   closing: "The last stretch on the map is the start of twenty new chapters.",
@@ -16,7 +16,7 @@ export const campaign = {
     {
       number: "01",
       title: "Establish what you know",
-      text: "Ask Noah or Samira for an existing briefing, or assign a new investigation. Each officer can submit up to 3 reports per scene. Completed investigations submit a report automatically.",
+      text: "Ask Noah or Samira for an existing briefing, or assign a new investigation. Each officer can submit up to 3 reports per scene. Confirm an investigation to open its report immediately.",
     },
     {
       number: "02",
@@ -26,7 +26,7 @@ export const campaign = {
     {
       number: "03",
       title: "Acting leaves questions open",
-      text: "Investigations take time and use resources shared across the mission. Choosing a route sends the convoy on its way and cancels unfinished investigations. Spent channel uses are not refunded.",
+      text: "Investigations and routes advance in-world time without making you wait. Investigations use resources shared across the mission. Moving to the next scene does not restore spent channel uses.",
     },
     {
       number: "04",

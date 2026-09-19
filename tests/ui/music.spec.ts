@@ -9,12 +9,13 @@ import type { SessionProjection } from "../../docs/engineering_v0.5/contracts/pu
 const origin = "http://127.0.0.1:33132";
 const settingsKey = "last-mile-audio-v1";
 type Harness = {
-  advance(milliseconds: number): Promise<void>;
+  advancePlayerTime(milliseconds: number): void;
   projection(sessionId: string): Promise<SessionProjection>;
 };
 
 // The real built client and HTTP service run against an isolated, in-memory
-// campaign. Only simulation time advances in Node; browser audio time is real.
+// campaign. Routes resolve immediately without advancing the injected clock;
+// browser audio time is real. One check advances actual player time independently.
 const test = base.extend<{ musicGame: Harness }>({
   musicGame: async ({}, use) => {
     let elapsed = 0;
@@ -38,10 +39,8 @@ const test = base.extend<{ musicGame: Harness }>({
       app = await createHttpApp({ service, config, closeServiceOnClose: true });
       await app.listen({ host: "127.0.0.1", port: 33132 });
       await use({
-        advance: async (milliseconds) => {
+        advancePlayerTime: (milliseconds) => {
           elapsed += milliseconds;
-          await service.tick();
-          await new Promise<void>((resolve) => setImmediate(resolve));
         },
         projection: async (sessionId) =>
           (await service.read("getSession", sessionId)) as SessionProjection,
@@ -161,8 +160,14 @@ test("approved production music follows a complete campaign and survives map/dra
   const sessionId = await enterBriefing(page);
   await expectCue(page, "opening", 67);
   await page.getByRole("button", { name: "Start escort", exact: true }).click();
-  await expectCue(page, "opening", 67);
-  await musicGame.advance(31_000);
+  expect(await musicGame.projection(sessionId)).toMatchObject({
+    actionTiming: "instant",
+    sceneId: "E1",
+    phase: "scene",
+    missionTimeMs: 30000,
+    playerElapsedMs: 0,
+    activeOperation: null,
+  });
   await expectCue(page, "E1", 59.428571);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByTestId("sound-settings").click();
@@ -186,7 +191,20 @@ test("approved production music follows a complete campaign and survives map/dra
     .click();
   await expect(page.locator(".map3d canvas")).toBeVisible();
   await page.getByRole("button", { name: "2D route map", exact: true }).click();
-  await musicGame.advance(1000); // A same-scene public clock update also keeps the phrase.
+  const beforeClock = await musicGame.projection(sessionId);
+  musicGame.advancePlayerTime(1000);
+  const refreshedClock = page.waitForResponse(
+    (response) =>
+      response.request().method() === "GET" &&
+      new URL(response.url()).pathname === `/api/v1/sessions/${sessionId}`,
+  );
+  await page.evaluate(() =>
+    document.dispatchEvent(new Event("visibilitychange")),
+  );
+  const afterClock = (await (await refreshedClock).json()) as SessionProjection;
+  expect(afterClock.missionTimeMs).toBe(beforeClock.missionTimeMs);
+  expect(afterClock.playerElapsedMs).toBe(1000);
+  // The same-scene player clock update also keeps the musical phrase.
   await expectCue(page, "E1", 59.428571);
   expect((await audioMetrics(page)).starts).toHaveLength(beforeUi);
 
@@ -207,18 +225,16 @@ test("approved production music follows a complete campaign and survives map/dra
     await page
       .getByRole("button", { name: "Confirm action", exact: true })
       .click();
-    expect((await accepted).status()).toBe(202);
-    for (let index = 0; index < 60; index++) {
-      await musicGame.advance(5000);
-      const projection = await musicGame.projection(sessionId);
-      if (
-        nextScene
-          ? projection.phase === "scene" && projection.sceneId === nextScene
-          : projection.lifecycle === "sealed"
-      )
-        return;
-    }
-    throw new Error(`Campaign did not reach ${nextScene ?? "ending"}`);
+    const response = await accepted;
+    expect(response.status()).toBe(202);
+    expect((await response.json()).operation.status).toBe("completed");
+    const projection = await musicGame.projection(sessionId);
+    expect(projection.activeOperation).toBeNull();
+    expect(projection.activeTasks).toEqual([]);
+    expect(projection.playerElapsedMs).toBe(1000);
+    if (nextScene)
+      expect(projection).toMatchObject({ phase: "scene", sceneId: nextScene });
+    else expect(projection.lifecycle).toBe("sealed");
   }
   await route("E1_MAIN", "E2");
   await expectCue(page, "E2", 72);
@@ -474,9 +490,12 @@ test("a failed music download can retry, and spoken clues duck music without res
   await page.getByTestId("sound-settings").click();
   const sessionId = await enterBriefing(page);
   await page.getByRole("button", { name: "Start escort", exact: true }).click();
-  await musicGame.advance(31_000);
   await expectCue(page, "E1", 59.428571);
-  expect((await musicGame.projection(sessionId)).sceneId).toBe("E1");
+  expect(await musicGame.projection(sessionId)).toMatchObject({
+    sceneId: "E1",
+    playerElapsedMs: 0,
+    activeOperation: null,
+  });
   const beforeSpeech = (await audioMetrics(page)).starts.length;
   // Find the settled native music bus, then observe its actual AudioParam as
   // speech starts/stops; the data attribute alone would not prove attenuation.

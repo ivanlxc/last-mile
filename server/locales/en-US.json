@@ -166,5 +166,11 @@
   "卫星资料是历史地表观察，不能确认当前登记系统、通行许可或集市当前车道状态。": "Satellite records are historical surface observations. They cannot confirm the current registration system, crossing permission, or current market-lane access.",
   "无人机只能观察可见区域，不能确认登记系统、通行许可、爆炸原因或人员敌意。": "A drone observes visible areas only. It cannot confirm registration systems, crossing permission, an explosion's cause, or hostile intent.",
   "机构联系只提供其授权与掌握范围内的答复；转述不自动成为现场事实。": "An agency can answer only within its authority and information. A retelling does not automatically become an observed fact.",
-  "目击者只提供个人经历与转述；不能仅凭人数认定独立来源或事件原因。": "A witness provides personal experience and retellings. The number of speakers alone cannot establish independent sources or the cause of an event."
+  "目击者只提供个人经历与转述；不能仅凭人数认定独立来源或事件原因。": "A witness provides personal experience and retellings. The number of speakers alone cannot establish independent sources or the cause of an event.",
+  "公开基础剧情耗时；现场条件可能增加模拟耗时，行动立即结算": "Base in-world duration; conditions may add simulated time. Resolves immediately.",
+  "确认后立即结算整段路线；沿途选择与已用资源无法撤回。": "The full route resolves on confirmation. Route decisions and spent resources cannot be undone.",
+  "推进剧情时间": "Advance time",
+  "立即推进 15、30 或 60 秒剧情时间": "Immediately advance in-world time by 15, 30, or 60 seconds",
+  "车队留在原地，剧情时间立即增加，无需现实等待。": "Stay in place and advance in-world time immediately. No real-time wait.",
+  "剧情时间已推进": "In-world time advanced"
 }

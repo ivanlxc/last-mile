@@ -9,7 +9,7 @@ export const en = {
   "ui.localAgency3": "Local agency × 3",
   "ui.witness2": "Witness × 2",
   "ui.eachRoleMayDeliver3ReportsPer":
-    "Each role may deliver 3 reports per scene. You may upload 5 cards per scene. Moving on does not refill mission resources. There is no overall time limit; elapsed mission time is recorded for the debrief.",
+    "Each role may deliver 3 reports per scene. You may upload 5 cards per scene. Moving on does not refill mission resources. There is no overall time limit; play time and simulated mission time are recorded separately for the debrief.",
   "ui.understood": "Understood",
   "ui.aiAdvisor": "AI advisor",
   "ui.offlineTemplate": "Offline template",
@@ -62,7 +62,13 @@ export const en = {
   "ui.requestPassageOverTheMainBridge": "Request passage over the main bridge",
   "ui.useTheOldRiverbedAndTransferArea":
     "Use the old riverbed and transfer area",
-  "ui.waitHere": "Wait here",
+  "ui.waitHere": "Advance time",
+  "ui.playTime": "Play time",
+  "ui.simulatedDuration": "In-world {time}",
+  "ui.simulatedMissionTime": "Simulated mission time",
+  "ui.reportReceived": "Report received · ready to read",
+  "ui.timeAdvanced": "In-world time advanced. Ready for your next order.",
+  "ui.actionCompleted": "Action completed. Ready for your next order.",
   "ui.theExportIsNotReadyYetPlease":
     "The export is not ready yet. Please try again shortly.",
   "ui.theLastMileArrivalConfirmed": "The last mile. Arrival confirmed.",
@@ -111,8 +117,8 @@ export const en = {
   "ui.conditionsMayChangeNextTimeTakeThe":
     "Conditions may change next time. Take the method with you, not a memorized answer.",
   "ui.startAnotherEscort": "Start another escort",
-  "ui.stayHereAndKeepCoordinating": "Stay here and keep coordinating",
-  "ui.knownEstimatedTime": "Known estimated time",
+  "ui.stayHereAndKeepCoordinating": "Advance time at this location",
+  "ui.knownEstimatedTime": "Estimated in-world time",
   "ui.whyAreYouChoosingThisNow": "Why are you choosing this now?",
   "ui.optional": "Optional",
   "ui.noteYourMainEvidenceAnUnresolvedQuestion":
@@ -122,12 +128,13 @@ export const en = {
   "ui.optionalForTheReview": "Optional · for the review",
   "ui.iConsideredTheLimitsOfTheInformation":
     "I considered the limits of the information",
-  "ui.iComparedTheKnownTimeCosts": "I compared the known time costs",
+  "ui.iComparedTheKnownTimeCosts": "I compared the in-world time costs",
   "ui.aQuestionStillUnresolved": "A question still unresolved",
   "ui.forExampleIsOurVehicleClearanceStill":
     "For example: Is our vehicle clearance still valid?",
   "ui.reportsReferenced": "Reports referenced",
-  "ui.theClockKeepsRunning": "No overall time limit · Elapsed time is recorded",
+  "ui.theClockKeepsRunning":
+    "Advances in-world time immediately · No real-time wait",
   "ui.issuingOrder": "Issuing order",
   "ui.confirmAction": "Confirm action",
   "ui.chapterProgress": "Chapter progress",
@@ -136,7 +143,7 @@ export const en = {
   "ui.mainBridge": "Main bridge",
   "ui.stable": "Stable",
   "ui.priorityTransferNeeded": "Priority transfer needed",
-  "ui.elapsedMissionTime": "Elapsed · no limit",
+  "ui.elapsedMissionTime": "Play time · no limit",
   "ui.fieldGuide": "Field guide",
   "ui.endThisSession": "End this session",
   "ui.daybreak07": "Daybreak 07",
@@ -171,7 +178,7 @@ export const en = {
   "ui.convoyInTransit": "Convoy in transit",
   "ui.chooseARouteAtTheNextDecision":
     "Choose a route at the next decision point.",
-  "ui.153060Sec": "15 / 30 / 60 sec",
+  "ui.153060Sec": "In-world · 15 / 30 / 60 sec",
   "ui.endThisEscort": "End this escort?",
   "ui.thisSessionWillBeSealedImmediatelyYou":
     "This session will be sealed immediately. You can review the decisions already made, then start another escort.",
@@ -183,7 +190,7 @@ export const en = {
   "ui.staticBrieflyFillsTheRadioTheDriver":
     "Static briefly fills the radio. The driver glances in the mirror and waits to move.",
   "ui.theIllustrationSetsTheSceneItDoes":
-    "The illustration sets the scene; it does not establish current road conditions. The mission clock continues.",
+    "The illustration sets the scene; it does not establish current road conditions.",
   "ui.missionAllowanceExhausted": "Mission allowance exhausted",
   "ui.sceneReportLimitReached": "Scene report limit reached",
   "ui.thisRoleIsBusy": "This role is busy",
@@ -199,7 +206,7 @@ export const en = {
   "ui.theReportArrivesAutomaticallyWhenReadyYou":
     "The report arrives automatically when ready. You can keep commanding.",
   "ui.existingBriefings": "Existing briefings",
-  "ui.noChannelCost1SecToDeliver": "No channel cost · 1 sec to deliver",
+  "ui.noChannelCost1SecToDeliver": "No channel cost · Opens immediately",
   "ui.contactsBecomeAvailableAtTheCheckpoint":
     "Contacts become available at the checkpoint.",
   "ui.furtherInvestigation": "Further investigation",
@@ -241,7 +248,7 @@ export const en = {
     "What is the original source of this report?",
   "ui.whatCausedTheLoudBang": "What caused the loud bang?",
   "ui.canWeEstablishHostileIntent": "Can we establish hostile intent?",
-  "ui.investigationTime": "Investigation time",
+  "ui.investigationTime": "In-world time",
   "ui.whatThisChannelCanEstablish": "What this channel can establish",
   "ui.whichReportShouldBeTraced": "Which report should be traced?",
   "ui.selectAReceivedReport": "Select a received report",
@@ -251,9 +258,9 @@ export const en = {
   "ui.iConsideredThisChannelSObservationLimits":
     "I considered this channel's observation limits",
   "ui.iComparedInvestigatingWithTheTimeNeeded":
-    "I compared investigating with the time needed to move",
+    "I compared investigation and travel time in the story",
   "ui.clockRunningAllowancesCoverTheWholeMission":
-    "Investigations take time · Allowances cover the whole mission",
+    "Opens the report immediately · Allowances cover the whole mission",
   "ui.startInvestigation": "Start investigation",
   "ui.theFinalStretch": "The final stretch",
   "ui.twentyPeopleOneWayHome": "Twenty people. One way home.",
@@ -325,7 +332,7 @@ export const en = {
   "advisor.showBasis": "Show analysis basis ({count})",
   "investigation.balance": "{channel} remaining",
   "investigation.costNote":
-    "Uses 1 {channel} allowance and reserves 1 of {name}’s report slots for this scene. Results are delivered automatically.",
+    "Uses 1 {channel} allowance and 1 of {name}’s report slots for this scene. The report opens immediately.",
   "decision.cancelPending":
     "Leaving cancels {count} unfinished investigation(s). Spent channel allowances are not refunded. I choose to depart.",
   "resources.sharedTitle": "{channel} · Shared across the mission",
@@ -336,7 +343,7 @@ export const en = {
   "review.knownReports": "Known reports: {count}",
   "review.uploadedReports": "Uploaded: {count}",
   "review.displayedAdvice": "Analyses displayed: {count}",
-  "context.elapsed": "Elapsed {time} · {medical} · No overall time limit",
+  "context.elapsed": "Play time {time} · {medical} · No overall time limit",
   "medical.stable": "Passengers stable",
   "medical.priority": "Priority transfer needed",
   "context.quotas":
@@ -368,7 +375,7 @@ export const zh: Record<MessageKey, string> = {
   "ui.localAgency3": "当地机构 × 3",
   "ui.witness2": "目击者 × 2",
   "ui.eachRoleMayDeliver3ReportsPer":
-    "每关上报：每位岗位 3 条。每关正式上传：总计 5 张。离开场景不会补充整局资源。没有总时限，累计任务用时会保留在复盘中。",
+    "每关上报：每位岗位 3 条。每关正式上传：总计 5 张。离开场景不会补充整局资源。没有总时限，实际游玩与剧情用时会分别保留在复盘中。",
   "ui.understood": "明白，交给我",
   "ui.aiAdvisor": "AI 顾问",
   "ui.offlineTemplate": "离线模板",
@@ -414,7 +421,13 @@ export const zh: Record<MessageKey, string> = {
   "ui.takeTheConnectorToTheBridge": "经连接路前往桥头",
   "ui.requestPassageOverTheMainBridge": "申请主桥通过",
   "ui.useTheOldRiverbedAndTransferArea": "经旧河床与转运区",
-  "ui.waitHere": "原地等待",
+  "ui.waitHere": "推进时间",
+  "ui.playTime": "实际游玩时间",
+  "ui.simulatedDuration": "剧情 {time}",
+  "ui.simulatedMissionTime": "剧情任务时间",
+  "ui.reportReceived": "报告已送达 · 可立即阅读",
+  "ui.timeAdvanced": "剧情时间已推进，可以继续行动。",
+  "ui.actionCompleted": "行动已完成，可以继续下达指令。",
   "ui.theExportIsNotReadyYetPlease": "导出暂未完成，请稍后再试。",
   "ui.theLastMileArrivalConfirmed": "已抵达，最后一程。",
   "ui.theWindowHasClosed": "窗口已经关闭。",
@@ -460,8 +473,8 @@ export const zh: Record<MessageKey, string> = {
   "ui.conditionsMayChangeNextTimeTakeThe":
     "下一局的现场条件可能不同。带上方法，不必记住答案。",
   "ui.startAnotherEscort": "再开始一次护送",
-  "ui.stayHereAndKeepCoordinating": "留在现场，继续协调",
-  "ui.knownEstimatedTime": "公开预计耗时",
+  "ui.stayHereAndKeepCoordinating": "留在当前位置，推进剧情时间",
+  "ui.knownEstimatedTime": "预计剧情耗时",
   "ui.whyAreYouChoosingThisNow": "此刻，你为什么这样决定？",
   "ui.optional": "选填",
   "ui.noteYourMainEvidenceAnUnresolvedQuestion":
@@ -470,11 +483,11 @@ export const zh: Record<MessageKey, string> = {
   "ui.addDecisionContext": "补充决策依据",
   "ui.optionalForTheReview": "选填，用于复盘",
   "ui.iConsideredTheLimitsOfTheInformation": "我已明确考虑材料的限制",
-  "ui.iComparedTheKnownTimeCosts": "我已比较公开时间成本",
+  "ui.iComparedTheKnownTimeCosts": "我已比较剧情时间成本",
   "ui.aQuestionStillUnresolved": "仍想解决的问题",
   "ui.forExampleIsOurVehicleClearanceStill": "例如：车辆许可是否仍有效？",
   "ui.reportsReferenced": "引用的报告",
-  "ui.theClockKeepsRunning": "没有总时限 · 累计用时会记录",
+  "ui.theClockKeepsRunning": "立即推进剧情时间 · 无需实际等待",
   "ui.issuingOrder": "正在下达",
   "ui.confirmAction": "确认行动",
   "ui.chapterProgress": "章节进度",
@@ -483,7 +496,7 @@ export const zh: Record<MessageKey, string> = {
   "ui.mainBridge": "主桥",
   "ui.stable": "状态稳定",
   "ui.priorityTransferNeeded": "需要优先转送",
-  "ui.elapsedMissionTime": "累计用时 · 不限时",
+  "ui.elapsedMissionTime": "实际游玩 · 不限时",
   "ui.fieldGuide": "行动指南",
   "ui.endThisSession": "结束本局",
   "ui.daybreak07": "曙光 07",
@@ -515,7 +528,7 @@ export const zh: Record<MessageKey, string> = {
   "ui.additionalDelayPossibleLabel": "可能额外延迟",
   "ui.convoyInTransit": "车队正在行进",
   "ui.chooseARouteAtTheNextDecision": "到达下一个决策点后可以选择路线。",
-  "ui.153060Sec": "15 / 30 / 60 秒",
+  "ui.153060Sec": "剧情时间 · 15 / 30 / 60 秒",
   "ui.endThisEscort": "结束这次护送？",
   "ui.thisSessionWillBeSealedImmediatelyYou":
     "本局会立即封存。你可以查看已经发生的决定与有限复盘，再开始新的护送。",
@@ -527,7 +540,7 @@ export const zh: Record<MessageKey, string> = {
   "ui.staticBrieflyFillsTheRadioTheDriver":
     "通信里有短暂的静电声。驾驶员向后视镜看了一眼，等待出发。",
   "ui.theIllustrationSetsTheSceneItDoes":
-    "场景插画用于叙事，不能证明实时道路状态。任务计时继续。",
+    "场景插画用于叙事，不能证明实时道路状态。",
   "ui.missionAllowanceExhausted": "整局次数已用完",
   "ui.sceneReportLimitReached": "本关上报额已满",
   "ui.thisRoleIsBusy": "岗位正在执行任务",
@@ -543,7 +556,7 @@ export const zh: Record<MessageKey, string> = {
   "ui.theReportArrivesAutomaticallyWhenReadyYou":
     "报告就绪后会自动送达。你可以继续指挥。",
   "ui.existingBriefings": "已有简报",
-  "ui.noChannelCost1SecToDeliver": "不占调查资源 · 上报耗时 1 秒",
+  "ui.noChannelCost1SecToDeliver": "不占调查资源 · 立即查看",
   "ui.contactsBecomeAvailableAtTheCheckpoint": "抵达检查站后开始联络。",
   "ui.furtherInvestigation": "进一步调查",
   "ui.usesTheMissionAllowance": "消耗整局共享次数",
@@ -579,7 +592,7 @@ export const zh: Record<MessageKey, string> = {
   "ui.whatIsTheOriginalSourceOfThis": "这条消息的原始来源是什么",
   "ui.whatCausedTheLoudBang": "爆响的原因是什么",
   "ui.canWeEstablishHostileIntent": "能否判断人员的敌意",
-  "ui.investigationTime": "调查耗时",
+  "ui.investigationTime": "剧情耗时",
   "ui.whatThisChannelCanEstablish": "这个渠道能回答什么",
   "ui.whichReportShouldBeTraced": "追溯哪份报告",
   "ui.selectAReceivedReport": "选择已收到的报告",
@@ -588,9 +601,9 @@ export const zh: Record<MessageKey, string> = {
   "ui.noNewQuestionIWantToCheck": "没有新问题，只想再次确认",
   "ui.iConsideredThisChannelSObservationLimits": "我已考虑这个渠道的观察限制",
   "ui.iComparedInvestigatingWithTheTimeNeeded":
-    "我已比较这次调查与行进的时间成本",
+    "我已比较这次调查与行进的剧情时间成本",
   "ui.clockRunningAllowancesCoverTheWholeMission":
-    "调查按耗时完成 · 次数整局共享",
+    "立即查看调查报告 · 次数整局共享",
   "ui.startInvestigation": "发起调查",
   "ui.theFinalStretch": "最后一程",
   "ui.twentyPeopleOneWayHome": "二十个人。一条回家的路。",
@@ -655,7 +668,7 @@ export const zh: Record<MessageKey, string> = {
   "advisor.showBasis": "查看分析依据 ({count})",
   "investigation.balance": "{channel}余量",
   "investigation.costNote":
-    "将消耗 1 次{channel}额度，并预留{name}的 1 条本关上报。结果完成后自动送达。",
+    "将消耗 1 次{channel}额度与{name}的 1 条本关上报。确认后立即查看报告。",
   "decision.cancelPending":
     "离场会取消 {count} 项未完成调查，已消耗的渠道次数保留。我仍选择出发。",
   "resources.sharedTitle": "{channel} · 整局共享",
@@ -665,7 +678,7 @@ export const zh: Record<MessageKey, string> = {
   "review.knownReports": "{count} 条已知报告",
   "review.uploadedReports": "{count} 条已上传",
   "review.displayedAdvice": "{count} 份已展示分析",
-  "context.elapsed": "累计用时 {time} · {medical} · 没有总时限",
+  "context.elapsed": "实际游玩 {time} · {medical} · 没有总时限",
   "medical.stable": "乘客状态稳定",
   "medical.priority": "需要优先转送",
   "context.quotas":

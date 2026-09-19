@@ -184,8 +184,15 @@ export function Debrief({ game }: { game: Game }) {
             </span>
             <span>
               <Clock3 size={17} />
-              <b>{timer(outcome?.sealedAtMissionMs ?? s.missionTimeMs)}</b>{" "}
-              {t("ui.missionTime")}{" "}
+              <b>
+                {timer(
+                  outcome?.playerElapsedMs ??
+                    s.playerElapsedMs ??
+                    outcome?.sealedAtMissionMs ??
+                    s.missionTimeMs,
+                )}
+              </b>{" "}
+              {t("ui.playTime")}{" "}
             </span>
             <span>
               <Flag size={17} />
@@ -198,6 +205,12 @@ export function Debrief({ game }: { game: Game }) {
               {t("ui.handoff")}{" "}
             </span>
           </div>
+          {s.actionTiming === "instant" && (
+            <p className="muted small-text">
+              {t("ui.simulatedMissionTime")}:{" "}
+              {timer(outcome?.sealedAtMissionMs ?? s.missionTimeMs)}
+            </p>
+          )}
         </div>
         <div className="ending-map">
           <Map2D
@@ -331,6 +344,9 @@ export function Debrief({ game }: { game: Game }) {
       ) : (
         <section className="replay-section">
           <div className="timeline">
+            {s.actionTiming === "instant" && (
+              <p className="muted small-text">{t("ui.simulatedMissionTime")}</p>
+            )}
             {replay?.decisions.length ? (
               replay.decisions.map((d, i) => (
                 <article className="timeline-card" key={d.decisionId}>
@@ -413,6 +429,9 @@ export function Debrief({ game }: { game: Game }) {
           <aside className="replay-log">
             <span className="eyebrow">MISSION LOG</span>
             <h3>{t("ui.missionLog")}</h3>
+            {s.actionTiming === "instant" && (
+              <p className="muted small-text">{t("ui.simulatedMissionTime")}</p>
+            )}
             {replay?.publicLog.map((l) => (
               <div key={l.logId}>
                 <time>{timer(l.missionTimeMs)}</time>

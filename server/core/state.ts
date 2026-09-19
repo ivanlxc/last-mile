@@ -49,6 +49,10 @@ export interface State {
     | "terminal";
   sceneId: P.SceneId | null;
   mission: number;
+  /** Historical snapshots without this field retain their original realtime rules. */
+  actionTiming?: "instant" | "realtime";
+  /** Actual player time, independent of authored simulation costs; checkpointed on writes. */
+  playerElapsedMs?: number;
   /** null: unlimited; absent only in historical snapshots with a 10-minute limit. */
   missionDeadlineMs?: number | null;
   createdAt: number;

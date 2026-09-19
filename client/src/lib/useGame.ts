@@ -42,15 +42,34 @@ export function useGame() {
   ref.current = state;
   const apply = useCallback(
     (s: P.SessionProjection) =>
-      setState((old) =>
-        !old ||
-        old.sessionId !== s.sessionId ||
-        s.stateVersion > old.stateVersion ||
-        (s.stateVersion === old.stateVersion &&
-          s.missionTimeMs >= old.missionTimeMs)
+      setState((old) => {
+        if (
+          !old ||
+          old.sessionId !== s.sessionId ||
+          old.runEpoch !== s.runEpoch
+        )
+          return s;
+        if (
+          s.stateVersion < old.stateVersion ||
+          (s.stateVersion === old.stateVersion &&
+            (s.missionTimeMs < old.missionTimeMs ||
+              (s.playerElapsedMs !== undefined &&
+                old.playerElapsedMs !== undefined &&
+                s.playerElapsedMs < old.playerElapsedMs)))
+        )
+          return old;
+        // SSE and HTTP may interleave while instant simulation time is fixed.
+        // Preserve the newest elapsed sample, including across older wire data.
+        return old.playerElapsedMs === undefined
           ? s
-          : old,
-      ),
+          : {
+              ...s,
+              playerElapsedMs: Math.max(
+                old.playerElapsedMs,
+                s.playerElapsedMs ?? 0,
+              ),
+            };
+      }),
     [],
   );
   const refreshJobs = useRef(

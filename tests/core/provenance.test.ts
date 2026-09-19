@@ -16,12 +16,11 @@ afterEach(async () => {
 describe("paid provenance disclosure satisfies the complete public graph contract", () => {
   for (const caseId of ["A", "B"] as const) {
     it(`case ${caseId}: disclosed nodes and edges are stable UUIDs with valid references`, async () => {
-      let elapsed = 0;
       const service = await createGameService({
         selectCase: () => caseId,
         clock: {
-          nowMs: () => 1800000000000 + elapsed,
-          monotonicMs: () => elapsed,
+          nowMs: () => 1800000000000,
+          monotonicMs: () => 0,
         },
       });
       services.push(service);
@@ -36,11 +35,23 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
         },
         { idempotencyKey: randomUUID() },
       )) as P.SessionCreated;
-      const get = async () =>
-        (await service.read(
-          "getSession",
-          created.sessionId,
-        )) as P.SessionProjection;
+      const get = async () => {
+        // Evidence resolves immediately, while offline AI publication remains
+        // asynchronous and can update the version before the next command.
+        for (let i = 0; i < 100; i++) {
+          const current = (await service.read(
+            "getSession",
+            created.sessionId,
+          )) as P.SessionProjection;
+          if (
+            !current.latestAdviceJob ||
+            !["queued", "running"].includes(current.latestAdviceJob.status)
+          )
+            return current;
+          await new Promise<void>((resolve) => setImmediate(resolve));
+        }
+        throw new Error("Offline advice did not settle");
+      };
       const command = async (
         operation: Parameters<GameService["execute"]>[0],
         payload: unknown,
@@ -60,17 +71,12 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
           },
         );
       };
-      const advance = async (milliseconds: number) => {
-        elapsed += milliseconds;
-        await service.tick(created.sessionId);
-      };
       const graph = async () =>
         (await service.read("getProvenance", created.sessionId, undefined, {
           sceneId: "E2",
         })) as P.ProvenanceView;
 
       await command("startSession", { acknowledgeDesignPreview: true });
-      await advance(30000);
       await command("commitAction", {
         actionId: "E1_BYPASS",
         waitDurationMs: null,
@@ -80,7 +86,6 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
         referencedReportIds: [],
         cancelPendingInvestigations: true,
       });
-      await advance(130000);
       for (const targetRole of ["analyst", "liaison"]) {
         await command("createTask", {
           taskKind: "request_report",
@@ -88,7 +93,6 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
           topicId: "cause",
         });
       }
-      await advance(1000);
       const source = (await get()).reports.find(
         (r) => r.card.definitionId === "market_broadcast",
       )!;
@@ -103,7 +107,6 @@ describe("paid provenance disclosure satisfies the complete public graph contrac
         sourceReportId: source.reportId,
         reasonAnnotation: null,
       });
-      await advance(15000);
 
       const first = await graph();
       expect(registry.errors("ProvenanceView", first)).toEqual([]);
