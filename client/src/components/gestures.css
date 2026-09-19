@@ -84,10 +84,28 @@
   border-radius: 5px;
   overflow: hidden;
 }
+.gesture-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.gesture-modes button {
+  padding: 7px 5px;
+  border: 1px solid #52695b;
+  border-radius: 4px;
+  color: #c2d1c7;
+  background: #21372b;
+}
+.gesture-modes button[aria-pressed="true"] {
+  color: #ffe2a3;
+  border-color: #d2bc88;
+  background: #44563a;
+}
 .gesture-preview video {
   display: block;
   width: 100%;
-  max-height: 145px;
+  max-height: 120px;
   object-fit: contain;
   transform: scaleX(-1);
 }

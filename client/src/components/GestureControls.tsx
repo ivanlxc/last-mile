@@ -8,6 +8,7 @@ import {
 import {
   GestureInterpreter,
   type GestureCameraDelta,
+  type GestureControlMode,
   type GestureResult,
 } from "../lib/gestures/gestureInterpreter";
 import "./gestures.css";
@@ -47,8 +48,17 @@ const copy = {
     starting: "Starting camera and hand model…",
     privacy:
       "Camera frames stay in this browser. No recording or upload. Camera is off by default.",
-    pan: "One hand: pinch thumb + index, then drag to pan.",
-    zoom: "Two hands: pinch with both; spread to zoom in, bring together to zoom out.",
+    mode: "Single-hand mode",
+    panLabel: "Pan",
+    orbitLabel: "Rotate",
+    zoomLabel: "Zoom",
+    pan: "Pinch thumb + index; move your hand to pan.",
+    orbit: "Pinch thumb + index; move sideways to rotate, up/down to tilt.",
+    zoom: "Pinch thumb + index; move up to zoom in, down to zoom out.",
+    cycle:
+      "Hold a V sign for 0.7s to switch: Pan → Rotate → Zoom. Lower it before switching again.",
+    switching: "Hold V to switch mode",
+    oneHand: "Show only one hand to control the map",
     release:
       "Release to stop. After losing tracking or using the mouse, open your hand before pinching again.",
     fallback: "Mouse controls always work. Esc turns the camera off.",
@@ -59,6 +69,7 @@ const copy = {
     idle: "Show an open hand, then pinch",
     arming: "Hold the pinch briefly…",
     moving: "Panning the map",
+    rotating: "Rotating the map",
     zooming: "Zooming the map",
     rearm: "Open your hand to rearm",
     mouse: "Mouse in control · release, then pinch again",
@@ -77,8 +88,17 @@ const copy = {
     disable: "关闭摄像头",
     starting: "正在启动摄像头与手部模型…",
     privacy: "画面仅在本浏览器处理，不录制、不上传。摄像头默认关闭。",
-    pan: "单手：拇指与食指捏合，移动手掌平移地图。",
-    zoom: "双手：两手均捏合，拉开放大，靠拢缩小。",
+    mode: "单手控制模式",
+    panLabel: "平移",
+    orbitLabel: "旋转",
+    zoomLabel: "缩放",
+    pan: "拇指与食指捏合，移动手掌平移地图。",
+    orbit: "拇指与食指捏合，左右移动旋转，上下移动调整俯仰。",
+    zoom: "拇指与食指捏合，向上移动放大，向下移动缩小。",
+    cycle:
+      "单手比 V 保持 0.7 秒，依次切换：平移 → 旋转 → 缩放。收起 V 后可再次切换。",
+    switching: "保持 V 手势切换模式",
+    oneHand: "请只用一只手控制地图",
     release: "松开即停止。丢失跟踪或使用鼠标后，请先张手再捏合。",
     fallback: "鼠标随时可用。按 Esc 关闭摄像头。",
     sensitivity: "灵敏度",
@@ -88,6 +108,7 @@ const copy = {
     idle: "先展示张开的手，再捏合",
     arming: "保持捏合片刻…",
     moving: "正在平移地图",
+    rotating: "正在旋转地图",
     zooming: "正在缩放地图",
     rearm: "请先张手，再重新捏合",
     mouse: "鼠标接管中 · 松开后重新捏合",
@@ -147,12 +168,14 @@ export default function GestureControls({
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [device, setDevice] = useState("");
   const [sensitivity, setSensitivity] = useState(1);
+  const [mode, setMode] = useState<GestureControlMode>("pan");
   const [stats, setStats] = useState({
     hands: 0,
     inference: 0,
     hz: 0,
     gesture: "idle" as GestureResult["status"],
     mouse: false,
+    switchProgress: 0,
   });
   const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
@@ -221,6 +244,7 @@ export default function GestureControls({
             hz: 0,
             gesture: "idle",
             mouse: false,
+            switchProgress: 0,
           });
           const canvas = skeleton.current;
           canvas
@@ -258,6 +282,8 @@ export default function GestureControls({
               input: STOP,
               status: "release" as const,
               handCount: frame.hands.length,
+              controlMode: interpreter.current.getMode(),
+              modeSwitchProgress: 0,
             }
           : interpreter.current.update(
               frame.hands,
@@ -272,7 +298,13 @@ export default function GestureControls({
           dy: Math.max(-0.15, Math.min(0.15, input.dy * gain)),
           zoomLog: Math.max(-0.35, Math.min(0.35, input.zoomLog * gain)),
         });
-        draw(frame, result.status === "pan" || result.status === "zoom");
+        setMode(result.controlMode);
+        draw(
+          frame,
+          result.status === "pan" ||
+            result.status === "orbit" ||
+            result.status === "zoom",
+        );
         frames++;
         if (now - rateStart >= 1000) {
           hz = (frames * 1000) / (now - rateStart);
@@ -287,6 +319,7 @@ export default function GestureControls({
             hz: Math.round(hz),
             gesture: result.status,
             mouse,
+            switchProgress: result.modeSwitchProgress,
           });
         }
       },
@@ -309,6 +342,7 @@ export default function GestureControls({
         hz: 0,
         gesture: "release",
         mouse: false,
+        switchProgress: 0,
       });
     }, 150);
     const manual = () => {
@@ -372,17 +406,30 @@ export default function GestureControls({
     runtime.current?.stop();
     setOpen(false);
   };
-  const status = stats.mouse
-    ? t.mouse
-    : {
-        idle: t.idle,
-        arming: t.arming,
-        pan: t.moving,
-        zoom: t.zooming,
-        release: t.rearm,
-      }[stats.gesture];
+  const nextMode = { pan: t.orbitLabel, orbit: t.zoomLabel, zoom: t.panLabel }[
+    mode
+  ];
+  const status =
+    stats.hands > 1
+      ? t.oneHand
+      : stats.mouse
+        ? t.mouse
+        : {
+            idle: t.idle,
+            arming: t.arming,
+            pan: t.moving,
+            orbit: t.rotating,
+            zoom: t.zooming,
+            switching: `${t.switching} → ${nextMode} · ${Math.round(stats.switchProgress * 100)}%`,
+            release: t.rearm,
+          }[stats.gesture];
   return (
-    <div className="gesture-controls" ref={root} data-gesture-state={state}>
+    <div
+      className="gesture-controls"
+      ref={root}
+      data-gesture-state={state}
+      data-control-mode={mode}
+    >
       <button
         type="button"
         className={`gesture-toggle ${state === "running" ? "is-on" : ""}`}
@@ -409,6 +456,31 @@ export default function GestureControls({
           <button type="button" aria-label={t.close} onClick={close}>
             <X size={16} />
           </button>
+        </div>
+        <div className="gesture-modes" role="group" aria-label={t.mode}>
+          {(["pan", "orbit", "zoom"] as const).map((value) => (
+            <button
+              type="button"
+              key={value}
+              aria-pressed={mode === value}
+              onClick={() => {
+                interpreter.current.setMode(value);
+                onInput(STOP);
+                setMode(value);
+                setStats((old) => ({
+                  ...old,
+                  gesture: "release",
+                  switchProgress: 0,
+                }));
+              }}
+            >
+              {
+                { pan: t.panLabel, orbit: t.orbitLabel, zoom: t.zoomLabel }[
+                  value
+                ]
+              }
+            </button>
+          ))}
         </div>
         <div className="gesture-preview" hidden={state === "idle"}>
           <video
@@ -438,10 +510,9 @@ export default function GestureControls({
           </p>
         )}
         <p className="gesture-instruction">
-          {t.pan}
-          <br />
-          {t.zoom}
+          {{ pan: t.pan, orbit: t.orbit, zoom: t.zoom }[mode]}
         </p>
+        <p className="gesture-hint">{t.cycle}</p>
         <p className="gesture-hint">
           {t.release} {t.fallback}
         </p>

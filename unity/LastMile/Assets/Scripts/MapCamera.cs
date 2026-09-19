@@ -74,6 +74,7 @@ namespace LastMile
             if (pointerCaptured || Time.unscaledTime < gesturesSuppressedUntil) return;
             if (input.mode == "pan") Pan(input.dx, input.dy);
             else if (input.mode == "zoom") Zoom(input.zoomLog);
+            else if (input.mode == "orbit") OrbitDegrees(input.dx * 180, input.dy * 120);
             PositionCamera();
         }
 
@@ -105,6 +106,15 @@ namespace LastMile
             distance = Mathf.Clamp(distance * Mathf.Exp(-zoomLog), 2.8f, 90);
         }
 
+        private void OrbitDegrees(float yawDelta, float pitchDelta)
+        {
+            if (yawDelta == 0 && pitchDelta == 0) return;
+            following = false;
+            yaw += yawDelta;
+            // Positive input is an upward drag, moving the view toward the horizon.
+            pitch = Mathf.Clamp(pitch - pitchDelta, 16, 78);
+        }
+
         private float OverviewDistance()
         {
             float aspect = Mathf.Max(view.aspect, 0.6f);
@@ -132,9 +142,7 @@ namespace LastMile
             }
             if (inside && pointerCaptured && Input.GetMouseButton(1))
             {
-                following = false;
-                yaw += delta.x * 0.27f;
-                pitch = Mathf.Clamp(pitch - delta.y * 0.23f, 16, 78);
+                OrbitDegrees(delta.x * 0.27f, delta.y * 0.23f);
             }
             if (inside)
                 Zoom(Input.mouseScrollDelta.y * 0.065f);

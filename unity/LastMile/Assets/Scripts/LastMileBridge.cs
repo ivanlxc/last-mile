@@ -62,7 +62,7 @@ namespace LastMile
                 var input = JsonUtility.FromJson<CameraInput>(json);
                 if (input == null || input.schemaVersion != 1 || input.instanceId != instanceId ||
                     input.sequence < 0 || input.sequence <= cameraSequence ||
-                    (input.mode != "pan" && input.mode != "zoom" && input.mode != "stop") ||
+                    (input.mode != "pan" && input.mode != "zoom" && input.mode != "orbit" && input.mode != "stop") ||
                     !Bounded(input.dx, 0.15f) || !Bounded(input.dy, 0.15f) || !Bounded(input.zoomLog, 0.35f)) return;
                 // Consume even suppressed input so it cannot be replayed after mouse control.
                 cameraSequence = input.sequence;

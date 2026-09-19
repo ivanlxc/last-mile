@@ -211,68 +211,86 @@ test("camera denial is recoverable and does not disable Unity or starting the es
   expect(errors).toEqual([]);
 });
 
-test("deterministic landmark fixture drives actual Unity pan and zoom without advancing the briefing", async ({
+test("single-hand landmarks switch modes and drive actual Unity pan, orbit and zoom", async ({
   page,
 }, info) => {
-  // Substitute only the recognizer's output, NOT the interpreter, bridge or Unity.
-  // This proves input integration; recognition accuracy needs a real user's hands.
+  // Only the recognizer output is synthetic. Interpreter, camera bridge and
+  // rendered Unity are real; this does not measure recognition on a live hand.
+  function hand(x = 0.5, y = 0.5, pinched = false) {
+    const p = Array.from({ length: 21 }, () => ({ x, y, z: 0 }));
+    p[0].y = y + 0.15;
+    p[9].y = y - 0.05;
+    p[5].y = y - 0.04;
+    p[13].y = y - 0.03;
+    p[4] = { x: x - 0.02, y: y - 0.15, z: 0 };
+    p[8] = { x: x + (pinched ? -0.005 : 0.12), y: y - 0.15, z: 0 };
+    return { landmarks: p };
+  }
+  function victory() {
+    const xy = [
+      [0.5, 0.75],
+      [0.43, 0.69],
+      [0.38, 0.64],
+      [0.35, 0.61],
+      [0.33, 0.58],
+      [0.43, 0.58],
+      [0.4, 0.4],
+      [0.39, 0.3],
+      [0.38, 0.2],
+      [0.5, 0.56],
+      [0.52, 0.38],
+      [0.53, 0.27],
+      [0.54, 0.17],
+      [0.57, 0.58],
+      [0.6, 0.48],
+      [0.59, 0.57],
+      [0.56, 0.65],
+      [0.64, 0.64],
+      [0.68, 0.55],
+      [0.67, 0.64],
+      [0.62, 0.69],
+    ];
+    return { landmarks: xy.map(([x, y]) => ({ x, y, z: 0 })) };
+  }
   await page.route("**/handLandmarker.worker.ts?*", (route) =>
     route.fulfill({
       contentType: "application/javascript",
       body: `
-      const channel = new BroadcastChannel('last-mile-test-gesture');
-      let fixture = { mode: 'open', x: .5, spread: .4 };
-      channel.onmessage = event => fixture = event.data;
-      function hand(x, pinched) {
-        const p = Array.from({length:21}, () => ({x,y:.5,z:0}));
-        p[0].y=.65; p[9].y=.45; p[5].y=.46; p[13].y=.47; p[17].y=.5;
-        p[4] = {x:x-.02,y:.35,z:0}; p[8] = {x:x+(pinched ? -.005 : .12),y:.35,z:0};
-        return {landmarks:p};
-      }
-      onmessage = ({data:r}) => {
-        if (r.type === 'initialize') return postMessage({type:'ready'});
+      const channel=new BroadcastChannel('last-mile-test-gesture');
+      let hands=${JSON.stringify([hand()])};
+      channel.onmessage=event=>hands=event.data;
+      onmessage=({data:r})=>{
+        if(r.type==='initialize') return postMessage({type:'ready'});
         r.bitmap.close();
-        const hands = fixture.mode==='lost' ? [] : fixture.mode==='zoom' ? [hand(.5-fixture.spread/2,true),hand(.5+fixture.spread/2,true)] : [hand(fixture.x,fixture.mode==='pan')];
         postMessage({type:'frame',frameId:r.frameId,frame:{hands,timestampMs:r.timestampMs,aspect:r.aspect,inferenceMs:1}});
       };`,
     }),
   );
   const sessionId = await openUnity(page);
-  await page.getByRole("button", { name: "Expand map", exact: true }).click();
   await page
     .getByRole("button", { name: "Gestures · try it", exact: true })
     .click();
   await page
     .getByRole("button", { name: "Enable camera", exact: true })
     .click();
-  await expect(page.locator(".gesture-controls")).toHaveAttribute(
-    "data-gesture-state",
-    "running",
-  );
-  await expect(page.locator(".gesture-status")).toHaveAttribute(
-    "data-gesture-mode",
-    "idle",
-  );
-  const fixture = async (mode: string, x = 0.5, spread = 0.4) =>
-    page.evaluate(
-      (data) => {
-        const channel = new BroadcastChannel("last-mile-test-gesture");
-        channel.postMessage(data);
-        channel.close();
-      },
-      { mode, x, spread },
-    );
+  const controls = page.locator(".gesture-controls");
+  const status = page.locator(".gesture-status");
+  await expect(controls).toHaveAttribute("data-gesture-state", "running");
+  await expect(status).toHaveAttribute("data-gesture-mode", "idle");
+  const fixture = (hands: ReturnType<typeof hand>[]) =>
+    page.evaluate((data) => {
+      const channel = new BroadcastChannel("last-mile-test-gesture");
+      channel.postMessage(data);
+      channel.close();
+    }, hands);
   const canvas = page.locator("canvas.unity-canvas");
   const before = await canvas.screenshot({
     path: info.outputPath("gesture-before.png"),
   });
-  await fixture("pan");
-  await expect(page.locator(".gesture-status")).toHaveAttribute(
-    "data-gesture-mode",
-    "pan",
-  );
+  await fixture([hand(0.5, 0.5, true)]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "pan");
   for (let i = 1; i <= 8; i++) {
-    await fixture("pan", 0.5 - i * 0.015);
+    await fixture([hand(0.5 - i * 0.015, 0.5, true)]);
     await page.waitForTimeout(90);
   }
   const pan = await canvas.screenshot({
@@ -280,40 +298,71 @@ test("deterministic landmark fixture drives actual Unity pan and zoom without ad
   });
   const panChange = await mapDifference(page, before, pan);
   expect(panChange).toBeGreaterThan(0.01);
-  await fixture("zoom");
-  await expect(page.locator(".gesture-status")).toHaveAttribute(
-    "data-gesture-mode",
-    "zoom",
-  );
+
+  // Both mode transitions are completed with one V hand, without clicking UI.
+  await fixture([hand()]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "idle");
+  await fixture([victory()]);
+  await expect(controls).toHaveAttribute("data-control-mode", "orbit");
+  await expect(
+    page.getByRole("button", { name: "Rotate", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.waitForTimeout(1600);
+  await expect(controls).toHaveAttribute("data-control-mode", "orbit");
+  await fixture([hand()]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "idle");
+  await fixture([hand(0.5, 0.5, true)]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "orbit");
   for (let i = 1; i <= 8; i++) {
-    await fixture("zoom", 0.5, 0.4 + i * 0.025);
+    await fixture([hand(0.5 - i * 0.015, 0.5 - i * 0.008, true)]);
+    await page.waitForTimeout(90);
+  }
+  const orbit = await canvas.screenshot({
+    path: info.outputPath("gesture-orbit.png"),
+  });
+  const orbitChange = await mapDifference(page, pan, orbit);
+  expect(orbitChange).toBeGreaterThan(0.01);
+
+  await fixture([hand()]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "idle");
+  await fixture([victory()]);
+  await expect(controls).toHaveAttribute("data-control-mode", "zoom");
+  await fixture([hand()]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "idle");
+  await fixture([hand(0.5, 0.5, true)]);
+  await expect(status).toHaveAttribute("data-gesture-mode", "zoom");
+  for (let i = 1; i <= 8; i++) {
+    await fixture([hand(0.5, 0.5 - i * 0.02, true)]);
     await page.waitForTimeout(90);
   }
   const zoom = await canvas.screenshot({
     path: info.outputPath("gesture-zoom.png"),
   });
-  const zoomChange = await mapDifference(page, pan, zoom);
+  const zoomChange = await mapDifference(page, orbit, zoom);
   expect(zoomChange).toBeGreaterThan(0.01);
-  await fixture("lost");
-  await expect(page.locator(".gesture-status")).toHaveAttribute(
-    "data-gesture-mode",
-    "release",
-  );
+
+  // Two hands can never become a control gesture in this iteration.
+  await fixture([hand(0.35, 0.34, true), hand(0.65, 0.34, true)]);
+  await expect(status).toContainText("Show only one hand");
+  await expect(status).toHaveAttribute("data-gesture-mode", "release");
   await page.waitForTimeout(250);
   const stopped = await canvas.screenshot();
+  await fixture([hand(0.5, 0.34, true)]);
   await page.waitForTimeout(500);
+  await expect(status).toHaveAttribute("data-gesture-mode", "release");
   const stopChange = await mapDifference(
     page,
     stopped,
     await canvas.screenshot(),
   );
   expect(stopChange).toBeLessThan(0.001);
-  await fixture("pan", 0.8);
-  await page.waitForTimeout(400);
-  await expect(page.locator(".gesture-status")).toHaveAttribute(
-    "data-gesture-mode",
-    "release",
-  );
+  await expect(controls).toHaveAttribute("data-control-mode", "zoom");
+
+  // Buttons are a fallback and also require a fresh open-hand release.
+  await page.getByRole("button", { name: "Pan", exact: true }).click();
+  await page.waitForTimeout(850);
+  await expect(controls).toHaveAttribute("data-control-mode", "pan");
+  await expect(status).toHaveAttribute("data-gesture-mode", "release");
   expect(
     await mapDifference(page, stopped, await canvas.screenshot()),
   ).toBeLessThan(0.001);
@@ -326,13 +375,14 @@ test("deterministic landmark fixture drives actual Unity pan and zoom without ad
     missionTimeMs: 0,
     location: { nodeId: "N00", routeId: null, progressPermille: 0 },
   });
-  await info.attach("gesture-input-evidence", {
+  await info.attach("single-hand-input-evidence", {
     body: JSON.stringify(
       {
-        kind: "synthetic landmarks with real Unity",
+        kind: "synthetic single-hand landmarks with real Unity",
         missionTimeMs: projection.missionTimeMs,
         location: projection.location,
         panChange,
+        orbitChange,
         zoomChange,
         stopChange,
       },
