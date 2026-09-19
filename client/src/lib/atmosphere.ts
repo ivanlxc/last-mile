@@ -6,10 +6,12 @@ export class Atmosphere {
   private readonly engineGain: GainNode;
   private readonly wind: AudioBufferSourceNode;
   private readonly windFilter: BiquadFilterNode;
+  private readonly ownsContext: boolean;
   private closed = false;
 
-  constructor() {
-    this.context = new AudioContext({ latencyHint: "playback" });
+  constructor(context?: AudioContext) {
+    this.ownsContext = !context;
+    this.context = context ?? new AudioContext({ latencyHint: "playback" });
     const ctx = this.context;
     this.master = ctx.createGain();
     this.master.gain.value = 0;
@@ -51,11 +53,12 @@ export class Atmosphere {
     moving: boolean,
     ducked: boolean,
     hidden: boolean,
+    volume = 0.32,
   ) {
     if (this.closed) return;
     const now = this.context.currentTime;
     this.master.gain.setTargetAtTime(
-      hidden ? 0 : ducked ? 0.035 : 0.32,
+      hidden ? 0 : Math.max(0, Math.min(1, volume)) * (ducked ? 0.11 : 1),
       now,
       0.18,
     );
@@ -97,7 +100,9 @@ export class Atmosphere {
     this.engine.stop();
     this.wind.disconnect();
     this.engine.disconnect();
+    this.engineGain.disconnect();
+    this.windFilter.disconnect();
     this.master.disconnect();
-    void this.context.close().catch(() => {});
+    if (this.ownsContext) void this.context.close().catch(() => {});
   }
 }

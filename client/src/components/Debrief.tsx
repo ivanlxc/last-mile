@@ -19,6 +19,7 @@ import type { EvaluatorOutput } from "../../../docs/engineering_v0.5/contracts/a
 import { timer } from "../lib/narrative";
 import { Brand } from "./Landing";
 import { Map2D } from "./TacticalMap";
+import { AtmosphereControl } from "./AtmosphereControl";
 export function Debrief({ game }: { game: Game }) {
   const { t, locale, scenes, dimensionLabels, supportLabels, campaign } =
     useI18n();
@@ -155,6 +156,7 @@ export function Debrief({ game }: { game: Game }) {
       <header className="page-header">
         <Brand />
         <span className="eyebrow">{t("ui.afterACTIONREVIEW")}</span>
+        <AtmosphereControl />
         <button className="text-button" onClick={game.home}>
           {" "}
           {t("ui.backToTitle")} <ArrowUpRight size={15} />

@@ -115,7 +115,7 @@ test("desktop map-first layout keeps map and drafts, opens one drawer, and revie
   await expect(intel).toBeVisible();
   await expect(page.locator(".map3d canvas")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Enable ambience", exact: true }),
+    page.getByRole("button", { name: "Sound settings", exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId("open-story")).toBeVisible();
   const windowMap = (await page.locator(".map-viewport").boundingBox())!;

@@ -249,12 +249,11 @@ test("real AudioWorklet PCM becomes a reviewed draft; only explicit Send posts a
     speechHarness,
   );
   expect(await microphoneMetrics(page)).toEqual({ calls: 0, live: 0 });
-  await page
-    .getByRole("button", { name: "Enable ambience", exact: true })
-    .click();
+  await page.getByTestId("sound-settings").click();
   await expect(
-    page.getByRole("button", { name: "Mute ambience", exact: true }),
+    page.getByRole("button", { name: "Mute sound", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
+  await page.getByTestId("sound-settings").click();
   expect(await microphoneMetrics(page)).toEqual({ calls: 0, live: 0 });
   await draft.fill("My question: ");
   await expect(voice).toBeEnabled();
@@ -265,6 +264,10 @@ test("real AudioWorklet PCM becomes a reviewed draft; only explicit Send posts a
   await expect(send).toBeDisabled();
   expect(questions).toHaveLength(0);
   expect(await microphoneMetrics(page)).toEqual({ calls: 1, live: 1 });
+  await expect(page.locator(".sound-control")).toHaveAttribute(
+    "data-ducked",
+    "true",
+  );
   await advisor
     .getByRole("button", { name: "Stop recording", exact: true })
     .click();
@@ -273,12 +276,16 @@ test("real AudioWorklet PCM becomes a reviewed draft; only explicit Send posts a
   );
   await expect(send).toBeEnabled();
   expect(await microphoneMetrics(page)).toEqual({ calls: 1, live: 0 });
-  await page
-    .getByRole("button", { name: "Mute ambience", exact: true })
-    .click();
+  await expect(page.locator(".sound-control")).toHaveAttribute(
+    "data-ducked",
+    "false",
+  );
+  await page.getByTestId("sound-settings").click();
+  await page.getByRole("button", { name: "Mute sound", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "Enable ambience", exact: true }),
+    page.getByRole("button", { name: "Enable sound", exact: true }),
   ).toHaveAttribute("aria-pressed", "false");
+  await page.getByTestId("sound-settings").click();
   expect(questions).toHaveLength(0);
   expect(speechHarness.providers[0].flushed).toBe(true);
   expect(speechHarness.providers[0].frames.length).toBeGreaterThanOrEqual(3);

@@ -11,6 +11,7 @@ import { AccessGate, type AccessMode } from "./components/AccessGate";
 import { CloudHistory } from "./components/CloudHistory";
 import { MapRendererProvider } from "./lib/mapRenderer";
 import { stopSpeech } from "./lib/speech/playback";
+import { GameAudioProvider } from "./lib/gameAudio";
 export default function App() {
   return <AccessGate>{(mode) => <AuthenticatedGame mode={mode} />}</AccessGate>;
 }
@@ -19,7 +20,9 @@ function AuthenticatedGame({ mode }: { mode: AccessMode }) {
   return (
     <LocaleProvider locale={game.locale}>
       <MapRendererProvider state={game.state}>
-        <GameShell game={game} mode={mode} />
+        <GameAudioProvider state={game.state}>
+          <GameShell game={game} mode={mode} />
+        </GameAudioProvider>
       </MapRendererProvider>
     </LocaleProvider>
   );

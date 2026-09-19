@@ -318,11 +318,7 @@ export function GameView({
               : t("ui.awaitingOrders")}
         </span>
         <div className="map-toolbar-feedback">
-          <AtmosphereControl
-            sceneId={s.sceneId}
-            travelling={travelling}
-            reportCount={s.reports.length}
-          />
+          <AtmosphereControl />
           {s.activeTasks.length > 0 && (
             <button className="task-status" onClick={() => setDrawer("intel")}>
               <span className="spinner" />

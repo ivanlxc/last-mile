@@ -14,6 +14,7 @@ import type { Game } from "../lib/useGame";
 import { TacticalMap } from "./TacticalMap";
 import { useMapRenderer } from "../lib/mapRenderer";
 import { mapRendererCopy } from "../lib/mapRendererCopy";
+import { AtmosphereControl } from "./AtmosphereControl";
 export function Brand({ small = false }: { small?: boolean }) {
   const { t } = useI18n();
   return (
@@ -44,6 +45,7 @@ export function Landing({
       <header className="landing-nav">
         <Brand />
         <div className="nav-right">
+          <AtmosphereControl />
           <div
             className="language-switch"
             role="group"
@@ -144,6 +146,7 @@ export function Briefing({ game }: { game: Game }) {
       <header className="page-header">
         <Brand />
         <span className="eyebrow">{t("ui.missionBRIEFING")}</span>
+        <AtmosphereControl />
         <span className="status-tag">
           <Clock3 size={13} /> {t("ui.theClockHasNotStarted")}{" "}
         </span>

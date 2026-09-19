@@ -1,0 +1,110 @@
+.sound-control {
+  position: relative;
+  flex-shrink: 0;
+}
+.sound-control .atmosphere-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid #71877350;
+  border-radius: 5px;
+  color: #bdc9b9;
+  background: #17241d;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sound-control .atmosphere-toggle[aria-expanded="true"] {
+  color: #f0d59d;
+  border-color: #b9a575;
+}
+.sound-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 270px;
+  padding: 17px;
+  z-index: 95;
+  border: 1px solid #73806a80;
+  border-radius: 9px;
+  color: #d9e1d5;
+  background: #19271f;
+  box-shadow: 0 18px 45px #0008;
+  font-size: 13px;
+  text-align: left;
+}
+.sound-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 13px;
+}
+.sound-control .sound-heading button {
+  border: 0;
+  padding: 3px;
+  background: transparent;
+  color: #b4c3b1;
+}
+.sound-control .sound-master-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px;
+  border: 1px solid #7e8b735c;
+  border-radius: 5px;
+  color: #e4d3a3;
+  background: #25372b;
+  font-size: 12px;
+}
+.sound-volume {
+  display: block;
+  margin: 17px 0 0;
+}
+.sound-volume > span {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+.sound-volume output {
+  color: #aabca8;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.sound-volume input {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  accent-color: #d6bc82;
+  cursor: pointer;
+}
+.sound-popover .sound-track {
+  margin: 18px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid #75826940;
+  color: #c8b585;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.sound-popover .sound-hint {
+  margin: 6px 0 0;
+  color: #99ab99;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.sound-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 10px;
+  color: #d5bd92;
+  font-size: 12px;
+}
+.sound-control .sound-notice button {
+  padding: 7px;
+  border: 1px solid #bcaa7770;
+  border-radius: 4px;
+  color: #ead4a5;
+  font-size: 12px;
+}
