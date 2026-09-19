@@ -39,7 +39,7 @@ def main():
         "-y", "-i", str(raw_path), "-af", f"{fades},{normalization}",
         "-ar", "48000", "-ac", "2", "-c:a", "libmp3lame", "-q:a", "2",
         "-metadata", f"title={score['title']}",
-        "-metadata", "album=LAST MILE - Music Auditions v1",
+        "-metadata", f"album=LAST MILE - Music Auditions {output_path.parent.name}",
         "-metadata", "comment=Original instrumental prototype; virtual instruments; audition only",
         str(output_path),
     ])

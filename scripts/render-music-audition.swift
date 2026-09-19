@@ -25,6 +25,7 @@ struct Score: Decodable {
     let beatsPerBar: Int
     let tailSeconds: Double
     let tracks: [Track]
+    let renderReverbPercent: Float?
 }
 struct Event {
     let sample: Int64
@@ -51,6 +52,8 @@ func render() throws {
     let programs: [String: UInt8] = [
         "piano": 0, "cello": 42, "strings": 48, "warm_pad": 89,
         "harp": 46, "bass": 43,
+        "pizzicato": 45, "marimba": 12, "clarinet": 71,
+        "tremolo_strings": 44,
     ]
     // The local macOS sound bank is used in place and never copied into the repo.
     let bank = URL(fileURLWithPath: "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls")
@@ -67,8 +70,12 @@ func render() throws {
     tone.bands[1].gain = -3
     tone.bands[1].bypass = false
     let space = AVAudioUnitReverb()
-    space.loadFactoryPreset(.largeHall2)
-    space.wetDryMix = 24
+    let reverb = score.renderReverbPercent ?? 24
+    guard (0...100).contains(reverb) else {
+        throw RenderError.invalid("Reverb percentage must be between 0 and 100")
+    }
+    space.loadFactoryPreset(reverb < 20 ? .mediumRoom : .largeHall2)
+    space.wetDryMix = reverb
     engine.attach(sum)
     engine.attach(tone)
     engine.attach(space)

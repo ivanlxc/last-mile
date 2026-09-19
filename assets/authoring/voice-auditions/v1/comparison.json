@@ -1,0 +1,31 @@
+{
+  "order": [
+    {
+      "voice": "Athena",
+      "startSeconds": 0,
+      "durationSeconds": 9.096,
+      "gainDB": 1.76
+    },
+    {
+      "voice": "Orion",
+      "startSeconds": 10.096,
+      "durationSeconds": 12.336,
+      "gainDB": 1.92
+    },
+    {
+      "voice": "Draco",
+      "startSeconds": 23.432,
+      "durationSeconds": 8.784,
+      "gainDB": -0.97
+    },
+    {
+      "voice": "Helena",
+      "startSeconds": 33.216,
+      "durationSeconds": 9.744,
+      "gainDB": 0.02
+    }
+  ],
+  "targetLUFS": -21,
+  "gapSeconds": 1,
+  "processing": "Constant gain per clip for level matching. Default provider speed and pitch preserved."
+}

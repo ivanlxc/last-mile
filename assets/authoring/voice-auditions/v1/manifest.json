@@ -1,0 +1,43 @@
+{
+  "purpose": "English narrator comparison, not applied to the game",
+  "provider": "Deepgram",
+  "family": "Aura-2",
+  "checkedOn": "2026-09-19",
+  "currentConfiguredVoice": "aura-2-thalia-en",
+  "source": "https://developers.deepgram.com/docs/tts-models",
+  "text": "West Gate checkpoint. The main road is visible, but permission to pass has not been confirmed. Check the latest report before choosing your route.",
+  "voices": [
+    {
+      "name": "Athena",
+      "model": "aura-2-athena-en",
+      "gender": "feminine",
+      "accent": "American",
+      "character": "Calm, smooth, professional",
+      "file": "athena.mp3"
+    },
+    {
+      "name": "Orion",
+      "model": "aura-2-orion-en",
+      "gender": "masculine",
+      "accent": "American",
+      "character": "Approachable, comfortable, calm",
+      "file": "orion.mp3"
+    },
+    {
+      "name": "Draco",
+      "model": "aura-2-draco-en",
+      "gender": "masculine",
+      "accent": "British",
+      "character": "Warm, approachable, baritone",
+      "file": "draco.mp3"
+    },
+    {
+      "name": "Helena",
+      "model": "aura-2-helena-en",
+      "gender": "feminine",
+      "accent": "American",
+      "character": "Caring, natural, friendly, raspy",
+      "file": "helena.mp3"
+    }
+  ]
+}
