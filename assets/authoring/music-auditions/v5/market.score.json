@@ -1,0 +1,932 @@
+{
+  "title": "Market — Unsettled Accounts (two-wave v5)",
+  "bpm": 60,
+  "bars": 16,
+  "beatsPerBar": 4,
+  "tailSeconds": 8,
+  "renderReverbPercent": 33,
+  "renderLowPassHz": 3200,
+  "arrangementNotes": "Two moderate waves follow a restrained cello phrase, B–D–E–G–E–B. Its second statement expands through F-sharp before reaching G. Piano intervals answer the cello, changing their spacing and register. Compressed per-track gain envelopes shape the sustained strings while gentle open-fifth support keeps the opening and middle pause audible. E minor, suspended ninths and open C/A sonorities remain grave and unresolved.",
+  "sections": [
+    {
+      "startBeat": 0,
+      "endBeat": 8,
+      "name": "Restrained opening",
+      "listening": "Low piano and a quiet sustained fifth establish a continuous soft floor; cello enters late."
+    },
+    {
+      "startBeat": 8,
+      "endBeat": 22,
+      "name": "First wave",
+      "listening": "Bass enters and cello climbs B–D–E–G; harmony widens toward the first crest around 17–19 seconds."
+    },
+    {
+      "startBeat": 22,
+      "endBeat": 30,
+      "name": "Release and thinning",
+      "listening": "Bass and cello leave while strings and pad retain a quiet open fifth beneath the unanswered piano."
+    },
+    {
+      "startBeat": 30,
+      "endBeat": 32,
+      "name": "Breath before the return",
+      "listening": "The quiet fifth carries a piano note and cello pickup into the second phrase."
+    },
+    {
+      "startBeat": 32,
+      "endBeat": 47,
+      "name": "Larger second wave",
+      "listening": "The motif unfolds through a longer ascent; low bass returns, strings widen upward, and the second crest sits at 41–43 seconds."
+    },
+    {
+      "startBeat": 47,
+      "endBeat": 64,
+      "name": "Withdrawal",
+      "listening": "Cello descends, the upper harmony leaves, and low piano returns over an unresolved E–B–F-sharp ending."
+    }
+  ],
+  "tracks": [
+    {
+      "name": "Low piano — measured answers and changing intervals",
+      "instrument": "piano",
+      "volume": 0.3,
+      "pan": -0.1,
+      "gainAutomation": [
+        {
+          "beat": 0,
+          "gain": 0.904
+        },
+        {
+          "beat": 8,
+          "gain": 0.936
+        },
+        {
+          "beat": 14,
+          "gain": 1.0
+        },
+        {
+          "beat": 18,
+          "gain": 1.032
+        },
+        {
+          "beat": 22,
+          "gain": 0.964
+        },
+        {
+          "beat": 27,
+          "gain": 0.864
+        },
+        {
+          "beat": 31,
+          "gain": 0.888
+        },
+        {
+          "beat": 36,
+          "gain": 0.98
+        },
+        {
+          "beat": 42,
+          "gain": 1.06
+        },
+        {
+          "beat": 47,
+          "gain": 0.976
+        },
+        {
+          "beat": 53,
+          "gain": 0.876
+        },
+        {
+          "beat": 60,
+          "gain": 0.808
+        },
+        {
+          "beat": 64,
+          "gain": 0.772
+        }
+      ],
+      "notes": [
+        {
+          "beat": 0.4,
+          "duration": 5.4,
+          "midi": 40,
+          "velocity": 43
+        },
+        {
+          "beat": 0.48,
+          "duration": 5.32,
+          "midi": 47,
+          "velocity": 38
+        },
+        {
+          "beat": 4.3,
+          "duration": 3.8,
+          "midi": 55,
+          "velocity": 38
+        },
+        {
+          "beat": 6.3,
+          "duration": 3.2,
+          "midi": 52,
+          "velocity": 36
+        },
+        {
+          "beat": 8.55,
+          "duration": 5.7,
+          "midi": 48,
+          "velocity": 42
+        },
+        {
+          "beat": 8.63,
+          "duration": 5.62,
+          "midi": 55,
+          "velocity": 39
+        },
+        {
+          "beat": 12.8,
+          "duration": 3.4,
+          "midi": 59,
+          "velocity": 40
+        },
+        {
+          "beat": 14.5,
+          "duration": 3.1,
+          "midi": 55,
+          "velocity": 38
+        },
+        {
+          "beat": 16.4,
+          "duration": 5.2,
+          "midi": 45,
+          "velocity": 45
+        },
+        {
+          "beat": 16.48,
+          "duration": 5.12,
+          "midi": 52,
+          "velocity": 41
+        },
+        {
+          "beat": 16.56,
+          "duration": 5.04,
+          "midi": 59,
+          "velocity": 39
+        },
+        {
+          "beat": 20.75,
+          "duration": 3,
+          "midi": 55,
+          "velocity": 38
+        },
+        {
+          "beat": 22.35,
+          "duration": 3.2,
+          "midi": 52,
+          "velocity": 35
+        },
+        {
+          "beat": 25.15,
+          "duration": 4.5,
+          "midi": 47,
+          "velocity": 36
+        },
+        {
+          "beat": 25.23,
+          "duration": 4.42,
+          "midi": 54,
+          "velocity": 33
+        },
+        {
+          "beat": 29.4,
+          "duration": 3.4,
+          "midi": 52,
+          "velocity": 33
+        },
+        {
+          "beat": 32.4,
+          "duration": 5.4,
+          "midi": 48,
+          "velocity": 43
+        },
+        {
+          "beat": 32.48,
+          "duration": 5.32,
+          "midi": 55,
+          "velocity": 39
+        },
+        {
+          "beat": 35.7,
+          "duration": 3.8,
+          "midi": 50,
+          "velocity": 40
+        },
+        {
+          "beat": 35.78,
+          "duration": 3.72,
+          "midi": 59,
+          "velocity": 39
+        },
+        {
+          "beat": 40.45,
+          "duration": 4.6,
+          "midi": 52,
+          "velocity": 46
+        },
+        {
+          "beat": 40.53,
+          "duration": 4.52,
+          "midi": 55,
+          "velocity": 42
+        },
+        {
+          "beat": 40.61,
+          "duration": 4.44,
+          "midi": 59,
+          "velocity": 40
+        },
+        {
+          "beat": 44.2,
+          "duration": 3.6,
+          "midi": 50,
+          "velocity": 40
+        },
+        {
+          "beat": 44.28,
+          "duration": 3.52,
+          "midi": 57,
+          "velocity": 38
+        },
+        {
+          "beat": 46.8,
+          "duration": 4.2,
+          "midi": 45,
+          "velocity": 39
+        },
+        {
+          "beat": 46.88,
+          "duration": 4.12,
+          "midi": 52,
+          "velocity": 36
+        },
+        {
+          "beat": 54.2,
+          "duration": 5,
+          "midi": 40,
+          "velocity": 36
+        },
+        {
+          "beat": 54.28,
+          "duration": 4.92,
+          "midi": 47,
+          "velocity": 33
+        },
+        {
+          "beat": 60.3,
+          "duration": 3.1,
+          "midi": 47,
+          "velocity": 33
+        },
+        {
+          "beat": 60.38,
+          "duration": 3.02,
+          "midi": 54,
+          "velocity": 30
+        }
+      ]
+    },
+    {
+      "name": "Cello — the slow question, expanded on its return",
+      "instrument": "cello",
+      "volume": 0.28,
+      "pan": 0.08,
+      "gainAutomation": [
+        {
+          "beat": 0,
+          "gain": 0.808
+        },
+        {
+          "beat": 8,
+          "gain": 0.86
+        },
+        {
+          "beat": 12,
+          "gain": 0.96
+        },
+        {
+          "beat": 17.5,
+          "gain": 1.052
+        },
+        {
+          "beat": 21,
+          "gain": 0.976
+        },
+        {
+          "beat": 25,
+          "gain": 0.8
+        },
+        {
+          "beat": 29,
+          "gain": 0.76
+        },
+        {
+          "beat": 32,
+          "gain": 0.868
+        },
+        {
+          "beat": 36,
+          "gain": 0.972
+        },
+        {
+          "beat": 42,
+          "gain": 1.1
+        },
+        {
+          "beat": 46,
+          "gain": 1.016
+        },
+        {
+          "beat": 50,
+          "gain": 0.916
+        },
+        {
+          "beat": 56,
+          "gain": 0.828
+        },
+        {
+          "beat": 64,
+          "gain": 0.744
+        }
+      ],
+      "notes": [
+        {
+          "beat": 6.7,
+          "duration": 3.5,
+          "midi": 47,
+          "velocity": 37
+        },
+        {
+          "beat": 10.4,
+          "duration": 2.4,
+          "midi": 50,
+          "velocity": 39
+        },
+        {
+          "beat": 13,
+          "duration": 2.1,
+          "midi": 52,
+          "velocity": 41
+        },
+        {
+          "beat": 15.3,
+          "duration": 2.3,
+          "midi": 55,
+          "velocity": 43
+        },
+        {
+          "beat": 17.8,
+          "duration": 2.5,
+          "midi": 52,
+          "velocity": 42
+        },
+        {
+          "beat": 20.5,
+          "duration": 4,
+          "midi": 47,
+          "velocity": 38
+        },
+        {
+          "beat": 31.6,
+          "duration": 2.5,
+          "midi": 47,
+          "velocity": 37
+        },
+        {
+          "beat": 34.3,
+          "duration": 2.4,
+          "midi": 50,
+          "velocity": 39
+        },
+        {
+          "beat": 36.85,
+          "duration": 2.4,
+          "midi": 52,
+          "velocity": 42
+        },
+        {
+          "beat": 39.45,
+          "duration": 2.3,
+          "midi": 54,
+          "velocity": 43
+        },
+        {
+          "beat": 42,
+          "duration": 2.5,
+          "midi": 55,
+          "velocity": 45
+        },
+        {
+          "beat": 44.7,
+          "duration": 2.7,
+          "midi": 52,
+          "velocity": 41
+        },
+        {
+          "beat": 47.8,
+          "duration": 2.8,
+          "midi": 50,
+          "velocity": 38
+        },
+        {
+          "beat": 51.1,
+          "duration": 3.4,
+          "midi": 47,
+          "velocity": 35
+        },
+        {
+          "beat": 57,
+          "duration": 5.8,
+          "midi": 52,
+          "velocity": 32
+        }
+      ]
+    },
+    {
+      "name": "Strings — two sustained swells and a widening register",
+      "instrument": "strings",
+      "volume": 0.23,
+      "pan": -0.17,
+      "gainAutomation": [
+        {
+          "beat": 0,
+          "gain": 0.768
+        },
+        {
+          "beat": 6,
+          "gain": 0.824
+        },
+        {
+          "beat": 8,
+          "gain": 0.86
+        },
+        {
+          "beat": 12,
+          "gain": 0.936
+        },
+        {
+          "beat": 16,
+          "gain": 1.04
+        },
+        {
+          "beat": 18.5,
+          "gain": 1.08
+        },
+        {
+          "beat": 22,
+          "gain": 0.98
+        },
+        {
+          "beat": 25,
+          "gain": 0.78
+        },
+        {
+          "beat": 28,
+          "gain": 0.72
+        },
+        {
+          "beat": 31,
+          "gain": 0.76
+        },
+        {
+          "beat": 34,
+          "gain": 0.852
+        },
+        {
+          "beat": 38,
+          "gain": 0.996
+        },
+        {
+          "beat": 41.5,
+          "gain": 1.128
+        },
+        {
+          "beat": 44,
+          "gain": 1.092
+        },
+        {
+          "beat": 47,
+          "gain": 0.98
+        },
+        {
+          "beat": 50,
+          "gain": 0.864
+        },
+        {
+          "beat": 54,
+          "gain": 0.784
+        },
+        {
+          "beat": 60,
+          "gain": 0.724
+        },
+        {
+          "beat": 64,
+          "gain": 0.676
+        }
+      ],
+      "notes": [
+        {
+          "beat": 0.8,
+          "duration": 7.3,
+          "midi": 47,
+          "velocity": 31
+        },
+        {
+          "beat": 1.05,
+          "duration": 7.35,
+          "midi": 52,
+          "velocity": 30
+        },
+        {
+          "beat": 8.8,
+          "duration": 6.8,
+          "midi": 48,
+          "velocity": 34
+        },
+        {
+          "beat": 9,
+          "duration": 6.7,
+          "midi": 52,
+          "velocity": 34
+        },
+        {
+          "beat": 12.2,
+          "duration": 3.6,
+          "midi": 59,
+          "velocity": 32
+        },
+        {
+          "beat": 16.5,
+          "duration": 6.8,
+          "midi": 48,
+          "velocity": 36
+        },
+        {
+          "beat": 16.7,
+          "duration": 6.7,
+          "midi": 52,
+          "velocity": 35
+        },
+        {
+          "beat": 16.9,
+          "duration": 6.6,
+          "midi": 59,
+          "velocity": 33
+        },
+        {
+          "beat": 18.2,
+          "duration": 4.2,
+          "midi": 62,
+          "velocity": 31
+        },
+        {
+          "beat": 24.3,
+          "duration": 7.2,
+          "midi": 52,
+          "velocity": 30
+        },
+        {
+          "beat": 24.65,
+          "duration": 6.85,
+          "midi": 47,
+          "velocity": 29
+        },
+        {
+          "beat": 32.6,
+          "duration": 7,
+          "midi": 48,
+          "velocity": 35
+        },
+        {
+          "beat": 32.8,
+          "duration": 6.8,
+          "midi": 55,
+          "velocity": 35
+        },
+        {
+          "beat": 33,
+          "duration": 6.6,
+          "midi": 59,
+          "velocity": 34
+        },
+        {
+          "beat": 35.2,
+          "duration": 4.1,
+          "midi": 64,
+          "velocity": 30
+        },
+        {
+          "beat": 40.2,
+          "duration": 5.4,
+          "midi": 52,
+          "velocity": 37
+        },
+        {
+          "beat": 40.4,
+          "duration": 5.2,
+          "midi": 55,
+          "velocity": 37
+        },
+        {
+          "beat": 40.6,
+          "duration": 5,
+          "midi": 59,
+          "velocity": 35
+        },
+        {
+          "beat": 41,
+          "duration": 4.5,
+          "midi": 64,
+          "velocity": 31
+        },
+        {
+          "beat": 45.8,
+          "duration": 4.1,
+          "midi": 45,
+          "velocity": 34
+        },
+        {
+          "beat": 46,
+          "duration": 4,
+          "midi": 52,
+          "velocity": 34
+        },
+        {
+          "beat": 46.2,
+          "duration": 4,
+          "midi": 55,
+          "velocity": 32
+        },
+        {
+          "beat": 46.4,
+          "duration": 3.8,
+          "midi": 62,
+          "velocity": 29
+        },
+        {
+          "beat": 51.4,
+          "duration": 4.8,
+          "midi": 55,
+          "velocity": 29
+        },
+        {
+          "beat": 51.6,
+          "duration": 4.6,
+          "midi": 59,
+          "velocity": 28
+        },
+        {
+          "beat": 58.5,
+          "duration": 4.6,
+          "midi": 52,
+          "velocity": 27
+        }
+      ]
+    },
+    {
+      "name": "Bowed bass — ground enters with each wave, then recedes",
+      "instrument": "bass",
+      "volume": 0.22,
+      "pan": -0.03,
+      "gainAutomation": [
+        {
+          "beat": 0,
+          "gain": 0.82
+        },
+        {
+          "beat": 8,
+          "gain": 0.856
+        },
+        {
+          "beat": 13,
+          "gain": 0.948
+        },
+        {
+          "beat": 18,
+          "gain": 1.028
+        },
+        {
+          "beat": 23,
+          "gain": 0.88
+        },
+        {
+          "beat": 28,
+          "gain": 0.78
+        },
+        {
+          "beat": 32,
+          "gain": 0.86
+        },
+        {
+          "beat": 37,
+          "gain": 0.964
+        },
+        {
+          "beat": 42,
+          "gain": 1.06
+        },
+        {
+          "beat": 47,
+          "gain": 0.948
+        },
+        {
+          "beat": 53,
+          "gain": 0.824
+        },
+        {
+          "beat": 60,
+          "gain": 0.748
+        },
+        {
+          "beat": 64,
+          "gain": 0.696
+        }
+      ],
+      "notes": [
+        {
+          "beat": 8.15,
+          "duration": 7.5,
+          "midi": 36,
+          "velocity": 35
+        },
+        {
+          "beat": 16.2,
+          "duration": 7.1,
+          "midi": 33,
+          "velocity": 37
+        },
+        {
+          "beat": 32.2,
+          "duration": 7.5,
+          "midi": 36,
+          "velocity": 36
+        },
+        {
+          "beat": 40.2,
+          "duration": 5.3,
+          "midi": 40,
+          "velocity": 38
+        },
+        {
+          "beat": 45.8,
+          "duration": 3.7,
+          "midi": 33,
+          "velocity": 34
+        },
+        {
+          "beat": 53,
+          "duration": 9.8,
+          "midi": 40,
+          "velocity": 31
+        }
+      ]
+    },
+    {
+      "name": "Warm suspended air — soft overlap without a pulse",
+      "instrument": "warm_pad",
+      "volume": 0.17,
+      "pan": 0.2,
+      "gainAutomation": [
+        {
+          "beat": 0,
+          "gain": 0.76
+        },
+        {
+          "beat": 8,
+          "gain": 0.804
+        },
+        {
+          "beat": 14,
+          "gain": 0.904
+        },
+        {
+          "beat": 19,
+          "gain": 0.98
+        },
+        {
+          "beat": 23,
+          "gain": 0.88
+        },
+        {
+          "beat": 27,
+          "gain": 0.756
+        },
+        {
+          "beat": 31,
+          "gain": 0.772
+        },
+        {
+          "beat": 35,
+          "gain": 0.856
+        },
+        {
+          "beat": 40,
+          "gain": 1.008
+        },
+        {
+          "beat": 43,
+          "gain": 1.04
+        },
+        {
+          "beat": 47,
+          "gain": 0.948
+        },
+        {
+          "beat": 51,
+          "gain": 0.828
+        },
+        {
+          "beat": 57,
+          "gain": 0.756
+        },
+        {
+          "beat": 64,
+          "gain": 0.696
+        }
+      ],
+      "notes": [
+        {
+          "beat": 0.15,
+          "duration": 8.4,
+          "midi": 52,
+          "velocity": 29
+        },
+        {
+          "beat": 0.35,
+          "duration": 8.2,
+          "midi": 59,
+          "velocity": 27
+        },
+        {
+          "beat": 10.2,
+          "duration": 6.8,
+          "midi": 50,
+          "velocity": 28
+        },
+        {
+          "beat": 19,
+          "duration": 5.3,
+          "midi": 57,
+          "velocity": 29
+        },
+        {
+          "beat": 24.35,
+          "duration": 8.2,
+          "midi": 52,
+          "velocity": 29
+        },
+        {
+          "beat": 24.5,
+          "duration": 8.6,
+          "midi": 59,
+          "velocity": 27
+        },
+        {
+          "beat": 33.8,
+          "duration": 8,
+          "midi": 52,
+          "velocity": 28
+        },
+        {
+          "beat": 34,
+          "duration": 9.8,
+          "midi": 59,
+          "velocity": 27
+        },
+        {
+          "beat": 38.9,
+          "duration": 6.3,
+          "midi": 54,
+          "velocity": 30
+        },
+        {
+          "beat": 39.1,
+          "duration": 6.1,
+          "midi": 62,
+          "velocity": 27
+        },
+        {
+          "beat": 46.4,
+          "duration": 4.7,
+          "midi": 59,
+          "velocity": 26
+        },
+        {
+          "beat": 54.4,
+          "duration": 8.6,
+          "midi": 54,
+          "velocity": 24
+        }
+      ]
+    }
+  ]
+}

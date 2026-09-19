@@ -11,12 +11,18 @@ struct Note: Decodable {
     let midi: Int
     let velocity: Int
 }
+struct GainPoint: Decodable {
+    let beat: Double
+    let gain: Float
+}
 struct Track: Decodable {
     let name: String
     let instrument: String
     let volume: Float
     let pan: Float
     let notes: [Note]
+    // Optional expression multiplier. Older scores retain their fixed mix.
+    let gainAutomation: [GainPoint]?
 }
 struct Score: Decodable {
     let title: String
@@ -37,6 +43,19 @@ struct Event {
 }
 enum RenderError: Error {
     case invalid(String)
+}
+
+func expression(at beat: Double, points: [GainPoint]) -> Float {
+    guard let first = points.first, let last = points.last else { return 1 }
+    if beat <= first.beat { return first.gain }
+    if beat >= last.beat { return last.gain }
+    for index in 1..<points.count where beat < points[index].beat {
+        let previous = points[index - 1]
+        let next = points[index]
+        let fraction = Float((beat - previous.beat) / (next.beat - previous.beat))
+        return previous.gain + (next.gain - previous.gain) * fraction
+    }
+    return last.gain
 }
 
 func render() throws {
@@ -98,10 +117,20 @@ func render() throws {
     var events: [Event] = []
     let beatSeconds = 60.0 / score.bpm
     let totalBeats = Double(score.bars * score.beatsPerBar)
+    let hasAutomation = score.tracks.contains { !($0.gainAutomation ?? []).isEmpty }
     for (index, track) in score.tracks.enumerated() {
         guard let program = programs[track.instrument],
               (0...1).contains(track.volume), (-1...1).contains(track.pan) else {
             throw RenderError.invalid("Invalid track: \(track.name)")
+        }
+        var previousBeat = -Double.infinity
+        for point in track.gainAutomation ?? [] {
+            guard point.beat.isFinite, point.beat >= 0, point.beat <= totalBeats,
+                  point.beat > previousBeat, (0...2).contains(point.gain),
+                  track.volume * point.gain <= 1 else {
+                throw RenderError.invalid("Invalid gain automation in \(track.name)")
+            }
+            previousBeat = point.beat
         }
         let sampler = AVAudioUnitSampler()
         let mixer = AVAudioMixerNode()
@@ -112,7 +141,7 @@ func render() throws {
             bankLSB: UInt8(kAUSampler_DefaultBankLSB))
         engine.connect(sampler, to: mixer, format: format)
         engine.connect(mixer, to: sum, fromBus: 0, toBus: AVAudioNodeBus(index), format: format)
-        mixer.outputVolume = track.volume
+        mixer.outputVolume = track.volume * expression(at: 0, points: track.gainAutomation ?? [])
         mixer.pan = track.pan
         // Consistent external space, no instrument-specific General MIDI chorus.
         sampler.sendController(91, withValue: 0, onChannel: 0)
@@ -161,7 +190,16 @@ func render() throws {
             eventIndex += 1
         }
         let boundary = eventIndex < events.count ? events[eventIndex].sample : totalSamples
-        let count = AVAudioFrameCount(min(4096, boundary - cursor, totalSamples - cursor))
+        // At 48 kHz, 256-frame expression updates are ~5 ms apart. This shapes
+        // sustained phrases before the shared reverb, whose tails decay naturally.
+        let count = AVAudioFrameCount(min(hasAutomation ? 256 : 4096, boundary - cursor, totalSamples - cursor))
+        if hasAutomation {
+            let beat = (Double(cursor) + Double(count) / 2) / rate / beatSeconds
+            for (index, track) in score.tracks.enumerated() {
+                trackMixers[index].outputVolume = track.volume * expression(
+                    at: beat, points: track.gainAutomation ?? [])
+            }
+        }
         let result = try engine.renderOffline(count, to: buffer)
         switch result {
         case .success:

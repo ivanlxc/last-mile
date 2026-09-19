@@ -1,0 +1,14 @@
+{
+  "score": "bridge.score.json",
+  "audio": "bridge.mp3",
+  "durationSeconds": 76.571,
+  "sampleRate": 48000,
+  "channels": 2,
+  "codec": "MP3 VBR quality 2",
+  "normalization": "linear",
+  "integratedLoudnessLUFS": -18.99,
+  "truePeakDBTP": -4.89,
+  "loudnessRangeLU": 9.2,
+  "fadeInSeconds": 1.2,
+  "fadeOutSeconds": 4
+}

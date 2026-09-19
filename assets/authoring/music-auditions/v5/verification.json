@@ -1,0 +1,289 @@
+{
+  "version": "v5",
+  "purpose": "Technical validation of revised music audition masters; musical taste remains subject to listening.",
+  "runtimeIntegrated": false,
+  "tracks": [
+    {
+      "cue": "market",
+      "audio": "market.mp3",
+      "durationSeconds": 72.0,
+      "noteCount": 90,
+      "automatedTracks": 5,
+      "checks": {
+        "noteBoundsAndNoSamePitchOverlaps": true,
+        "gainPointsValid": true,
+        "stereo48kHzDecode": true,
+        "finiteUnclippedSamples": true,
+        "fadedEndpoints": true,
+        "linearNormalizationPreservesDynamics": true
+      },
+      "integratedLoudnessLUFS": -19.0,
+      "truePeakDBTP": -4.74,
+      "comparison": {
+        "previousAudio": "v4/market.mp3",
+        "oldLoudnessRangeLU": 4.2,
+        "newLoudnessRangeLU": 10.7,
+        "threeSecondRmsSpreadDescription": "90th minus 10th percentile of nonoverlapping 3s RMS windows, excluding opening fade and final phrase/tail; objective dynamics check, not a quality score.",
+        "oldRmsSpreadDB": 3.06,
+        "newRmsSpreadDB": 9.6,
+        "newRmsWindows": [
+          {
+            "startSeconds": 3,
+            "endSeconds": 6,
+            "rmsDBFS": -27.37
+          },
+          {
+            "startSeconds": 6,
+            "endSeconds": 9,
+            "rmsDBFS": -23.75
+          },
+          {
+            "startSeconds": 9,
+            "endSeconds": 12,
+            "rmsDBFS": -21.14
+          },
+          {
+            "startSeconds": 12,
+            "endSeconds": 15,
+            "rmsDBFS": -19.41
+          },
+          {
+            "startSeconds": 15,
+            "endSeconds": 18,
+            "rmsDBFS": -19.54
+          },
+          {
+            "startSeconds": 18,
+            "endSeconds": 21,
+            "rmsDBFS": -17.93
+          },
+          {
+            "startSeconds": 21,
+            "endSeconds": 24,
+            "rmsDBFS": -19.94
+          },
+          {
+            "startSeconds": 24,
+            "endSeconds": 27,
+            "rmsDBFS": -28.04
+          },
+          {
+            "startSeconds": 27,
+            "endSeconds": 30,
+            "rmsDBFS": -29.43
+          },
+          {
+            "startSeconds": 30,
+            "endSeconds": 33,
+            "rmsDBFS": -24.42
+          },
+          {
+            "startSeconds": 33,
+            "endSeconds": 36,
+            "rmsDBFS": -20.1
+          },
+          {
+            "startSeconds": 36,
+            "endSeconds": 39,
+            "rmsDBFS": -18.59
+          },
+          {
+            "startSeconds": 39,
+            "endSeconds": 42,
+            "rmsDBFS": -17.78
+          },
+          {
+            "startSeconds": 42,
+            "endSeconds": 45,
+            "rmsDBFS": -17.7
+          },
+          {
+            "startSeconds": 45,
+            "endSeconds": 48,
+            "rmsDBFS": -19.33
+          },
+          {
+            "startSeconds": 48,
+            "endSeconds": 51,
+            "rmsDBFS": -21.31
+          },
+          {
+            "startSeconds": 51,
+            "endSeconds": 54,
+            "rmsDBFS": -25.27
+          },
+          {
+            "startSeconds": 54,
+            "endSeconds": 57,
+            "rmsDBFS": -26.69
+          },
+          {
+            "startSeconds": 57,
+            "endSeconds": 60,
+            "rmsDBFS": -26.5
+          }
+        ]
+      },
+      "sha256": "977ec5ace4851a0ca35234d1e5d6c6df7bf1548f8f5b2672824d36295a387137"
+    },
+    {
+      "cue": "bridge",
+      "audio": "bridge.mp3",
+      "durationSeconds": 76.571,
+      "noteCount": 80,
+      "automatedTracks": 5,
+      "checks": {
+        "noteBoundsAndNoSamePitchOverlaps": true,
+        "gainPointsValid": true,
+        "stereo48kHzDecode": true,
+        "finiteUnclippedSamples": true,
+        "fadedEndpoints": true,
+        "linearNormalizationPreservesDynamics": true
+      },
+      "integratedLoudnessLUFS": -18.99,
+      "truePeakDBTP": -4.89,
+      "comparison": {
+        "previousAudio": "v4/bridge.mp3",
+        "oldLoudnessRangeLU": 5.6,
+        "newLoudnessRangeLU": 9.2,
+        "threeSecondRmsSpreadDescription": "90th minus 10th percentile of nonoverlapping 3s RMS windows, excluding opening fade and final phrase/tail; objective dynamics check, not a quality score.",
+        "oldRmsSpreadDB": 4.65,
+        "newRmsSpreadDB": 5.66,
+        "newRmsWindows": [
+          {
+            "startSeconds": 3,
+            "endSeconds": 6,
+            "rmsDBFS": -23.59
+          },
+          {
+            "startSeconds": 6,
+            "endSeconds": 9,
+            "rmsDBFS": -23.45
+          },
+          {
+            "startSeconds": 9,
+            "endSeconds": 12,
+            "rmsDBFS": -23.14
+          },
+          {
+            "startSeconds": 12,
+            "endSeconds": 15,
+            "rmsDBFS": -24.17
+          },
+          {
+            "startSeconds": 15,
+            "endSeconds": 18,
+            "rmsDBFS": -22.3
+          },
+          {
+            "startSeconds": 18,
+            "endSeconds": 21,
+            "rmsDBFS": -21.46
+          },
+          {
+            "startSeconds": 21,
+            "endSeconds": 24,
+            "rmsDBFS": -20.74
+          },
+          {
+            "startSeconds": 24,
+            "endSeconds": 27,
+            "rmsDBFS": -20.7
+          },
+          {
+            "startSeconds": 27,
+            "endSeconds": 30,
+            "rmsDBFS": -21.71
+          },
+          {
+            "startSeconds": 30,
+            "endSeconds": 33,
+            "rmsDBFS": -27.4
+          },
+          {
+            "startSeconds": 33,
+            "endSeconds": 36,
+            "rmsDBFS": -23.17
+          },
+          {
+            "startSeconds": 36,
+            "endSeconds": 39,
+            "rmsDBFS": -19.96
+          },
+          {
+            "startSeconds": 39,
+            "endSeconds": 42,
+            "rmsDBFS": -18.78
+          },
+          {
+            "startSeconds": 42,
+            "endSeconds": 45,
+            "rmsDBFS": -18.78
+          },
+          {
+            "startSeconds": 45,
+            "endSeconds": 48,
+            "rmsDBFS": -18.02
+          },
+          {
+            "startSeconds": 48,
+            "endSeconds": 51,
+            "rmsDBFS": -16.86
+          },
+          {
+            "startSeconds": 51,
+            "endSeconds": 54,
+            "rmsDBFS": -20.63
+          },
+          {
+            "startSeconds": 54,
+            "endSeconds": 57,
+            "rmsDBFS": -21.6
+          },
+          {
+            "startSeconds": 57,
+            "endSeconds": 60,
+            "rmsDBFS": -23.3
+          },
+          {
+            "startSeconds": 60,
+            "endSeconds": 63,
+            "rmsDBFS": -26.06
+          }
+        ]
+      },
+      "sha256": "73e6043e3143ecb14d8a75e29b850ab9830bf3f417f5e9f26703b1d42312975f"
+    }
+  ],
+  "expressionDiagnostic": {
+    "sustainedExpression": [
+      {
+        "startSeconds": 0.05,
+        "endSeconds": 0.45,
+        "expectedRatio": 0.2,
+        "measuredRmsRatio": 0.2
+      },
+      {
+        "startSeconds": 1,
+        "endSeconds": 1.9,
+        "expectedRatio": 0.2,
+        "measuredRmsRatio": 0.2
+      },
+      {
+        "startSeconds": 4,
+        "endSeconds": 4.9,
+        "expectedRatio": 1,
+        "measuredRmsRatio": 1.0
+      },
+      {
+        "startSeconds": 7.1,
+        "endSeconds": 7.9,
+        "expectedRatio": 0.2,
+        "measuredRmsRatio": 0.2
+      }
+    ],
+    "invalidUnsortedPointsRejected": true
+  },
+  "previousVersionsUnchanged": true,
+  "allCollectionPathsExist": true
+}
