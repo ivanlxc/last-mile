@@ -9,6 +9,7 @@ import { Debrief } from "./components/Debrief";
 import { Modal } from "./components/Modal";
 import { AccessGate, type AccessMode } from "./components/AccessGate";
 import { CloudHistory } from "./components/CloudHistory";
+import { MapRendererProvider } from "./lib/mapRenderer";
 export default function App() {
   return <AccessGate>{(mode) => <AuthenticatedGame mode={mode} />}</AccessGate>;
 }
@@ -16,7 +17,9 @@ function AuthenticatedGame({ mode }: { mode: AccessMode }) {
   const game = useGame();
   return (
     <LocaleProvider locale={game.locale}>
-      <GameShell game={game} mode={mode} />
+      <MapRendererProvider state={game.state}>
+        <GameShell game={game} mode={mode} />
+      </MapRendererProvider>
     </LocaleProvider>
   );
 }

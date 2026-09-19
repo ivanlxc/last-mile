@@ -1,0 +1,20 @@
+<linker>
+  <!-- Procedural primitives and JSON DTOs must survive IL2CPP managed stripping. -->
+  <assembly fullname="UnityEngine.CoreModule">
+    <type fullname="UnityEngine.MeshFilter" preserve="all" />
+    <type fullname="UnityEngine.MeshRenderer" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.BoxCollider" preserve="all" />
+    <type fullname="UnityEngine.SphereCollider" preserve="all" />
+    <type fullname="UnityEngine.CapsuleCollider" preserve="all" />
+  </assembly>
+  <assembly fullname="Assembly-CSharp">
+    <type fullname="LastMile.RenderState" preserve="all" />
+    <type fullname="LastMile.KnownLocation" preserve="all" />
+    <type fullname="LastMile.BridgeEvent" preserve="all" />
+    <type fullname="LastMile.PublicMap" preserve="all" />
+    <type fullname="LastMile.PublicNode" preserve="all" />
+    <type fullname="LastMile.PublicRoute" preserve="all" />
+  </assembly>
+</linker>

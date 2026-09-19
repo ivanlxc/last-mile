@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="31.4.5" type="device">
+  <diagram id="unity-web-proposal" name="Unity Web 接入方案（待实现）">
+    <mxGraphModel grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1540" pageHeight="1040" background="#FFFFFF">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="brand" value="LAST MILE / UNITY INTEGRATION PROPOSAL" style="text;html=0;whiteSpace=wrap;align=left;fontSize=14;fontFamily=Helvetica;fontColor=#233A50;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="25" width="1450" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="Unity Web 接入方案 · 待实现" style="text;html=0;whiteSpace=wrap;align=left;fontSize=31;fontFamily=Helvetica;fontColor=#233A50;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="65" width="1450" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="sub" value="第一阶段：Unity 接管场景呈现与地图交互；React 继续管理网页界面、网络会话与操作提交。" style="text;html=0;whiteSpace=wrap;align=left;fontSize=18;fontFamily=Helvetica;fontColor=#233A50;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="120" width="1450" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" value="浏览器 · React 外壳 + Unity Web" style="swimlane;horizontal=1;startSize=45;rounded=1;arcSize=8;fillColor=#F8FAFD;swimlaneFillColor=#F8FAFD;strokeColor=#D8E1EA;fontColor=#53677D;fontFamily=Helvetica;fontSize=18;fontStyle=1;align=left;spacingLeft=20;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="180" width="1450" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="server" value="现有 Node.js 后端 · 继续作为游戏状态与规则的权威来源" style="swimlane;horizontal=1;startSize=45;rounded=1;arcSize=8;fillColor=#F8FAFD;swimlaneFillColor=#F8FAFD;strokeColor=#D8E1EA;fontColor=#53677D;fontFamily=Helvetica;fontSize=18;fontStyle=1;align=left;spacingLeft=20;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="665" width="1450" height="270" as="geometry" />
+        </mxCell>
+        <mxCell id="react" value="保留：React + useGame&#10;情报 / AI 对话 / 调查 / 复盘&#10;Cookie · REST · SSE · 幂等请求&#10;TacticalMap 增加 Unity 显示入口" style="rounded=1;arcSize=12;whiteSpace=wrap;html=0;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#233A50;fontSize=19;fontFamily=Helvetica;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="245" width="380" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="bridge" value="新增：JS ↔ C# Bridge&#10;公开渲染状态 / 快照恢复&#10;地图选择与调查意图&#10;Ready / 版本 / 错误处理" style="rounded=1;arcSize=12;whiteSpace=wrap;html=0;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#233A50;fontSize=19;fontFamily=Helvetica;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="590" y="245" width="310" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="unity" value="新增：Unity Web 场景&#10;地形 / 车队 / 镜头 / 动画 / 音效&#10;按服务端位置平滑呈现&#10;点击实体 → 返回操作意图" style="rounded=1;arcSize=12;whiteSpace=wrap;html=0;fillColor=#F3EFFF;strokeColor=#9376BE;strokeWidth=1.5;fontColor=#233A50;fontSize=19;fontFamily=Helvetica;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="245" width="420" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="bridge-notes" value="桥接消息是拟新增契约。&#10;SendMessage：JS → Unity&#10;.jslib 回调：Unity → JS" style="text;html=0;whiteSpace=wrap;align=left;fontSize=17;fontFamily=Helvetica;fontColor=#233A50;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="590" y="460" width="350" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="unity-notes" value="只渲染玩家获准看到的状态。&#10;不打包隐藏剧本，不自行解锁证据。&#10;Unity 加载完成后，才允许开始任务。" style="text;html=0;whiteSpace=wrap;align=left;fontSize=17;fontFamily=Helvetica;fontColor=#233A50;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="460" width="420" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="http" value="Fastify HTTP / 静态托管&#10;现有鉴权与 API 校验&#10;Unity 资源 / 响应头 / CSP" style="rounded=1;arcSize=12;whiteSpace=wrap;html=0;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#233A50;fontSize=19;fontFamily=Helvetica;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="80" y="745" width="380" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="core" value="CoreGameService&#10;时钟 / 资源 / 调查 / 路线后果&#10;验证并执行玩家操作" style="rounded=1;arcSize=12;whiteSpace=wrap;html=0;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#233A50;fontSize=19;fontFamily=Helvetica;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="590" y="745" width="310" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="existing" value="复用：AI / 内容 / 数据库&#10;Advisor + Evaluator&#10;World + SQLite / PostgreSQL" style="rounded=1;arcSize=12;whiteSpace=wrap;html=0;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#233A50;fontSize=19;fontFamily=Helvetica;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="745" width="420" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="react-bridge" value="状态 / 意图" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontFamily=Helvetica;fontSize=15;labelBackgroundColor=#FFFFFF;startArrow=block;startFill=1;" edge="1" parent="1" source="react" target="bridge">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bridge-unity" value="浏览器桥接" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontFamily=Helvetica;fontSize=15;labelBackgroundColor=#FFFFFF;startArrow=block;startFill=1;" edge="1" parent="1" source="bridge" target="unity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="react-http" value="现有 REST + SSE" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontFamily=Helvetica;fontSize=15;labelBackgroundColor=#FFFFFF;startArrow=block;startFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="react" target="http">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="http-core" value="命令 / 视图" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontFamily=Helvetica;fontSize=15;labelBackgroundColor=#FFFFFF;startArrow=block;startFill=1;" edge="1" parent="1" source="http" target="core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="core-existing" value="内部调用" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontFamily=Helvetica;fontSize=15;labelBackgroundColor=#FFFFFF;startArrow=block;startFill=1;" edge="1" parent="1" source="core" target="existing">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="footer" value="基于当前源码 e31f794 的设计建议 · 2026-09-18  |  尚未新增 Unity 工程，也未修改游戏运行代码。" style="text;html=0;whiteSpace=wrap;align=left;fontSize=14;fontFamily=Helvetica;fontColor=#233A50;fontStyle=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="980" width="1450" height="35" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

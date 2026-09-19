@@ -1,0 +1,72 @@
+{
+  "blenderVersion": "5.2.1 LTS",
+  "source": "assets/authoring/last-mile-v2/LAST_MILE_Master.blend",
+  "sourceSha256": "e6fec36d2466ecbe6e523b94d0731c5c4053a8f7670dfdba52674ddaa7b380ad",
+  "authoring": "assets/authoring/last-mile-unity/LAST_MILE_Unity_Refined.blend",
+  "fbx": "assets/authoring/last-mile-unity/exports/LastMileMap.fbx",
+  "fbxBytes": 8677804,
+  "triangles": 362646,
+  "staticMeshGroups": 18,
+  "textureFiles": 16,
+  "convoy": [
+    {
+      "name": "LM_CONVOY_01",
+      "source": "CONVOY_01_LEAD",
+      "forwardBlender": "+X",
+      "wheelAxisLocal": "+X",
+      "wheelRadius": 0.13,
+      "routeYOffset": 0,
+      "wheelCount": 4
+    },
+    {
+      "name": "LM_CONVOY_02",
+      "source": "CONVOY_02_BUS_16_PAX",
+      "forwardBlender": "+X",
+      "wheelAxisLocal": "+X",
+      "wheelRadius": 0.13,
+      "routeYOffset": 0,
+      "wheelCount": 4
+    },
+    {
+      "name": "LM_CONVOY_03",
+      "source": "CONVOY_03_MEDICAL_4_PAX",
+      "forwardBlender": "+X",
+      "wheelAxisLocal": "+X",
+      "wheelRadius": 0.13,
+      "routeYOffset": 0,
+      "wheelCount": 4
+    }
+  ],
+  "clearedN00Props": [
+    "N00_relief_tent",
+    "N00_relief_tent.001",
+    "N00_relief_tent_ridge",
+    "N00_relief_tent_ridge.001"
+  ],
+  "staticGatePose": {
+    "angleDegrees": 80,
+    "children": [
+      "Barrier orange stripe",
+      "Barrier orange stripe.001",
+      "Barrier orange stripe.002",
+      "Barrier orange stripe.003",
+      "E1_GATE_ARM"
+    ]
+  },
+  "coordinates": {
+    "blenderToUnity": "(x, y, z) -> (x, z, y)",
+    "anchors": [
+      "LM_ANCHOR_N00",
+      "LM_ANCHOR_N01",
+      "LM_ANCHOR_N07"
+    ],
+    "fbxForward": "-Z",
+    "fbxUp": "Y",
+    "unitScale": 1
+  },
+  "limitations": [
+    "Schematic authored geography, not GIS or real terrain.",
+    "Refined game art, not photogrammetry or a photorealistic environment.",
+    "Preview uses Blender lighting; Unity runtime is verified separately."
+  ]
+}

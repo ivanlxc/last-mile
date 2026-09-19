@@ -1,7 +1,7 @@
 import { asLocale, translateFixed, type Locale } from "../localization.js";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 import Fastify, {
   type FastifyInstance,
   type FastifyReply,
@@ -24,6 +24,7 @@ import {
   isPublicDocumentNavigation,
   requestContextVary,
 } from "./request-context.js";
+import { isUnityAssetRequest, unityAssetHeaders } from "./unity-assets.js";
 
 export interface HttpAppOptions {
   service: GameService;
@@ -141,7 +142,7 @@ export async function createHttpApp(
       .header("Referrer-Policy", "no-referrer");
     reply.header(
       "Content-Security-Policy",
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
     );
     const remote = request.ip;
     if (
@@ -637,10 +638,18 @@ export async function createHttpApp(
       prefix: "/",
       index: ["index.html"],
       dotfiles: "deny",
+      setHeaders(reply, filePath) {
+        const assetPath = relative(config.clientDir, filePath)
+          .split(sep)
+          .join("/");
+        if (assetPath.startsWith("unity/"))
+          reply.headers(unityAssetHeaders(assetPath));
+      },
     });
     app.setNotFoundHandler((request, reply) => {
       if (
         !request.url.startsWith("/api/") &&
+        !isUnityAssetRequest(request.url) &&
         request.method === "GET" &&
         (request.headers.accept ?? "").includes("text/html")
       ) {

@@ -4225,6 +4225,10 @@
             },
             "missionDeadlineMs": {
               "const": 600000
+            },
+            "location": {
+              "$ref": "#/$defs/KnownLocation",
+              "description": "Authoritative public convoy position at missionTimeMs. New samples include this field; optional for replaying older persisted clock events."
             }
           },
           "required": [

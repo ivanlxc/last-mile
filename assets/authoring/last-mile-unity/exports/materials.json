@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "materials": [
+    {
+      "name": "LM_Sand",
+      "color": [
+        0.7300000190734863,
+        0.6100000143051147,
+        0.4300000071525574,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Sand_Albedo.png",
+      "normalTexture": "textures/LM_Sand_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Plaster",
+      "color": [
+        0.7599999904632568,
+        0.6899999976158142,
+        0.550000011920929,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Plaster_Albedo.png",
+      "normalTexture": "textures/LM_Plaster_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_WarmPlaster",
+      "color": [
+        0.6700000166893005,
+        0.5299999713897705,
+        0.4000000059604645,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_WarmPlaster_Albedo.png",
+      "normalTexture": "textures/LM_WarmPlaster_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Asphalt",
+      "color": [
+        0.1899999976158142,
+        0.20000000298023224,
+        0.1899999976158142,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Asphalt_Albedo.png",
+      "normalTexture": "textures/LM_Asphalt_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Concrete",
+      "color": [
+        0.550000011920929,
+        0.5299999713897705,
+        0.44999998807907104,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Concrete_Albedo.png",
+      "normalTexture": "textures/LM_Concrete_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Clay",
+      "color": [
+        0.5099999904632568,
+        0.3700000047683716,
+        0.23999999463558197,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Clay_Albedo.png",
+      "normalTexture": "textures/LM_Clay_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Canvas",
+      "color": [
+        0.699999988079071,
+        0.6000000238418579,
+        0.41999998688697815,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Canvas_Albedo.png",
+      "normalTexture": "textures/LM_Canvas_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Timber",
+      "color": [
+        0.36000001430511475,
+        0.2199999988079071,
+        0.10999999940395355,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "textures/LM_Timber_Albedo.png",
+      "normalTexture": "textures/LM_Timber_Normal.png",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_AidIvory",
+      "color": [
+        0.7900000214576721,
+        0.800000011920929,
+        0.7300000190734863,
+        1.0
+      ],
+      "roughness": 0.3499999940395355,
+      "metallic": 0.18000000715255737,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_TealPaint",
+      "color": [
+        0.07000000029802322,
+        0.2800000011920929,
+        0.28999999165534973,
+        1.0
+      ],
+      "roughness": 0.44999998807907104,
+      "metallic": 0.11999999731779099,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Glass",
+      "color": [
+        0.04500000178813934,
+        0.09000000357627869,
+        0.11500000208616257,
+        1.0
+      ],
+      "roughness": 0.18000000715255737,
+      "metallic": 0.5,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Rubber",
+      "color": [
+        0.027000000700354576,
+        0.028999999165534973,
+        0.02800000086426735,
+        1.0
+      ],
+      "roughness": 0.949999988079071,
+      "metallic": 0.0,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_GalvanizedMetal",
+      "color": [
+        0.4000000059604645,
+        0.4300000071525574,
+        0.4300000071525574,
+        1.0
+      ],
+      "roughness": 0.3199999928474426,
+      "metallic": 0.75,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_DarkMetal",
+      "color": [
+        0.05999999865889549,
+        0.0729999989271164,
+        0.0729999989271164,
+        1.0
+      ],
+      "roughness": 0.5,
+      "metallic": 0.6000000238418579,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Headlamp",
+      "color": [
+        0.8600000143051147,
+        0.8299999833106995,
+        0.6499999761581421,
+        1.0
+      ],
+      "roughness": 0.17000000178813934,
+      "metallic": 0.25,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Taillamp",
+      "color": [
+        0.47999998927116394,
+        0.054999999701976776,
+        0.027000000700354576,
+        1.0
+      ],
+      "roughness": 0.2800000011920929,
+      "metallic": 0.15000000596046448,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Foliage",
+      "color": [
+        0.20000000298023224,
+        0.27000001072883606,
+        0.10499999672174454,
+        1.0
+      ],
+      "roughness": 0.8999999761581421,
+      "metallic": 0.0,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_Water",
+      "color": [
+        0.10000000149011612,
+        0.30000001192092896,
+        0.30000001192092896,
+        1.0
+      ],
+      "roughness": 0.23000000417232513,
+      "metallic": 0.15000000596046448,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    },
+    {
+      "name": "LM_RoadPaint",
+      "color": [
+        0.7699999809265137,
+        0.7300000190734863,
+        0.6000000238418579,
+        1.0
+      ],
+      "roughness": 0.800000011920929,
+      "metallic": 0.0,
+      "albedoTexture": "",
+      "normalTexture": "",
+      "normalScale": 0.22
+    }
+  ]
+}

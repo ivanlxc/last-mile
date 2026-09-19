@@ -1,0 +1,142 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="31.4.5" type="device">
+  <diagram id="01-system" name="01  系统总览">
+    <mxGraphModel dx="1680" dy="1280" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1280" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="brand" value="LAST MILE  /  IMPLEMENTATION ARCHITECTURE" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="22" width="1300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="01  系统总览" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#182D44;fontSize=31;fontFamily=Helvetica;fontStyle=1;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="57" width="1600" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="React / Three.js + Node.js / Fastify 模块化单体；游戏状态由服务端统一管理。" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="111" width="1600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="footer" value="源码基线：e31f794 · 游戏 v0.3.0 · 2026-09-18   |   实线：运行数据 / 调用；虚线：依赖或返回" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=13;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1238" width="1600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" value="浏览器 · 玩家界面" style="swimlane;html=0;rounded=1;arcSize=8;horizontal=1;startSize=43;fillColor=#FAFBFD;swimlaneFillColor=#FAFBFD;strokeColor=#D8E1EA;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;align=left;spacingLeft=18;fontStyle=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="165" width="355" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="server" value="Node.js 服务端 · 同一应用进程" style="swimlane;html=0;rounded=1;arcSize=8;horizontal=1;startSize=43;fillColor=#FAFBFD;swimlaneFillColor=#FAFBFD;strokeColor=#D8E1EA;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;align=left;spacingLeft=18;fontStyle=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="460" y="165" width="750" height="980" as="geometry" />
+        </mxCell>
+        <mxCell id="ui" value="&lt;b style=&quot;font-size:21px&quot;&gt;React 游戏界面&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;任务 / 情报 / 调查 / 顾问 / 复盘&lt;br&gt;Three.js 3D 地图 + 2D 回退&lt;br&gt;中文 / English&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;client/src/components/&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="65" y="230" width="305" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="client" value="&lt;b style=&quot;font-size:21px&quot;&gt;useGame + API Client&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;状态同步 · SSE · 展示回执&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;client/src/lib/&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="65" y="470" width="305" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="http" value="&lt;b style=&quot;font-size:21px&quot;&gt;Fastify HTTP&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;REST /api/v1 + SSE&lt;br&gt;鉴权 · 契约校验 · 静态资源&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;server/http/app.ts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="500" y="235" width="320" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="clock" value="&lt;b style=&quot;font-size:21px&quot;&gt;调度器 / Scheduler&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;每 1 秒 tick&lt;br&gt;命令前补齐到期事件&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="900" y="235" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="core" value="&lt;b style=&quot;font-size:21px&quot;&gt;CoreGameService · 权威游戏核心&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;命令与版本校验 · 状态机 · 调查与资源 · 路线后果&lt;br&gt;公开视图 · AI 任务与调用账本 · 决策快照 · 终局封存&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;server/core/implementation.ts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="500" y="455" width="680" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="world" value="&lt;b style=&quot;font-size:21px&quot;&gt;World · 场景规则&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;两套隐藏剧本 / 三个关卡&lt;br&gt;路线计划 · 条件等待 · 位置解析&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;server/core/world.ts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="500" y="725" width="300" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="ai" value="&lt;b style=&quot;font-size:21px&quot;&gt;AI Gateway&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;Advisor / 独立 Evaluator&lt;br&gt;白名单输入 · 输出校验 · 降级&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;server/ai/&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F3EFFF;strokeColor=#9376BE;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="880" y="725" width="300" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="store" value="&lt;b style=&quot;font-size:21px&quot;&gt;Store · 统一存储接口&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;串行操作 / 数据库事务 / 状态、事件、额度与任务持久化&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;server/core/store.ts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="500" y="1010" width="680" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="contracts" value="&lt;b style=&quot;font-size:21px&quot;&gt;API 接口契约&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;OpenAPI · JSON Schema&lt;br&gt;运行时读取的版本化资产&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;docs/engineering_v0.5/&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="665" width="355" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="content" value="&lt;b style=&quot;font-size:21px&quot;&gt;版本化剧情内容&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;campaign-reference / reference-policy&lt;br&gt;public-map / public-actions&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;docs/engineering_v0.5/content/&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="40" y="890" width="355" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="ext-title" value="外部服务 / 部署存储" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;fontStyle=1;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="195" width="330" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="provider" value="&lt;b style=&quot;font-size:21px&quot;&gt;模型供应商&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;OpenAI / Anthropic&lt;br&gt;HTTPS · 结构化响应&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F3EFFF;strokeColor=#9376BE;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="735" width="330" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="sqlite" value="&lt;b style=&quot;font-size:21px&quot;&gt;本地：SQLite&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;本机文件数据库&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="945" width="330" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="pg" value="&lt;b style=&quot;font-size:21px&quot;&gt;云端：PostgreSQL&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;Render 配置 + Neon 部署说明&lt;br&gt;数据库锁保证单个运行引擎&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="1080" width="330" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="offline-note" value="本地可离线运行；实时调用失败时&#10;返回有明确标识的离线模板。" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=16;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="595" width="330" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="deploy-note" value="部署模式来自代码与配置；&#10;不表示已确认线上服务状态。" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=16;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="1305" y="260" width="330" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ui-client" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;" edge="1" parent="1" source="ui" target="client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-client-http" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="client" target="http">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="520" />
+              <mxPoint x="430" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rest-label" value="REST&#10;+ SSE" style="text;html=0;whiteSpace=wrap;align=center;verticalAlign=middle;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="395" y="392" width="65" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="e-http-core" value="命令 / 公开视图" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.235;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="http" target="core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-clock-core" value="到期推进" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.794;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="clock" target="core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-world-core" value="场景与路线规则" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.22;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="world" target="core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-core-ai" value="冻结输入 / 校验后结果" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=0.779;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="core" target="ai">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-core-store" value="事务 / 日志" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="core" target="store">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-contracts-http" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.14;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="contracts" target="http">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="475" y="735" />
+              <mxPoint x="475" y="410" />
+              <mxPoint x="545" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-content-world" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="content" target="world">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="960" />
+              <mxPoint x="440" y="797" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-ai-provider" value="HTTPS" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ai" target="provider">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-store-sqlite" value="local" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="store" target="sqlite">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1250" y="1057" />
+              <mxPoint x="1250" y="992" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-store-pg" value="cloud" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;startArrow=block;startFill=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="store" target="pg">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1230" y="1080" />
+              <mxPoint x="1230" y="1135" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

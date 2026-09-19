@@ -27,6 +27,8 @@ import { AdvisorPanel } from "./AdvisorPanel";
 import { DecisionModal } from "./DecisionModal";
 import { Modal } from "./Modal";
 import { ContextModal } from "./ContextModal";
+import { InvestigationModal } from "./InvestigationModal";
+import { mapRendererCopy } from "../lib/mapRendererCopy";
 const icons = {
   satellite: Satellite,
   drone: ScanLine,
@@ -48,6 +50,14 @@ export function GameView({
     [showScene, setShowScene] = useState(false),
     [context, setContext] = useState(false);
   const [displayClock, setDisplayClock] = useState(s.missionTimeMs);
+  const [mapInvestigations, setMapInvestigations] = useState(false);
+  const [mapInvestigationId, setMapInvestigationId] = useState<string | null>(
+    null,
+  );
+  const mapInvestigation = s.taskOptions.find(
+    (option) => option.targetId === mapInvestigationId,
+  );
+  const mapCopy = mapRendererCopy(locale);
   const sample = useRef({ mission: s.missionTimeMs, at: performance.now() });
   useEffect(() => {
     sample.current = { mission: s.missionTimeMs, at: performance.now() };
@@ -73,6 +83,8 @@ export function GameView({
   useEffect(() => {
     if (s.sceneId !== previousScene.current) {
       setDecision(null);
+      setMapInvestigations(false);
+      setMapInvestigationId(null);
       previousScene.current = s.sceneId;
     }
   }, [s.sceneId]);
@@ -246,7 +258,15 @@ export function GameView({
               </p>
             </div>
           </div>
-          <TacticalMap location={s.location} sceneId={s.sceneId} />
+          <TacticalMap
+            location={s.location}
+            sceneId={s.sceneId}
+            onInvestigate={
+              s.phase === "scene" || waiting
+                ? () => setMapInvestigations(true)
+                : undefined
+            }
+          />
           {(s.pendingTasks.manifest === "pending" ||
             s.pendingTasks.inspection === "pending") && (
             <div className="pending-strip">
@@ -342,6 +362,57 @@ export function GameView({
           game={game}
           action={decision}
           onClose={() => setDecision(null)}
+        />
+      )}
+      {mapInvestigations && (
+        <Modal
+          title={mapCopy.investigations}
+          onClose={() => setMapInvestigations(false)}
+        >
+          <p>{mapCopy.investigationNote}</p>
+          {s.taskOptions.map((option) => {
+            const Icon = icons[option.resourceChannel];
+            return (
+              <button
+                key={option.targetId}
+                className="investigation-card"
+                disabled={
+                  game.busy ||
+                  (!option.available &&
+                    option.disabledReason !== "needs_report_reference")
+                }
+                onClick={() => {
+                  setMapInvestigations(false);
+                  setMapInvestigationId(option.targetId);
+                }}
+              >
+                <div className="investigation-icon">
+                  <Icon size={18} />
+                </div>
+                <div>
+                  <strong>{option.label}</strong>
+                  <span>
+                    {channelLabels[option.resourceChannel]} ·{" "}
+                    {duration(option.cost.knownDurationMs)}
+                  </span>
+                </div>
+                <ChevronRight size={16} />
+              </button>
+            );
+          })}
+          {!s.taskOptions.length && (
+            <p className="muted">
+              {t("ui.theConvoyIsMovingAssignInvestigationsAt")}
+            </p>
+          )}
+        </Modal>
+      )}
+      {mapInvestigation && (
+        <InvestigationModal
+          key={mapInvestigation.targetId}
+          game={game}
+          option={mapInvestigation}
+          onClose={() => setMapInvestigationId(null)}
         />
       )}
       {exit && (

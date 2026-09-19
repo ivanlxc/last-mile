@@ -9,7 +9,13 @@
 *.sql text eol=lf
 *.blend binary
 *.glb binary
+*.fbx binary
 *.png binary
 *.jpg binary
 *.pdf binary
 *.zip binary
+# Unity serializes empty YAML fields with a trailing space.
+unity/**/*.meta whitespace=-blank-at-eol
+unity/**/*.asset whitespace=-blank-at-eol
+unity/**/*.mat whitespace=-blank-at-eol
+unity/**/*.unity whitespace=-blank-at-eol

@@ -44,8 +44,11 @@ and cancels unfinished investigations with their report reservations released;
 spent investigation resources remain spent. Due events use a stable order, and
 arrival exactly at 600,000 ms wins over the deadline at the same instant.
 
-The public clock sample is persisted at most once per observed second. It advances
-only the view cursor. SSE cursors are `<runEpoch>:<viewSequence>`; HTTP polls the
+The public clock sample is persisted at most once per observed second. It includes
+the authoritative public convoy location so movement reaches the renderer between
+game events, and advances only the view cursor, not `stateVersion`. The location
+field remains optional in the wire schema for historical outbox compatibility.
+SSE cursors are `<runEpoch>:<viewSequence>`; HTTP polls the
 durable view outbox and may request the next page of up to 250 events.
 
 ## Persistence and migrations

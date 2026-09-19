@@ -11,6 +11,8 @@
     "dev:server": "tsx watch --env-file-if-exists=.env server/index.ts",
     "dev:client": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
+    "build:unity": "node scripts/build-unity.mjs",
+    "build:art": "node scripts/build-art.mjs",
     "start": "tsx --env-file-if-exists=.env server/index.ts",
     "typecheck": "tsc --noEmit",
     "verify:model": "tsx --env-file-if-exists=.env scripts/verify-model.ts",

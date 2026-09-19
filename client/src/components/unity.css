@@ -1,0 +1,37 @@
+.unity-viewport,
+.unity-canvas-host {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #15201d;
+}
+
+.unity-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline-offset: -3px;
+}
+
+.unity-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: #bed0c4;
+  background: #15201de8;
+  text-align: center;
+  font-size: 12px;
+}
+
+.unity-loading progress {
+  width: min(220px, 75%);
+  height: 5px;
+  accent-color: #c4a06e;
+}

@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="31.4.5" type="device">
+  <diagram id="03-sequence" name="03  调查、上传与 AI 分析时序">
+    <mxGraphModel dx="1680" dy="1510" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1510" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="brand" value="LAST MILE  /  IMPLEMENTATION ARCHITECTURE" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="22" width="1300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="03  调查、上传与 AI 分析时序" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#182D44;fontSize=31;fontFamily=Helvetica;fontStyle=1;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="57" width="1600" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="模型调用在数据库事务之外运行；游戏时间持续推进，过期结果不能覆盖新上下文。" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="111" width="1600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="footer" value="源码基线：e31f794 · 游戏 v0.3.0 · 2026-09-18   |   实线：运行数据 / 调用；虚线：依赖或返回" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=13;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1468" width="1600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="p0" value="&lt;b style=&quot;font-size:21px&quot;&gt;前端 / 玩家操作&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;React + useGame&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="45" y="175" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="life0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#C3CDD8;strokeWidth=1.6;endArrow=none;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="175" y="265" as="sourcePoint" />
+            <mxPoint x="175" y="1360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p1" value="&lt;b style=&quot;font-size:21px&quot;&gt;HTTP 接口&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;Fastify&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="365" y="175" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="life1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#C3CDD8;strokeWidth=1.6;endArrow=none;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="495" y="265" as="sourcePoint" />
+            <mxPoint x="495" y="1360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p2" value="&lt;b style=&quot;font-size:21px&quot;&gt;游戏核心 / 调度器&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;CoreGameService&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="685" y="175" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="life2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#C3CDD8;strokeWidth=1.6;endArrow=none;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="815" y="265" as="sourcePoint" />
+            <mxPoint x="815" y="1360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p3" value="&lt;b style=&quot;font-size:21px&quot;&gt;数据库&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;SQLite / PostgreSQL&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="175" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="life3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#C3CDD8;strokeWidth=1.6;endArrow=none;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1135" y="265" as="sourcePoint" />
+            <mxPoint x="1135" y="1360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="p4" value="&lt;b style=&quot;font-size:21px&quot;&gt;AI Gateway / 模型&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;Advisor&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F3EFFF;strokeColor=#9376BE;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1325" y="175" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="life4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#C3CDD8;strokeWidth=1.6;endArrow=none;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1455" y="265" as="sourcePoint" />
+            <mxPoint x="1455" y="1360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s01" value="1  POST /tasks · 幂等键 / 状态版本 / runEpoch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="175" y="315" as="sourcePoint" />
+            <mxPoint x="495" y="315" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s02" value="2  鉴权与契约校验 → createTask" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="495" y="375" as="sourcePoint" />
+            <mxPoint x="815" y="375" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s03" value="3  事务：任务 + 资源账本 + 事件 + 回执" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="435" as="sourcePoint" />
+            <mxPoint x="1135" y="435" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s04" value="4  202 Accepted · 调查已安排" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="495" y="500" as="sourcePoint" />
+            <mxPoint x="175" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="time-note" value="&lt;b style=&quot;font-size:21px&quot;&gt;世界时间继续推进&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;调度器检查调查是否到期&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="670" y="545" width="290" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="s05" value="5  到期后保存报告与公开事件" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="655" as="sourcePoint" />
+            <mxPoint x="1135" y="655" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s06" value="6  发布报告事件" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="705" as="sourcePoint" />
+            <mxPoint x="495" y="705" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s07" value="7  SSE：report.received / projection.changed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="495" y="755" as="sourcePoint" />
+            <mxPoint x="175" y="755" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s08" value="8  玩家选报告 → POST /uploads" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="175" y="830" as="sourcePoint" />
+            <mxPoint x="495" y="830" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s09" value="9  uploadReports · 检查版本与上传额度" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="495" y="880" as="sourcePoint" />
+            <mxPoint x="815" y="880" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s10" value="10  事务：上传快照 + 输入清单 + queued job" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="930" as="sourcePoint" />
+            <mxPoint x="1135" y="930" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s11" value="11  持久化本次模型调用额度" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="980" as="sourcePoint" />
+            <mxPoint x="1135" y="980" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s12" value="12  事务外异步调用 · 冻结的 AdvisorInput" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="1045" as="sourcePoint" />
+            <mxPoint x="1455" y="1045" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s13" value="13  已校验结果 / 明确标识的离线模板" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="1455" y="1110" as="sourcePoint" />
+            <mxPoint x="815" y="1110" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s14" value="14  上下文仍有效才保存并发布" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="1175" as="sourcePoint" />
+            <mxPoint x="1135" y="1175" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s15" value="15  advice.updated" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="815" y="1235" as="sourcePoint" />
+            <mxPoint x="495" y="1235" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s16" value="16  SSE：更新顾问建议" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#667D94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;dashed=1;dashPattern=5 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry" y="-12">
+            <mxPoint x="495" y="1295" as="sourcePoint" />
+            <mxPoint x="175" y="1295" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="idem-note" value="&lt;b style=&quot;font-size:21px&quot;&gt;重复请求&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;同一幂等键返回原结果，避免重复扣费 / 执行&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="45" y="1390" width="640" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="stale-note" value="&lt;b style=&quot;font-size:21px&quot;&gt;场景变更 / 上下文更新 / 任务结束&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;保留调用账本；不发布晚到的 Advisor 结果&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F2F5F8;strokeColor=#8B9CAC;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="745" y="1390" width="840" height="65" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

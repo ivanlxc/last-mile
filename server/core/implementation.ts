@@ -2392,6 +2392,9 @@ export class CoreGameService implements GameService {
                 missionTimeMs: now,
                 serverNow: iso(this.clock.nowMs()),
                 missionDeadlineMs: 600000,
+                // Motion advances between rule-changing projections. Send the
+                // public route position from the same authoritative clock sample.
+                location: this.location(s, now),
               }),
           );
           this.lastClockSamples.set(sid, second);

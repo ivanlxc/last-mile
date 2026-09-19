@@ -1,0 +1,120 @@
+using UnityEngine;
+
+namespace LastMile
+{
+    // Perspective controls only change presentation, never authoritative game state.
+    public sealed class MapCamera : MonoBehaviour
+    {
+        public LastMileBridge bridge;
+        private Camera view;
+        private Transform convoy;
+        private Vector3 center = new Vector3(0, 1, 0);
+        private float yaw = -17;
+        private float pitch = 49;
+        private float distance = 43;
+        private bool following;
+        private Vector3 pointerStart;
+        private Vector3 previousPointer;
+        private bool dragging;
+        private bool pointerCaptured;
+        private float previousAspect;
+
+        public bool Following => following;
+        public void SetConvoy(Transform target) { convoy = target; }
+
+        private void Awake()
+        {
+            view = GetComponent<Camera>();
+            view.orthographic = false;
+            view.fieldOfView = 43;
+            view.nearClipPlane = 0.08f;
+            view.farClipPlane = 160;
+            view.clearFlags = CameraClearFlags.SolidColor;
+            view.backgroundColor = new Color(0.51f, 0.60f, 0.62f);
+            view.allowHDR = false;
+            view.allowMSAA = true;
+            previousAspect = view.aspect;
+            ResetView();
+        }
+
+        public void ResetView()
+        {
+            following = false;
+            center = new Vector3(0, 1, 0);
+            yaw = -17; pitch = 49;
+            distance = OverviewDistance();
+            PositionCamera();
+        }
+
+        public void FollowConvoy()
+        {
+            if (convoy == null) return;
+            following = true;
+            center = convoy.position + Vector3.up * 0.2f;
+            pitch = 38;
+            distance = 7.5f;
+            PositionCamera();
+        }
+
+        private float OverviewDistance()
+        {
+            float aspect = Mathf.Max(view.aspect, 0.6f);
+            return Mathf.Clamp(43f * Mathf.Max(1, 1.45f / aspect), 43, 79);
+        }
+
+        private void Update()
+        {
+            Vector3 mouse = Input.mousePosition;
+            Vector3 delta = mouse - previousPointer;
+            previousPointer = mouse;
+            bool inside = mouse.x >= 0 && mouse.x <= Screen.width && mouse.y >= 0 && mouse.y <= Screen.height;
+            // Leave camera buttons to IMGUI instead of also selecting the map beneath.
+            bool overControls = mouse.y < 44 && mouse.x > Screen.width - 278;
+            if (inside && !overControls && (Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1)))
+            { pointerStart = mouse; dragging = false; pointerCaptured = true; delta = Vector3.zero; }
+            if (pointerCaptured && (Input.GetMouseButton(0) || Input.GetMouseButton(1)) && (mouse - pointerStart).sqrMagnitude > 36)
+                dragging = true;
+            if (inside && pointerCaptured && Input.GetMouseButton(0) && dragging)
+            {
+                following = false;
+                Vector3 right = transform.right; right.y = 0; right.Normalize();
+                Vector3 forward = Vector3.Cross(right, Vector3.up);
+                float scale = 2 * distance * Mathf.Tan(view.fieldOfView * Mathf.Deg2Rad * 0.5f) / Mathf.Max(Screen.height, 1);
+                center -= right * delta.x * scale;
+                center -= forward * delta.y * scale;
+                center.x = Mathf.Clamp(center.x, -23, 23); center.z = Mathf.Clamp(center.z, -17, 17);
+            }
+            if (inside && pointerCaptured && Input.GetMouseButton(1))
+            {
+                yaw += delta.x * 0.27f;
+                pitch = Mathf.Clamp(pitch - delta.y * 0.23f, 16, 78);
+            }
+            if (inside)
+                distance = Mathf.Clamp(distance * Mathf.Exp(-Input.mouseScrollDelta.y * 0.065f), 2.8f, 90);
+            if (inside && pointerCaptured && Input.GetMouseButtonUp(0) && !dragging && !overControls)
+            {
+                if (Physics.Raycast(view.ScreenPointToRay(mouse), out RaycastHit hit, 160))
+                {
+                    var target = hit.collider.GetComponent<MapHotspot>();
+                    if (target != null) bridge.SelectNode(target.nodeId);
+                }
+            }
+            if (!Input.GetMouseButton(0) && !Input.GetMouseButton(1)) pointerCaptured = false;
+            if (inside && Input.GetKeyDown(KeyCode.Home)) ResetView();
+            if (inside && Input.GetKeyDown(KeyCode.F)) { if (following) ResetView(); else FollowConvoy(); }
+            if (!following && Mathf.Abs(view.aspect - previousAspect) > 0.02f && distance > 30)
+                distance = OverviewDistance();
+            previousAspect = view.aspect;
+            if (following && convoy != null)
+                center = Vector3.Lerp(center, convoy.position + Vector3.up * 0.2f, 1 - Mathf.Exp(-Time.unscaledDeltaTime * 7));
+            PositionCamera();
+        }
+
+        private void PositionCamera()
+        {
+            var rotation = Quaternion.Euler(pitch, yaw, 0);
+            transform.position = center - rotation * Vector3.forward * distance;
+            transform.rotation = rotation;
+        }
+    }
+}

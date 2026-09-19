@@ -29,7 +29,11 @@ afterEach(async () => {
   for (const s of services.splice(0)) await s.close();
   for (const p of dirs.splice(0)) rmSync(p, { recursive: true, force: true });
 });
-async function setup(caseId: "A" | "B" = "A", dbPath = ":memory:") {
+async function setup(
+  caseId: "A" | "B" = "A",
+  dbPath = ":memory:",
+  initialTravelMs = 30000,
+) {
   const clock = new FakeClock();
   const svc = await createGameService({
     clock,
@@ -85,7 +89,7 @@ async function setup(caseId: "A" | "B" = "A", dbPath = ":memory:") {
     return await get();
   };
   await command("startSession", { acknowledgeDesignPreview: true });
-  await advance(30000);
+  if (initialTravelMs > 0) await advance(initialTravelMs);
   return { svc, clock, sid, get, command, advance, made };
 }
 async function task(
@@ -357,6 +361,41 @@ describe("SQLite authoritative core", () => {
     expect(events.some((e) => e.eventType === "clock.sample")).toBe(true);
     expect((await x.get()).stateVersion).toBe(old.stateVersion);
     expect((await x.get()).missionTimeMs).toBe(31000);
+  });
+  it("clock samples carry live R00 convoy progress without a new rule-state version", async () => {
+    const x = await setup("A", ":memory:", 0);
+    const initial = await x.get();
+    expect(initial.location.nodeId).toBe("N00");
+    const samples: P.SseClockSample[] = [];
+    const stop = await x.svc.subscribe(x.sid, (event) => {
+      if (event.eventType === "clock.sample") samples.push(event);
+    });
+    try {
+      const first = await x.advance(1000);
+      expect(samples.at(-1)?.data).toMatchObject({
+        missionTimeMs: 1000,
+        location: { nodeId: null, routeId: "R00", progressPermille: 33 },
+      });
+      expect(samples.at(-1)?.data.location).toEqual(first.location);
+      const later = await x.advance(4000);
+      expect(samples.at(-1)?.data).toMatchObject({
+        missionTimeMs: 5000,
+        location: { nodeId: null, routeId: "R00", progressPermille: 167 },
+      });
+      expect(samples.at(-1)?.data.location).toEqual(later.location);
+      expect(samples.map((sample) => sample.stateVersion)).toEqual([
+        initial.stateVersion,
+        initial.stateVersion,
+      ]);
+      expect(later.stateVersion).toBe(initial.stateVersion);
+      const persisted = await x.svc.getEventsSince(
+        x.sid,
+        initial.lastViewCursor,
+      );
+      expect(persisted).toEqual(samples);
+    } finally {
+      stop();
+    }
   });
   it("subscriptions deliver every future committed view event exactly once beyond one outbox page", async () => {
     const x = await setup();

@@ -152,7 +152,24 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   const initialSatellite = (await projection()).resources.find(
     (r) => r.channel === "satellite",
   )!.remaining;
+  // Map selection is an intent: future locations cannot trigger investigations
+  // and neither selecting a hotspot nor opening a confirmation spends resources.
   await page
+    .getByRole("group", { name: "查看地点" })
+    .getByRole("button", { name: "旧市集", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "调查此地点", exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("group", { name: "查看地点" })
+    .getByRole("button", { name: "西门检查站", exact: true })
+    .click();
+  expect((await projection()).location.nodeId).toBe("N01");
+  await screenshot(page, info, "01b-map-location-selection");
+  await page.getByRole("button", { name: "调查此地点", exact: true }).click();
+  await page
+    .getByRole("dialog")
     .locator(".investigation-card")
     .filter({ hasText: satellite.label })
     .click();
@@ -166,6 +183,16 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     (await projection()).resources.find((r) => r.channel === "satellite")!
       .remaining,
   ).toBe(initialSatellite);
+  await closeModal(page);
+  expect(
+    (await projection()).resources.find((r) => r.channel === "satellite")!
+      .remaining,
+  ).toBe(initialSatellite);
+  // Existing intelligence-panel entry remains available after cancelling.
+  await page
+    .locator(".intel-panel .investigation-card")
+    .filter({ hasText: satellite.label })
+    .click();
   await page.getByLabel("我已考虑这个渠道的观察限制", { exact: true }).check();
   await page
     .getByLabel("我已比较这次调查与行进的时间成本", { exact: true })
@@ -293,7 +320,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
   await assertNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "二维路线图", exact: true }).click();
   await expect(
-    page.getByRole("img", { name: "公开路线图与车队当前位置" }),
+    page.getByRole("group", { name: "公开路线图与车队当前位置" }),
   ).toBeVisible();
   await expect(
     page.getByText("路线示意 · 非实时侦察", { exact: true }),

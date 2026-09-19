@@ -7,6 +7,7 @@ import {
   translate,
 } from "./i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { applyClockSample } from "./clockSample";
 import {
   get,
   post,
@@ -181,17 +182,18 @@ export function useGame() {
     });
     stream.addEventListener("clock.sample", (e) => {
       try {
-        const v = JSON.parse((e as MessageEvent).data);
-        const d = v.data ?? v;
-        setState((old) =>
-          old?.sessionId === sid && old.lifecycle === "active"
-            ? {
-                ...old,
-                missionTimeMs: Math.max(old.missionTimeMs, d.missionTimeMs),
-                serverNow: d.serverNow,
-              }
-            : old,
-        );
+        const sample = JSON.parse((e as MessageEvent).data) as P.SseClockSample;
+        setState((old) => applyClockSample(old, sample));
+        const current = ref.current;
+        // Recover a missed projection, or an older server's clock-only packet.
+        if (
+          current?.sessionId === sid &&
+          sample.sessionId === sid &&
+          (sample.stateVersion > current.stateVersion ||
+            sample.runEpoch !== current.runEpoch ||
+            (!sample.data.location && current.phase === "resolving"))
+        )
+          resync();
       } catch {
         /* Next projection resynchronizes. */
       }

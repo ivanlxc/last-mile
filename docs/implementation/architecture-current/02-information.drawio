@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="31.4.5" type="device">
+  <diagram id="02-information" name="02  信息边界与双 AI">
+    <mxGraphModel dx="1680" dy="1320" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1680" pageHeight="1320" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="brand" value="LAST MILE  /  IMPLEMENTATION ARCHITECTURE" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="22" width="1300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="title" value="02  信息边界与双 AI" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#182D44;fontSize=31;fontFamily=Helvetica;fontStyle=1;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="57" width="1600" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="玩家可见、明确上传、行为评价三个输入域分别构造；模型没有完整世界或数据库访问权。" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="111" width="1600" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="footer" value="源码基线：e31f794 · 游戏 v0.3.0 · 2026-09-18   |   实线：运行数据 / 调用；虚线：依赖或返回" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=13;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="1278" width="1600" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="advisor-area" value="任务中 · Advisor 的授权信息链" style="swimlane;html=0;rounded=1;arcSize=8;horizontal=1;startSize=43;fillColor=#FAFBFD;swimlaneFillColor=#FAFBFD;strokeColor=#D8E1EA;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;align=left;spacingLeft=18;fontStyle=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="165" width="1595" height="590" as="geometry" />
+        </mxCell>
+        <mxCell id="eval-area" value="任务后 · 独立 Evaluator 的行为评价链" style="swimlane;html=0;rounded=1;arcSize=8;horizontal=1;startSize=43;fillColor=#FAFBFD;swimlaneFillColor=#FAFBFD;strokeColor=#D8E1EA;fontColor=#53677D;fontSize=17;fontFamily=Helvetica;align=left;spacingLeft=18;fontStyle=1;collapsible=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="820" width="1595" height="405" as="geometry" />
+        </mxCell>
+        <mxCell id="truth" value="&lt;b style=&quot;font-size:21px&quot;&gt;服务端私有世界&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;隐藏剧本 A/B · 未揭示证据&lt;br&gt;路线条件 · 完整运行状态&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;World + State&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="65" y="245" width="310" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="reports" value="&lt;b style=&quot;font-size:21px&quot;&gt;玩家可见信息&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;到达的报告 · 已揭示来源关系&lt;br&gt;任务 / 地图 / 时间 / 资源&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;SessionProjection / ReportView&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="465" y="245" width="340" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="uploads" value="&lt;b style=&quot;font-size:21px&quot;&gt;主动上传快照&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;玩家选择当前关卡报告&lt;br&gt;固定 evidence ID + revision&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;UploadSnapshot&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="895" y="245" width="300" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="input" value="&lt;b style=&quot;font-size:21px&quot;&gt;AdvisorInput 白名单&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;已上传报告 + 公开任务 / 背景&lt;br&gt;玩家陈述标为 unverified&lt;br&gt;contextVersion + inputHash&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;ai/context.ts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="245" width="315" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="no-truth" value="&lt;b style=&quot;font-size:21px&quot;&gt;不进入 Advisor 的信息&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;隐藏真相 / case ID / 未上传报告&lt;br&gt;完整私有状态与实时倒计时&lt;br&gt;模型不直接决定世界后果&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF0F0;strokeColor=#C87777;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="65" y="535" width="310" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="advice-ui" value="&lt;b style=&quot;font-size:21px&quot;&gt;顾问建议卡片&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;依据 · 引用 · 未知项 · 核查建议&lt;br&gt;标明 live_model / offline_template&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;AdvisorPanel.tsx&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="465" y="545" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="guard" value="&lt;b style=&quot;font-size:21px&quot;&gt;输出与发布检查&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;结构 / 引用 / 语言检查&lt;br&gt;场景与上下文仍须有效&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;ai/guards.ts + Core.publishJob&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="895" y="545" width="300" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="advisor" value="&lt;b style=&quot;font-size:21px&quot;&gt;Advisor&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;独立提示词与冻结输入&lt;br&gt;异步模型调用 / 离线模板&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;ai/index.ts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F3EFFF;strokeColor=#9376BE;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="545" width="315" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="b-truth-reports" value="按规则揭示" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1" source="truth" target="reports">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-reports-uploads" value="明确选择上传" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1" source="reports" target="uploads">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-uploads-input" value="过滤 / 构造" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1" source="uploads" target="input">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-input-advisor" value="冻结输入" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="input" target="advisor">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-advisor-guard" value="生成输出" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="advisor" target="guard">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-guard-ui" value="有效才发布" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="guard" target="advice-ui">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="advice-note" value="报告到达 ≠ 上传给 AI；来源关系只在已揭示且满足上传条件时进入模型。" style="text;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#53677D;fontSize=16;fontFamily=Helvetica;fontStyle=0;spacing=0;" vertex="1" parent="1">
+          <mxGeometry x="465" y="705" width="1090" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="snapshots" value="&lt;b style=&quot;font-size:21px&quot;&gt;决策时快照&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;已展示 / 已上传的信息&lt;br&gt;当时建议 · 操作 · 理由&lt;br&gt;展示回执只证明展示&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;decision_snapshots / display_receipts&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="65" y="915" width="310" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="facts" value="&lt;b style=&quot;font-size:21px&quot;&gt;行为事实与评价边界&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;按决策截止时间筛选&lt;br&gt;规则生成 facts / contexts / bounds&lt;br&gt;排除隐藏真相与结果内容&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;ai/facts.ts · buildEvaluatorInput&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF8F3;strokeColor=#5F9B83;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="465" y="915" width="340" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="evaluator" value="&lt;b style=&quot;font-size:21px&quot;&gt;独立 Evaluator&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;终局封存后才可请求&lt;br&gt;独立输入与提示词&lt;br&gt;评价已记录行为&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;EvaluatorInput / Output&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#F3EFFF;strokeColor=#9376BE;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="895" y="915" width="300" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="debrief" value="&lt;b style=&quot;font-size:21px&quot;&gt;Debrief 复盘&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;font-size:17px&quot;&gt;行为评价 · 决策回放&lt;br&gt;任务结果单独展示&lt;br&gt;JSON 导出&lt;/span&gt;&lt;br&gt;&lt;span style=&quot;font-size:13px;color:#53677D&quot;&gt;Debrief.tsx&lt;/span&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#EDF4FF;strokeColor=#6187B9;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1285" y="915" width="315" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="outcome" value="&lt;b style=&quot;font-size:21px&quot;&gt;游戏核心计算的 Outcome&lt;/b&gt;" style="rounded=1;arcSize=12;whiteSpace=wrap;html=1;fillColor=#FFF4E6;strokeColor=#C79A60;strokeWidth=1.5;fontColor=#182D44;fontSize=17;fontFamily=Helvetica;spacing=14;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="65" y="1130" width="310" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="b-snap-facts" value="封存后构造" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1" source="snapshots" target="facts">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-facts-eval" value="允许的事实" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1" source="facts" target="evaluator">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-eval-review" value="校验后评价" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;" edge="1" parent="1" source="evaluator" target="debrief">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="b-outcome-review" value="任务结果独立呈现，不输入 Evaluator" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=0;strokeColor=#6B7F94;strokeWidth=1.6;endArrow=block;endFill=1;fontColor=#53677D;fontSize=14;fontFamily=Helvetica;labelBackgroundColor=#FFFFFF;spacing=5;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="outcome" target="debrief">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1442" y="1157" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,27 +1,43 @@
 import { useI18n } from "../lib/i18n";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Box, Map as MapIcon, LocateFixed, Expand, X } from "lucide-react";
 import type {
   KnownLocation,
   SceneId,
 } from "../../../docs/engineering_v0.5/contracts/public.types";
 import { mapData, locationPoint } from "../lib/map";
+import { UnityMapSlot, useMapRenderer } from "../lib/mapRenderer";
+import { mapRendererCopy } from "../lib/mapRendererCopy";
+import { Modal } from "./Modal";
 const Map3D = lazy(() => import("./Map3D"));
 export function TacticalMap({
   location,
   sceneId,
   large = false,
+  onInvestigate,
 }: {
   location: KnownLocation;
   sceneId: SceneId | null;
   large?: boolean;
+  onInvestigate?: () => void;
 }) {
-  const { t, nodeLabel } = useI18n();
-  const [three, setThree] = useState(true),
-    [expanded, setExpanded] = useState(false);
+  const { t, nodeLabel, locale } = useI18n();
+  const renderer = useMapRenderer();
+  const copy = mapRendererCopy(locale);
+  const [expanded, setExpanded] = useState(false);
+  const [setup, setSetup] = useState(false);
+  const selected = mapData.nodes.find(
+    (n) => n.nodeId === renderer.selectedNodeId,
+  );
+  const selection = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    selection.current?.scrollIntoView({ block: "nearest" });
+  }, [renderer.selectedNodeId]);
+  const three = renderer.mode === "three";
+  const unity = renderer.mode === "unity";
   return (
     <section
-      className={`tactical-map ${large ? "large" : ""} ${expanded ? "expanded" : ""}`}
+      className={`tactical-map renderer-map ${selected ? "has-selection" : ""} ${large ? "large" : ""} ${expanded ? "expanded" : ""}`}
       aria-label={t("ui.convoyTerrainModel")}
     >
       <div className="map-heading">
@@ -31,8 +47,9 @@ export function TacticalMap({
         </div>
         <div className="map-tools">
           <button
-            className={!three ? "active" : ""}
-            onClick={() => setThree(false)}
+            className={renderer.mode === "two" ? "active" : ""}
+            aria-pressed={renderer.mode === "two"}
+            onClick={() => renderer.selectMode("two")}
             title={t("ui.2dRouteMap")}
             aria-label={t("ui.2dRouteMap")}
           >
@@ -40,11 +57,24 @@ export function TacticalMap({
           </button>
           <button
             className={three ? "active" : ""}
-            onClick={() => setThree(true)}
+            aria-pressed={three}
+            onClick={() => renderer.selectMode("three")}
             title={t("ui.3dTerrainModel")}
             aria-label={t("ui.3dTerrainModel")}
           >
             <Box size={16} />
+          </button>
+          <button
+            className={`renderer-choice ${unity ? "active" : ""} ${renderer.availability !== "available" ? "unavailable" : ""}`}
+            aria-label={copy.unity}
+            aria-pressed={unity}
+            onClick={() =>
+              renderer.availability === "available"
+                ? renderer.selectMode("unity")
+                : setSetup(true)
+            }
+          >
+            Unity
           </button>
           <button
             onClick={() => setExpanded(!expanded)}
@@ -56,7 +86,9 @@ export function TacticalMap({
         </div>
       </div>
       <div className="map-viewport">
-        {three ? (
+        {unity ? (
+          <UnityMapSlot />
+        ) : three ? (
           <Suspense
             fallback={
               <div className="map-loading">
@@ -64,10 +96,17 @@ export function TacticalMap({
               </div>
             }
           >
-            <Map3D location={location} onFailure={() => setThree(false)} />
+            <Map3D
+              location={location}
+              onFailure={() => renderer.selectMode("two")}
+            />
           </Suspense>
         ) : (
-          <Map2D location={location} sceneId={sceneId} />
+          <Map2D
+            location={location}
+            sceneId={sceneId}
+            onSelectLocation={renderer.selectNode}
+          />
         )}
         <span className="map-north">
           N <i>↑</i>
@@ -81,20 +120,142 @@ export function TacticalMap({
           </b>
         </span>
         <span>
-          {three
-            ? t("ui.dragToRotateScrollToZoom")
-            : t("ui.routeDiagramNotLiveReconnaissance")}
+          {unity
+            ? copy.controls
+            : three
+              ? t("ui.dragToRotateScrollToZoom")
+              : t("ui.routeDiagramNotLiveReconnaissance")}
         </span>
       </div>
+      <div
+        className={`map-engine-status ${renderer.runtimeError ? "error" : ""}`}
+        role="status"
+      >
+        <span>
+          {renderer.runtimeError
+            ? copy.failed
+            : renderer.checking
+              ? copy.checking
+              : renderer.availability === "unavailable"
+                ? copy.missing
+                : unity
+                  ? renderer.ready
+                    ? copy.ready
+                    : renderer.missionStarted
+                      ? copy.loadingActive
+                      : copy.loading
+                  : copy.available}
+        </span>
+        <button onClick={() => setSetup(true)}>{copy.setup}</button>
+      </div>
+      <div
+        className="map-point-choices"
+        role="group"
+        aria-label={copy.locations}
+      >
+        {mapData.nodes
+          .filter((n) => !!n.sceneId)
+          .map((node) => (
+            <button
+              key={node.nodeId}
+              aria-pressed={renderer.selectedNodeId === node.nodeId}
+              onClick={() => renderer.selectNode(node.nodeId)}
+            >
+              {nodeLabel(node.nodeId)}
+            </button>
+          ))}
+      </div>
+      {selected && (
+        <div className="map-selection" ref={selection}>
+          <div className="map-selection-title">
+            <strong>{nodeLabel(selected.nodeId)}</strong>
+            <span>
+              {selected.nodeId} · {copy.selected}
+            </span>
+            <button
+              onClick={() => renderer.selectNode(null)}
+              aria-label={copy.closeLocation}
+            >
+              <X size={15} />
+            </button>
+          </div>
+          <p>{copy.mapOnly}</p>
+          {selected.sceneId &&
+            (selected.sceneId === sceneId && onInvestigate ? (
+              <button className="secondary" onClick={onInvestigate}>
+                {copy.investigate}
+              </button>
+            ) : (
+              <p>{copy.otherLocation}</p>
+            ))}
+        </div>
+      )}
+      {setup && (
+        <Modal title={copy.setup} onClose={() => setSetup(false)}>
+          <div className="unity-setup">
+            <p>
+              {renderer.availability === "available"
+                ? copy.available
+                : copy.missing}
+            </p>
+            {renderer.runtimeError && (
+              <p role="alert">
+                {copy.failed} {renderer.runtimeError}
+              </p>
+            )}
+            <ol>
+              <li>{copy.install}</li>
+              <li>
+                {copy.build}
+                <p>
+                  <code>pnpm build:unity</code>
+                </p>
+              </li>
+            </ol>
+            <p>{copy.editor}</p>
+            <div className="unity-setup-actions">
+              {renderer.availability === "available" && (
+                <button
+                  className="primary"
+                  onClick={() => {
+                    renderer.selectMode("unity");
+                    setSetup(false);
+                  }}
+                >
+                  {copy.useUnity}
+                </button>
+              )}
+              <button
+                className="secondary"
+                disabled={renderer.checking}
+                onClick={renderer.recheck}
+              >
+                {renderer.checking ? copy.checking : copy.recheck}
+              </button>
+              <button
+                className="secondary"
+                onClick={() => {
+                  renderer.selectMode("three");
+                  setSetup(false);
+                }}
+              >
+                {copy.useMap}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </section>
   );
 }
 export function Map2D({
   location,
   sceneId,
+  onSelectLocation,
 }: {
   location: KnownLocation;
   sceneId: SceneId | null;
+  onSelectLocation?: (nodeId: string) => void;
 }) {
   const { t, nodeLabel } = useI18n();
   const p = locationPoint(location),
@@ -104,7 +265,7 @@ export function Map2D({
     <svg
       className="map2d"
       viewBox="0 0 620 330"
-      role="img"
+      role={onSelectLocation ? "group" : "img"}
       aria-label={t("ui.publicRouteMapAndCurrentConvoyPosition")}
     >
       <defs>
@@ -167,7 +328,26 @@ export function Map2D({
           active = n.sceneId === sceneId,
           major = !!n.sceneId || ["N00", "N07"].includes(n.nodeId);
         return (
-          <g key={n.nodeId}>
+          <g
+            key={n.nodeId}
+            role={onSelectLocation ? "button" : undefined}
+            tabIndex={onSelectLocation ? 0 : undefined}
+            aria-label={onSelectLocation ? nodeLabel(n.nodeId) : undefined}
+            style={onSelectLocation ? { cursor: "pointer" } : undefined}
+            onClick={() => onSelectLocation?.(n.nodeId)}
+            onKeyDown={(event) => {
+              if (
+                onSelectLocation &&
+                (event.key === "Enter" || event.key === " ")
+              ) {
+                event.preventDefault();
+                onSelectLocation(n.nodeId);
+              }
+            }}
+          >
+            {onSelectLocation && (
+              <circle cx={x} cy={y} r={14} fill="transparent" />
+            )}
             <circle
               cx={x}
               cy={y}

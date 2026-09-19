@@ -12,6 +12,8 @@ import {
 
 import type { Game } from "../lib/useGame";
 import { TacticalMap } from "./TacticalMap";
+import { useMapRenderer } from "../lib/mapRenderer";
+import { mapRendererCopy } from "../lib/mapRendererCopy";
 export function Brand({ small = false }: { small?: boolean }) {
   const { t } = useI18n();
   return (
@@ -134,7 +136,8 @@ export function Landing({
   );
 }
 export function Briefing({ game }: { game: Game }) {
-  const { t, campaign, characters } = useI18n();
+  const { t, campaign, characters, locale } = useI18n();
+  const { canStart } = useMapRenderer();
   const state = game.state!;
   return (
     <main className="briefing page-shell">
@@ -227,9 +230,14 @@ export function Briefing({ game }: { game: Game }) {
           <Sparkles size={16} />
           <span>{t("ui.observeThenJudgeYouCanAlwaysAct")}</span>
         </div>
+        {!canStart && (
+          <p className="map-start-status" role="status">
+            {mapRendererCopy(locale).loading}
+          </p>
+        )}
         <button
           className="primary"
-          disabled={game.busy}
+          disabled={game.busy || !canStart}
           onClick={() =>
             void game.command("/start", { acknowledgeDesignPreview: true })
           }
