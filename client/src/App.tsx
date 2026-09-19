@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, AlertCircle, ArrowRight } from "lucide-react";
 import { useGame } from "./lib/useGame";
 import { LocaleProvider, useI18n } from "./lib/i18n";
@@ -10,6 +10,7 @@ import { Modal } from "./components/Modal";
 import { AccessGate, type AccessMode } from "./components/AccessGate";
 import { CloudHistory } from "./components/CloudHistory";
 import { MapRendererProvider } from "./lib/mapRenderer";
+import { stopSpeech } from "./lib/speech/playback";
 export default function App() {
   return <AccessGate>{(mode) => <AuthenticatedGame mode={mode} />}</AccessGate>;
 }
@@ -26,6 +27,15 @@ function AuthenticatedGame({ mode }: { mode: AccessMode }) {
 function GameShell({ game, mode }: { game: Game; mode: AccessMode }) {
   const { t, campaign } = useI18n();
   const [guide, setGuide] = useState(false);
+  useEffect(
+    () => () => stopSpeech(),
+    [
+      game.state?.sessionId,
+      game.state?.runEpoch,
+      game.state?.sceneId,
+      game.state?.lifecycle,
+    ],
+  );
   return (
     <>
       {game.state ? (

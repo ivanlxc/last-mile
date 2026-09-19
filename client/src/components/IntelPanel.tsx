@@ -20,6 +20,8 @@ import type { Game } from "../lib/useGame";
 import { useVisibleReceipt } from "../lib/useVisibleReceipt";
 import { InvestigationModal } from "./InvestigationModal";
 import { ProvenanceModal } from "./ProvenanceModal";
+import { ReadAloudButton } from "./ReadAloudButton";
+import { reportNarration } from "../lib/reportNarration";
 const icons = {
   satellite: Satellite,
   drone: ScanLine,
@@ -352,6 +354,11 @@ function ReportCard({
       </button>
       {expanded && (
         <div className="report-body">
+          <ReadAloudButton
+            id={`report:${r.reportId}:${r.revision}`}
+            text={reportNarration(r, characters[r.sourceRole].name)}
+            disabled={!active}
+          />
           <div ref={ref} className="report-opening">
             <p>{r.card.body}</p>
           </div>

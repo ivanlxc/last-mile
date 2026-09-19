@@ -18,6 +18,8 @@ import { useVisibleReceipt } from "../lib/useVisibleReceipt";
 import { Modal } from "./Modal";
 import { useVoiceInput } from "../lib/speech/useVoiceInput";
 import { appendTranscript } from "../lib/speech/transcript";
+import { advisorReadout } from "../lib/speech/readout";
+import { ReadAloudButton } from "./ReadAloudButton";
 import "./voice.css";
 export function AdvisorPanel({
   game,
@@ -138,6 +140,37 @@ export function AdvisorPanel({
             </div>
             <div ref={ref}>
               <h3>{output.summary}</h3>
+            </div>
+            <div className="advice-readout">
+              <ReadAloudButton
+                id={`advice:${job!.jobId}:${current ? "current" : "earlier"}`}
+                disabled={!active}
+                text={advisorReadout(output, {
+                  current,
+                  offline: job?.mode === "offline_template",
+                  actionLabel: output.recommendation.actionId
+                    ? (s.actionOptions.find(
+                        (action) =>
+                          action.actionId === output.recommendation.actionId,
+                      )?.label ?? output.recommendation.actionId)
+                    : null,
+                  sourceTitle: (refId, revision) => {
+                    if (
+                      !s.sceneUploads.some(
+                        (upload) =>
+                          upload.evidenceInstanceId === refId &&
+                          upload.revision === revision,
+                      )
+                    )
+                      return undefined;
+                    return s.reports.find(
+                      (report) =>
+                        report.evidenceInstanceId === refId &&
+                        report.revision === revision,
+                    )?.card.title;
+                  },
+                })}
+              />
             </div>
             <div className="advice-rationale">
               {output.recommendation.rationale}

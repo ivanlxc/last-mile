@@ -31,6 +31,7 @@ import { DecisionModal } from "./DecisionModal";
 import { Modal } from "./Modal";
 import { ContextModal } from "./ContextModal";
 import { useMapRenderer } from "../lib/mapRenderer";
+import { ReadAloudButton } from "./ReadAloudButton";
 import "./map-first.css";
 const icons = {
   satellite: Satellite,
@@ -531,6 +532,15 @@ export function GameView({
           <blockquote>
             {scene?.atmosphere ?? t("ui.staticBrieflyFillsTheRadioTheDriver")}
           </blockquote>
+          <ReadAloudButton
+            id={`story:${s.sessionId}:${s.sceneId}`}
+            text={[
+              scene?.title ?? t("ui.theLastDeparture"),
+              scene?.intro ?? t("ui.duskSettlesOverTheValleyTwentyPassengers"),
+              scene?.atmosphere ?? t("ui.staticBrieflyFillsTheRadioTheDriver"),
+              `${scene?.speaker ?? t("ui.daybreakReceptionStation")}. ${scene?.radio ?? t("ui.daybreak07TheReceptionWindowIsOpen")}`,
+            ].join(". ")}
+          />
           <div className="radio-line">
             <div className="radio-avatar">
               <Radio size={17} />

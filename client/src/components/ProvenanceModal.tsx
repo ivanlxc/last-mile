@@ -4,6 +4,7 @@ import { Link2 } from "lucide-react";
 import { get, sessionPath, type P } from "../lib/api";
 import type { Game } from "../lib/useGame";
 import { Modal } from "./Modal";
+import { ReadAloudButton } from "./ReadAloudButton";
 export function ProvenanceModal({
   game,
   onClose,
@@ -62,6 +63,24 @@ export function ProvenanceModal({
         </div>
       ) : (
         <>
+          <ReadAloudButton
+            id={`provenance:${s.sessionId}:${s.sceneId}`}
+            text={[
+              t("ui.thisGraphShowsOnlyDisclosedRelationshipsSimilar"),
+              ...data.nodes.map((node) => node.label),
+              ...data.edges.map((edge) =>
+                [
+                  data.nodes.find((node) => node.nodeId === edge.fromNodeId)
+                    ?.label,
+                  relationLabels[edge.relation],
+                  data.nodes.find((node) => node.nodeId === edge.toNodeId)
+                    ?.label,
+                  statusLabels[edge.status],
+                ].join(". "),
+              ),
+              data.notice,
+            ].join(". ")}
+          />
           <div className="provenance-legend">
             <span>{t("ui.reportCards")}</span>
             <span>{t("ui.disclosedSources")}</span>
