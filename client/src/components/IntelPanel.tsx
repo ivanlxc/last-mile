@@ -341,7 +341,7 @@ export function IntelPanel({
     </section>
   );
 }
-function ReportCard({
+export function ReportCard({
   report: r,
   game,
   active,

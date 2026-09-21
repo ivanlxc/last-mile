@@ -14,6 +14,7 @@
     "build": "node scripts/prepare-gestures.mjs && tsc --noEmit && vite build",
     "build:unity": "node scripts/build-unity.mjs",
     "build:art": "node scripts/build-art.mjs",
+    "preview:market": "pnpm build && tsx scripts/preview-market.ts",
     "start": "tsx --env-file-if-exists=.env server/index.ts",
     "typecheck": "tsc --noEmit",
     "verify:model": "tsx --env-file-if-exists=.env scripts/verify-model.ts",

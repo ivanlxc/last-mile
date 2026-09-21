@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#556b7d"/></marker></defs>
+<rect width="1400" height="980" fill="#f8fafc"/>
+<text x="45" y="62" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#172c40">UNITY / VERTICAL SLICE TARGET</text>
+<text x="45" y="102" font-family="Arial,sans-serif" font-size="16" fill="#596c7e">Planned architecture | New gameplay contracts and a real Editor build are required before implementation is accepted</text>
+<rect x="45" y="155" width="340" height="145" rx="10" fill="#faf4df" stroke="#baaa6f" stroke-width="1.5"/>
+<text x="63" y="185" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Authoring + content validation</text>
+<text x="63" y="215" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Blender: human-scale level assets</text>
+<text x="63" y="239" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Versioned story and evidence bundles</text>
+<text x="63" y="263" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Localization / branch-reachability tests</text>
+<rect x="45" y="405" width="340" height="150" rx="10" fill="#faf4df" stroke="#baaa6f" stroke-width="1.5"/>
+<text x="63" y="435" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Unity presentation client</text>
+<text x="63" y="465" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Character controller / interactions</text>
+<text x="63" y="489" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">NPCs / cinematics / spatial audio</text>
+<text x="63" y="513" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Native UI + input accessibility</text>
+<rect x="45" y="675" width="340" height="150" rx="10" fill="#faf4df" stroke="#baaa6f" stroke-width="1.5"/>
+<text x="63" y="705" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Consequences + review</text>
+<text x="63" y="735" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Play committed presentation events</text>
+<text x="63" y="759" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Skip / replay must not repeat actions</text>
+<text x="63" y="783" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Show what was known at decision time</text>
+<rect x="525" y="405" width="340" height="150" rx="10" fill="#e1f1e9" stroke="#79a68e" stroke-width="1.5"/>
+<text x="543" y="435" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Engine-independent contract</text>
+<text x="543" y="465" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Public scene projection + command intent</text>
+<text x="543" y="489" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Content version / session / epoch</text>
+<text x="543" y="513" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Server checks observation eligibility</text>
+<rect x="1005" y="405" width="340" height="150" rx="10" fill="#e1f1e9" stroke="#79a68e" stroke-width="1.5"/>
+<text x="1023" y="435" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Versioned rules + narrative kernel</text>
+<text x="1023" y="465" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Private truth / discovery / budgets</text>
+<text x="1023" y="489" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Deterministic branching consequences</text>
+<text x="1023" y="513" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Reuse existing transactional behavior</text>
+<rect x="1005" y="155" width="340" height="145" rx="10" fill="#eee8fa" stroke="#a28abe" stroke-width="1.5"/>
+<text x="1023" y="185" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Remote agent services</text>
+<text x="1023" y="215" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Advisor: uploaded evidence only</text>
+<text x="1023" y="239" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Evaluator: sealed behavior facts only</text>
+<text x="1023" y="263" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Provider adapters / budgets / fallbacks</text>
+<rect x="1005" y="675" width="340" height="150" rx="10" fill="#faf4df" stroke="#baaa6f" stroke-width="1.5"/>
+<text x="1023" y="705" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Save and recovery service</text>
+<text x="1023" y="735" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Rule + content versions / checkpoint</text>
+<text x="1023" y="759" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Idempotent restore / pending job policy</text>
+<text x="1023" y="783" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">No repeat charge after recovery</text>
+<rect x="525" y="675" width="340" height="150" rx="10" fill="#fff0db" stroke="#c7974d" stroke-width="1.5"/>
+<text x="543" y="705" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Product decision: offline main story</text>
+<text x="543" y="735" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Pending user decision</text>
+<text x="543" y="759" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">If required: locally runnable rule kernel</text>
+<text x="543" y="783" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Cloud AI becomes optional assistance</text>
+<polyline points="215,300 215,405" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="224" y="352.5" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">approved public assets</text>
+<polyline points="385,230 930,230 930,475 1005,475" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="657.5" y="222" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">private bundles to rules only</text>
+<polyline points="385,450 525,450" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="455.0" y="442" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">player intent</text>
+<polyline points="525,515 385,515" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="455.0" y="507" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">public projection</text>
+<polyline points="865,450 1005,450" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="935.0" y="442" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">validated command</text>
+<polyline points="1175,405 1175,300" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="1184" y="352.5" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">permitted frozen context</text>
+<polyline points="1175,555 1175,675" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="1184" y="615.0" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">checkpoint + journal</text>
+<polyline points="525,540 455,540 455,750 385,750" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="490.0" y="532" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">committed event</text>
+<polyline points="695,675 695,555" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="704" y="615.0" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">hosting choice</text>
+<text x="45" y="957" font-family="Arial,sans-serif" font-size="13" fill="#596c7e">Current Unity bridge supports map selection and camera input only. This page is a migration target, not a claim of completed Unity gameplay.</text></svg>

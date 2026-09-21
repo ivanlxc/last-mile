@@ -4,6 +4,8 @@
 
 ## 开始使用与当前实现
 
+- [商业化方向与第一人称市集切片](commercial/README.md)：M1 现场原型、GDD、增量 PRD/HLD/LLD、Unity 迁移门槛与 draw.io 图。
+
 - [地图主界面与英文语音试用版](implementation/地图主界面与英文语音.md)：电脑网页、侧栏、Deepgram 语音、环境音和回滚检查点。
 - [根目录 README](../README.md)：安装、启动、游戏规则。
 - [项目目录与版本](项目目录与版本.md)：每类文件的权威位置、历史迁移。

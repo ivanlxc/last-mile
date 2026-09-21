@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="980" viewBox="0 0 1400 980">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#556b7d"/></marker></defs>
+<rect width="1400" height="980" fill="#f8fafc"/>
+<text x="45" y="62" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="#172c40">M1 / MARKET FIELD PROTOTYPE</text>
+<text x="45" y="102" font-family="Arial,sans-serif" font-size="16" fill="#596c7e">Implemented on the feature branch | Existing authority and information boundaries are preserved</text>
+<rect x="45" y="155" width="340" height="130" rx="10" fill="#e7f0fb" stroke="#789bc6" stroke-width="1.5"/>
+<text x="63" y="185" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">First-person presentation</text>
+<text x="63" y="215" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Three.js / camera / collisions</text>
+<text x="63" y="239" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Public geometry + four StationIds</text>
+<text x="63" y="263" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">No session, evidence or hidden case</text>
+<rect x="45" y="360" width="340" height="135" rx="10" fill="#e7f0fb" stroke="#789bc6" stroke-width="1.5"/>
+<text x="63" y="390" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">MarketField controller</text>
+<text x="63" y="420" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Station dialog / cost confirmation</text>
+<text x="63" y="444" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Uses game.command + public state</text>
+<text x="63" y="468" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Shortcuts use identical rules</text>
+<rect x="45" y="585" width="340" height="135" rx="10" fill="#e7f0fb" stroke="#789bc6" stroke-width="1.5"/>
+<text x="63" y="615" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Shared game interface</text>
+<text x="63" y="645" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">ReportCard / visibility receipt / upload</text>
+<text x="63" y="669" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">AdvisorPanel / DecisionModal</text>
+<text x="63" y="693" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">EN / ZH + 2D fallback</text>
+<rect x="525" y="155" width="340" height="130" rx="10" fill="#e1f1e9" stroke="#79a68e" stroke-width="1.5"/>
+<text x="543" y="185" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Fastify HTTP + session access</text>
+<text x="543" y="215" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Identity / owner / origin checks</text>
+<text x="543" y="239" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Schema / epoch / state version</text>
+<text x="543" y="263" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Existing command endpoints</text>
+<rect x="525" y="360" width="340" height="135" rx="10" fill="#e1f1e9" stroke="#79a68e" stroke-width="1.5"/>
+<text x="543" y="390" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Authoritative GameService</text>
+<text x="543" y="420" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Idempotent transactions / quotas</text>
+<text x="543" y="444" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Tasks / actions / sealed decisions</text>
+<text x="543" y="468" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Scene transitions + instant time</text>
+<rect x="525" y="585" width="340" height="135" rx="10" fill="#e1f1e9" stroke="#79a68e" stroke-width="1.5"/>
+<text x="543" y="615" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Public projection + events</text>
+<text x="543" y="645" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Only acquired reports and public state</text>
+<text x="543" y="669" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">HTTP response + SSE updates</text>
+<text x="543" y="693" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Received is not uploaded</text>
+<rect x="525" y="790" width="340" height="120" rx="10" fill="#fff0db" stroke="#c7974d" stroke-width="1.5"/>
+<text x="543" y="820" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Private scripted world</text>
+<text x="543" y="850" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Case A/B / source roots / outcomes</text>
+<text x="543" y="874" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Server only; never sent to renderer</text>
+<rect x="1005" y="155" width="340" height="130" rx="10" fill="#eee8fa" stroke="#a28abe" stroke-width="1.5"/>
+<text x="1023" y="185" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Frozen advisor input</text>
+<text x="1023" y="215" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Uploaded revisions + permitted context</text>
+<text x="1023" y="239" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Question + unverified player statements</text>
+<text x="1023" y="263" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Allowlist / schema / input hash</text>
+<rect x="1005" y="360" width="340" height="135" rx="10" fill="#eee8fa" stroke="#a28abe" stroke-width="1.5"/>
+<text x="1023" y="390" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">AI advisor gateway</text>
+<text x="1023" y="420" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Existing OpenAI / Anthropic adapters</text>
+<text x="1023" y="444" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Structured output + citation validation</text>
+<text x="1023" y="468" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">No direct world or action access</text>
+<rect x="1005" y="585" width="340" height="135" rx="10" fill="#eee8fa" stroke="#a28abe" stroke-width="1.5"/>
+<text x="1023" y="615" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Independent final evaluator</text>
+<text x="1023" y="645" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Sealed behavior facts + coverage</text>
+<text x="1023" y="669" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Separate input from advisor</text>
+<text x="1023" y="693" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">No personality claims from walking</text>
+<rect x="1005" y="790" width="340" height="120" rx="10" fill="#e9edf2" stroke="#93a0af" stroke-width="1.5"/>
+<text x="1023" y="820" font-family="Arial,sans-serif" font-size="18" font-weight="700" fill="#172c40">Existing persistent storage</text>
+<text x="1023" y="850" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">PostgreSQL cloud / SQLite local tests</text>
+<text x="1023" y="874" font-family="Arial,sans-serif" font-size="15" fill="#3e5366">Reports, quotas, manifests, jobs, events</text>
+<polyline points="215,285 215,360" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="224" y="322.5" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">StationId</text>
+<polyline points="385,405 455,405 455,220 525,220" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="420.0" y="397" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">command</text>
+<polyline points="695,285 695,360" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="704" y="322.5" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">validated request</text>
+<polyline points="695,495 695,585" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="704" y="540.0" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">committed state</text>
+<polyline points="525,650 385,650" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="455.0" y="642" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">projection</text>
+<polyline points="215,495 215,585" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="224" y="540.0" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">shared components</text>
+<polyline points="865,405 925,405 925,220 1005,220" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="895.0" y="397" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">upload / ask</text>
+<polyline points="1175,285 1175,360" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="1184" y="322.5" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">frozen input</text>
+<polyline points="1005,465 965,465 965,620 865,620" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="985.0" y="457" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">validated result</text>
+<polyline points="525,845 485,845 485,465 525,465" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="505.0" y="837" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">private rules</text>
+<polyline points="865,480 900,480 900,680 1005,680" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="882.5" y="472" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">after seal</text>
+<polyline points="1175,720 1175,790" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="1184" y="755.0" text-anchor="start" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">assessment</text>
+<polyline points="865,445 945,445 945,850 1005,850" fill="none" stroke="#556b7d" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text x="905.0" y="437" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" fill="#43596d" stroke="#f8fafc" stroke-width="4" paint-order="stroke">transactions</text>
+<text x="45" y="957" font-family="Arial,sans-serif" font-size="13" fill="#596c7e">M1 adds no database migration, no new model prompt and no third Agent. Camera movement is cosmetic, not gameplay authority.</text></svg>

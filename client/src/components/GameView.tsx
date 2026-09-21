@@ -1,5 +1,5 @@
 import { useI18n } from "../lib/i18n";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Clock3,
@@ -34,6 +34,7 @@ import { useMapRenderer } from "../lib/mapRenderer";
 import { ReadAloudButton } from "./ReadAloudButton";
 import { AtmosphereControl } from "./AtmosphereControl";
 import "./map-first.css";
+const MarketField = lazy(() => import("./MarketField"));
 const icons = {
   satellite: Satellite,
   drone: ScanLine,
@@ -55,6 +56,7 @@ export function GameView({
     [showScene, setShowScene] = useState(false),
     [context, setContext] = useState(false);
   const [missionOpen, setMissionOpen] = useState(false);
+  const [onFoot, setOnFoot] = useState(false);
   const missionMenu = useRef<HTMLDetailsElement>(null);
   const [drawer, setDrawer] = useState<"intel" | "advisor" | null>(null);
   const [completedOperation, setCompletedOperation] =
@@ -91,9 +93,9 @@ export function GameView({
     if (drawer === "intel") setSeenReportCount(s.reports.length);
   }, [drawer, s.reports.length]);
   useEffect(() => {
-    renderer.setInputBlocked(!!drawer || !!decision || missionOpen);
+    renderer.setInputBlocked(!!drawer || !!decision || missionOpen || onFoot);
     return () => renderer.setInputBlocked(false);
-  }, [drawer, decision, missionOpen, renderer.setInputBlocked]);
+  }, [drawer, decision, missionOpen, onFoot, renderer.setInputBlocked]);
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || document.querySelector("dialog[open]"))
@@ -152,6 +154,7 @@ export function GameView({
   useEffect(() => {
     if (s.sceneId !== previousScene.current) {
       setDecision(null);
+      setOnFoot(false);
       previousScene.current = s.sceneId;
     }
   }, [s.sceneId]);
@@ -286,6 +289,27 @@ export function GameView({
       </header>
       <div className="map-command-toolbar">
         <div className="map-panel-tools">
+          {s.sceneId === "E2" && s.phase === "scene" && (
+            <button
+              data-testid="toggle-field"
+              className={onFoot ? "active" : ""}
+              aria-pressed={onFoot}
+              onClick={() => {
+                setDrawer(null);
+                setDecision(null);
+                setOnFoot((value) => !value);
+              }}
+            >
+              <ScanLine size={16} />
+              {onFoot
+                ? chinese
+                  ? "战术地图"
+                  : "Tactical map"
+                : chinese
+                  ? "进入市集现场"
+                  : "Enter market on foot"}
+            </button>
+          )}
           <button
             data-testid="open-intel"
             ref={intelTrigger}
@@ -412,16 +436,40 @@ export function GameView({
           <IntelPanel game={game} active={drawer === "intel"} />
         </aside>
         <div className="map-stage-main">
-          <TacticalMap
-            location={s.location}
-            sceneId={s.sceneId}
-            stage
-            onInvestigate={
-              s.phase === "scene" || waiting
-                ? () => setDrawer("intel")
-                : undefined
-            }
-          />
+          {onFoot && s.sceneId === "E2" ? (
+            <Suspense
+              fallback={
+                <div className="empty-state">
+                  {chinese ? "正在准备市集…" : "Preparing the courtyard…"}
+                </div>
+              }
+            >
+              <MarketField
+                game={game}
+                blocked={
+                  !!drawer ||
+                  !!decision ||
+                  missionOpen ||
+                  context ||
+                  exit ||
+                  showScene
+                }
+                onMap={() => setOnFoot(false)}
+                onTablet={setDrawer}
+              />
+            </Suspense>
+          ) : (
+            <TacticalMap
+              location={s.location}
+              sceneId={s.sceneId}
+              stage
+              onInvestigate={
+                s.phase === "scene" || waiting
+                  ? () => setDrawer("intel")
+                  : undefined
+              }
+            />
+          )}
         </div>
         <aside
           data-testid="advisor-drawer"

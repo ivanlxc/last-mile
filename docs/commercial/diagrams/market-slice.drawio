@@ -1,0 +1,258 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device" version="26.0.0">
+  <diagram name="M1 - implemented" id="m1-architecture">
+    <mxGraphModel dx="1400" dy="980" grid="1" gridSize="10" page="1" pageWidth="1400" pageHeight="980">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="M1 / MARKET FIELD PROTOTYPE" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=28;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="30" width="1280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Implemented on the feature branch | Existing authority and information boundaries are preserved" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontColor=#596c7e;" vertex="1" parent="1">
+          <mxGeometry x="45" y="77" width="1300" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="viewport" value="First-person presentation&#10;&#10;Three.js / camera / collisions&#10;Public geometry + four StationIds&#10;No session, evidence or hidden case" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e7f0fb;strokeColor=#789bc6;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="155" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="field" value="MarketField controller&#10;&#10;Station dialog / cost confirmation&#10;Uses game.command + public state&#10;Shortcuts use identical rules" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e7f0fb;strokeColor=#789bc6;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="360" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="panels" value="Shared game interface&#10;&#10;ReportCard / visibility receipt / upload&#10;AdvisorPanel / DecisionModal&#10;EN / ZH + 2D fallback" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e7f0fb;strokeColor=#789bc6;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="585" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="http" value="Fastify HTTP + session access&#10;&#10;Identity / owner / origin checks&#10;Schema / epoch / state version&#10;Existing command endpoints" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e1f1e9;strokeColor=#79a68e;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="525" y="155" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="core" value="Authoritative GameService&#10;&#10;Idempotent transactions / quotas&#10;Tasks / actions / sealed decisions&#10;Scene transitions + instant time" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e1f1e9;strokeColor=#79a68e;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="525" y="360" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="public" value="Public projection + events&#10;&#10;Only acquired reports and public state&#10;HTTP response + SSE updates&#10;Received is not uploaded" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e1f1e9;strokeColor=#79a68e;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="525" y="585" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="world" value="Private scripted world&#10;&#10;Case A/B / source roots / outcomes&#10;Server only; never sent to renderer" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#fff0db;strokeColor=#c7974d;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="525" y="790" width="340" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="manifest" value="Frozen advisor input&#10;&#10;Uploaded revisions + permitted context&#10;Question + unverified player statements&#10;Allowlist / schema / input hash" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#eee8fa;strokeColor=#a28abe;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="155" width="340" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="advisor" value="AI advisor gateway&#10;&#10;Existing OpenAI / Anthropic adapters&#10;Structured output + citation validation&#10;No direct world or action access" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#eee8fa;strokeColor=#a28abe;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="360" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="evaluator" value="Independent final evaluator&#10;&#10;Sealed behavior facts + coverage&#10;Separate input from advisor&#10;No personality claims from walking" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#eee8fa;strokeColor=#a28abe;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="585" width="340" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="Existing persistent storage&#10;&#10;PostgreSQL cloud / SQLite local tests&#10;Reports, quotas, manifests, jobs, events" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e9edf2;strokeColor=#93a0af;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="790" width="340" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-0" value="StationId" source="viewport" target="field" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="215" y="285" as="sourcePoint" />
+            <mxPoint x="215" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-1" value="command" source="field" target="http" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.3333333333333333;entryX=0.0;entryY=0.5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="385" y="405" as="sourcePoint" />
+            <mxPoint x="525" y="220" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="455" y="405" />
+              <mxPoint x="455" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-2" value="validated request" source="http" target="core" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="695" y="285" as="sourcePoint" />
+            <mxPoint x="695" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-3" value="committed state" source="core" target="public" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="695" y="495" as="sourcePoint" />
+            <mxPoint x="695" y="585" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-4" value="projection" source="public" target="panels" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.0;exitY=0.48148148148148145;entryX=1.0;entryY=0.48148148148148145;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="650" as="sourcePoint" />
+            <mxPoint x="385" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-5" value="shared components" source="field" target="panels" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="215" y="495" as="sourcePoint" />
+            <mxPoint x="215" y="585" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-6" value="upload / ask" source="core" target="manifest" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.3333333333333333;entryX=0.0;entryY=0.5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="865" y="405" as="sourcePoint" />
+            <mxPoint x="1005" y="220" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="925" y="405" />
+              <mxPoint x="925" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-7" value="frozen input" source="manifest" target="advisor" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="285" as="sourcePoint" />
+            <mxPoint x="1175" y="360" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-8" value="validated result" source="advisor" target="public" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.0;exitY=0.7777777777777778;entryX=1.0;entryY=0.25925925925925924;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1005" y="465" as="sourcePoint" />
+            <mxPoint x="865" y="620" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="965" y="465" />
+              <mxPoint x="965" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-9" value="private rules" source="world" target="core" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.0;exitY=0.4583333333333333;entryX=0.0;entryY=0.7777777777777778;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="845" as="sourcePoint" />
+            <mxPoint x="525" y="465" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="485" y="845" />
+              <mxPoint x="485" y="465" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-10" value="after seal" source="core" target="evaluator" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.8888888888888888;entryX=0.0;entryY=0.7037037037037037;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="865" y="480" as="sourcePoint" />
+            <mxPoint x="1005" y="680" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="900" y="480" />
+              <mxPoint x="900" y="680" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-11" value="assessment" source="evaluator" target="db" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="720" as="sourcePoint" />
+            <mxPoint x="1175" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-12" value="transactions" source="core" target="db" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.6296296296296297;entryX=0.0;entryY=0.5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="865" y="445" as="sourcePoint" />
+            <mxPoint x="1005" y="850" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="945" y="445" />
+              <mxPoint x="945" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="footer" value="M1 adds no database migration, no new model prompt and no third Agent. Camera movement is cosmetic, not gameplay authority." style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontColor=#596c7e;" vertex="1" parent="1">
+          <mxGeometry x="45" y="937" width="1300" height="32" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Unity - target, not implemented" id="unity-target">
+    <mxGraphModel dx="1400" dy="980" grid="1" gridSize="10" page="1" pageWidth="1400" pageHeight="980">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="UNITY / VERTICAL SLICE TARGET" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=28;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="30" width="1280" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="Planned architecture | New gameplay contracts and a real Editor build are required before implementation is accepted" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontColor=#596c7e;" vertex="1" parent="1">
+          <mxGeometry x="45" y="77" width="1300" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="author" value="Authoring + content validation&#10;&#10;Blender: human-scale level assets&#10;Versioned story and evidence bundles&#10;Localization / branch-reachability tests" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#faf4df;strokeColor=#baaa6f;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="155" width="340" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="unity" value="Unity presentation client&#10;&#10;Character controller / interactions&#10;NPCs / cinematics / spatial audio&#10;Native UI + input accessibility" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#faf4df;strokeColor=#baaa6f;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="405" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="replay" value="Consequences + review&#10;&#10;Play committed presentation events&#10;Skip / replay must not repeat actions&#10;Show what was known at decision time" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#faf4df;strokeColor=#baaa6f;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="45" y="675" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="contract" value="Engine-independent contract&#10;&#10;Public scene projection + command intent&#10;Content version / session / epoch&#10;Server checks observation eligibility" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e1f1e9;strokeColor=#79a68e;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="525" y="405" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="kernel" value="Versioned rules + narrative kernel&#10;&#10;Private truth / discovery / budgets&#10;Deterministic branching consequences&#10;Reuse existing transactional behavior" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#e1f1e9;strokeColor=#79a68e;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="405" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="agents" value="Remote agent services&#10;&#10;Advisor: uploaded evidence only&#10;Evaluator: sealed behavior facts only&#10;Provider adapters / budgets / fallbacks" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#eee8fa;strokeColor=#a28abe;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="155" width="340" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="save" value="Save and recovery service&#10;&#10;Rule + content versions / checkpoint&#10;Idempotent restore / pending job policy&#10;No repeat charge after recovery" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#faf4df;strokeColor=#baaa6f;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="1005" y="675" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="offline" value="Product decision: offline main story&#10;&#10;Pending user decision&#10;If required: locally runnable rule kernel&#10;Cloud AI becomes optional assistance" style="rounded=1;arcSize=10;html=0;whiteSpace=wrap;align=left;verticalAlign=middle;spacing=18;fontSize=16;fillColor=#fff0db;strokeColor=#c7974d;fontColor=#172c40;" vertex="1" parent="1">
+          <mxGeometry x="525" y="675" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-0" value="approved public assets" source="author" target="unity" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="215" y="300" as="sourcePoint" />
+            <mxPoint x="215" y="405" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-1" value="private bundles to rules only" source="author" target="kernel" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.5172413793103449;entryX=0.0;entryY=0.4666666666666667;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="385" y="230" as="sourcePoint" />
+            <mxPoint x="1005" y="475" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="930" y="230" />
+              <mxPoint x="930" y="475" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-2" value="player intent" source="unity" target="contract" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.3;entryX=0.0;entryY=0.3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="385" y="450" as="sourcePoint" />
+            <mxPoint x="525" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-3" value="public projection" source="contract" target="unity" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.0;exitY=0.7333333333333333;entryX=1.0;entryY=0.7333333333333333;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="515" as="sourcePoint" />
+            <mxPoint x="385" y="515" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-4" value="validated command" source="contract" target="kernel" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=1.0;exitY=0.3;entryX=0.0;entryY=0.3;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="865" y="450" as="sourcePoint" />
+            <mxPoint x="1005" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-5" value="permitted frozen context" source="kernel" target="agents" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=0.0;entryX=0.5;entryY=1.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="405" as="sourcePoint" />
+            <mxPoint x="1175" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-6" value="checkpoint + journal" source="kernel" target="save" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=1.0;entryX=0.5;entryY=0.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1175" y="555" as="sourcePoint" />
+            <mxPoint x="1175" y="675" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-7" value="committed event" source="contract" target="replay" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.0;exitY=0.9;entryX=1.0;entryY=0.5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="525" y="540" as="sourcePoint" />
+            <mxPoint x="385" y="750" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="455" y="540" />
+              <mxPoint x="455" y="750" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-8" value="hosting choice" source="offline" target="contract" style="edgeStyle=none;html=0;rounded=0;endArrow=block;endFill=1;strokeColor=#556b7d;fontColor=#43596d;fontSize=12;labelBackgroundColor=#f8fafc;exitX=0.5;exitY=0.0;entryX=0.5;entryY=1.0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="695" y="675" as="sourcePoint" />
+            <mxPoint x="695" y="555" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="footer" value="Current Unity bridge supports map selection and camera input only. This page is a migration target, not a claim of completed Unity gameplay." style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontColor=#596c7e;" vertex="1" parent="1">
+          <mxGeometry x="45" y="937" width="1300" height="32" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
