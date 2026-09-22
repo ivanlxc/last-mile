@@ -41,4 +41,13 @@ describe("market first-person movement", () => {
       nearbyStation({ x: -5.7, z: 5, yaw: -Math.PI / 2, pitch: 0 }),
     ).toBeNull();
   });
+  it("crew bodies block walking without blocking their own interaction target", () => {
+    let pose = { x: -1.5, z: 5, yaw: 0, pitch: 0 };
+    for (let i = 0; i < 50; i++) pose = moveInField(pose, -1, 0, 0.05);
+    expect(pose.x).toBeGreaterThanOrEqual(-2.64);
+    expect(nearbyStation({ ...pose, yaw: Math.PI / 2 })).toBe("noah");
+    expect(nearbyStation({ x: -2.45, z: 6.1, yaw: 0.9, pitch: 0 })).toBe(
+      "noah",
+    );
+  });
 });

@@ -26,6 +26,12 @@ export const FIELD_COLLIDERS: readonly FieldBox[] = [
   { x: 4.5, z: -2, width: 1.8, depth: 2.8 },
   { x: -4.5, z: -9, width: 2.2, depth: 2.2 },
   { x: 6.1, z: 10, width: 2.6, depth: 5.4 },
+  // Sample storefront: pots and chair remain solid even when art falls back.
+  { x: -6.03, z: 7, width: 0.6, depth: 0.6 },
+  { x: -6, z: 9.92, width: 0.52, depth: 0.52 },
+  { x: -5.75, z: 4.98, width: 0.6, depth: 0.62 },
+  { x: -3.2, z: 5, width: 0.48, depth: 0.48 },
+  { x: 3.2, z: -2, width: 0.48, depth: 0.48 },
 ];
 export function fieldPositionAllowed(point: FieldPoint) {
   const r = FIELD_RADIUS,
@@ -88,7 +94,15 @@ export function nearbyStation(pose: FieldPose): StationId | null {
     for (let i = 1; i <= samples; i++) {
       const t =
         ((i / (samples + 1)) * Math.max(0, d - 0.5)) / Math.max(d, 0.001);
-      if (!fieldPositionAllowed({ x: pose.x + dx * t, z: pose.z + dz * t })) {
+      // Sight is a thin ray. The player's collision radius is only for walking;
+      // applying it here incorrectly makes a crew member occlude themselves.
+      if (
+        FIELD_COLLIDERS.some(
+          (box) =>
+            Math.abs(pose.x + dx * t - box.x) < box.width / 2 &&
+            Math.abs(pose.z + dz * t - box.z) < box.depth / 2,
+        )
+      ) {
         clear = false;
         break;
       }
@@ -114,6 +128,8 @@ export function marketCopy(chinese: boolean) {
         stations: "地点快捷访问",
         close: "返回现场",
         loading: "正在准备市集…",
+        artLoading: "正在载入店面材质与模型…你可以继续移动和调查。",
+        artFallback: "精细模型未能载入，已保留基础场景。调查功能仍可使用。",
         failed: "当前设备无法显示 3D 场景。你仍可通过下方地点按钮完成调查。",
         environment: "此处是车队停靠点；实际通行状况请通过情报核实。",
         paused: "现场控制已暂停",
@@ -162,6 +178,10 @@ export function marketCopy(chinese: boolean) {
         stations: "Location shortcuts",
         close: "Back to the courtyard",
         loading: "Preparing the courtyard…",
+        artLoading:
+          "Loading storefront materials and models… You can keep walking and investigating.",
+        artFallback:
+          "Detailed art could not load. The basic scene and investigation controls remain available.",
         failed:
           "3D is unavailable on this device. Use the location buttons below to continue your investigation.",
         environment:

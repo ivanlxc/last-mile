@@ -121,6 +121,7 @@ describe("Unity Web production hosting", () => {
     const csp = String(page.headers["content-security-policy"]);
     expect(csp).toContain("script-src 'self' 'wasm-unsafe-eval';");
     expect(csp).not.toContain("'unsafe-eval'");
+    expect(csp).toContain("connect-src 'self' blob:;");
     expect(page.headers["cross-origin-opener-policy"]).toBeUndefined();
     expect(page.headers["cross-origin-embedder-policy"]).toBeUndefined();
     for (const hostile of [

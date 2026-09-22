@@ -1,0 +1,139 @@
+{
+  "provider": "Poly Haven",
+  "licenseUrl": "https://polyhaven.com/license",
+  "retrieved": "2026-09-22",
+  "files": [
+    {
+      "file": "beige_wall_001_baseColor.jpg",
+      "asset": "beige_wall_001",
+      "slot": "baseColor",
+      "resolution": "2k",
+      "source": "https://polyhaven.com/a/beige_wall_001",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_diff_2k.jpg",
+      "md5": "c927ac1136767f1df758ae064f50a2d1",
+      "sha256": "222d4d2e7d5c425c97e5a66790852388cec7706714d773f769fba6bfe08cea4e"
+    },
+    {
+      "file": "beige_wall_001_normal.jpg",
+      "asset": "beige_wall_001",
+      "slot": "normal",
+      "resolution": "2k",
+      "source": "https://polyhaven.com/a/beige_wall_001",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_nor_gl_2k.jpg",
+      "md5": "127b2f5f2f8c2e57b1f08b263c0690bd",
+      "sha256": "7f5cbecd6766f44034f3b78b4addb1559e12bdd5a77501bd418a736609e7cedc"
+    },
+    {
+      "file": "beige_wall_001_roughness.jpg",
+      "asset": "beige_wall_001",
+      "slot": "roughness",
+      "resolution": "2k",
+      "source": "https://polyhaven.com/a/beige_wall_001",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/beige_wall_001/beige_wall_001_rough_2k.jpg",
+      "md5": "6c2a7eb786d436459c231e9d230fb3cc",
+      "sha256": "a76e2307d8ec47d1be1d4710851fc4545db7aecfa176333738a6756358b64767"
+    },
+    {
+      "file": "cobblestone_floor_08_baseColor.jpg",
+      "asset": "cobblestone_floor_08",
+      "slot": "baseColor",
+      "resolution": "2k",
+      "source": "https://polyhaven.com/a/cobblestone_floor_08",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/cobblestone_floor_08/cobblestone_floor_08_diff_2k.jpg",
+      "md5": "56404e8a3cdf04c8697dbbc7f9ddd65c",
+      "sha256": "9aaf7db7f660f03d0c5c129c11e83caa828fb8bca63f8cd5154d450ffc4c340f"
+    },
+    {
+      "file": "cobblestone_floor_08_normal.jpg",
+      "asset": "cobblestone_floor_08",
+      "slot": "normal",
+      "resolution": "2k",
+      "source": "https://polyhaven.com/a/cobblestone_floor_08",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/cobblestone_floor_08/cobblestone_floor_08_nor_gl_2k.jpg",
+      "md5": "3d1c34ed083de54949e8375d69033b0b",
+      "sha256": "42dd5fc2da4a858f9c076c9ac5002857a1c064f8f4c4ffb12fafecffb84e96cc"
+    },
+    {
+      "file": "cobblestone_floor_08_roughness.jpg",
+      "asset": "cobblestone_floor_08",
+      "slot": "roughness",
+      "resolution": "2k",
+      "source": "https://polyhaven.com/a/cobblestone_floor_08",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/cobblestone_floor_08/cobblestone_floor_08_rough_2k.jpg",
+      "md5": "caae39f3ea47e2c09ca897d8dffa00ea",
+      "sha256": "3bc645ec45543c704fe1042f7b81f9bad4f88a8567760c4898c82bc2a134e093"
+    },
+    {
+      "file": "wood_table_001_baseColor.jpg",
+      "asset": "wood_table_001",
+      "slot": "baseColor",
+      "resolution": "1k",
+      "source": "https://polyhaven.com/a/wood_table_001",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/wood_table_001/wood_table_001_diff_1k.jpg",
+      "md5": "56652a7339b16a76afad20d3585f66ea",
+      "sha256": "460dd08d240f4a1f02982415048c3c5c200f385db212da18dc7e2df68bf4d0be"
+    },
+    {
+      "file": "wood_table_001_normal.jpg",
+      "asset": "wood_table_001",
+      "slot": "normal",
+      "resolution": "1k",
+      "source": "https://polyhaven.com/a/wood_table_001",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/wood_table_001/wood_table_001_nor_gl_1k.jpg",
+      "md5": "6360e09967add8baecaa5ecc55fb5e03",
+      "sha256": "9bf7ddf5721e225c20290f1772ae37f9bdfd49658f6d458259eb794e2149d3cf"
+    },
+    {
+      "file": "wood_table_001_roughness.jpg",
+      "asset": "wood_table_001",
+      "slot": "roughness",
+      "resolution": "1k",
+      "source": "https://polyhaven.com/a/wood_table_001",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/wood_table_001/wood_table_001_rough_1k.jpg",
+      "md5": "05b60bd20a1cc4355c5d73a99b245d44",
+      "sha256": "a2ca9ae89dfe7b8e2e5e92f0aa43467845417de8a50205b5852ef0d57c7624f9"
+    },
+    {
+      "file": "fabric_pattern_07_baseColor.jpg",
+      "asset": "fabric_pattern_07",
+      "slot": "baseColor",
+      "resolution": "1k",
+      "source": "https://polyhaven.com/a/fabric_pattern_07",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/fabric_pattern_07/fabric_pattern_07_col_1_1k.jpg",
+      "md5": "c82406b5ac4086b14db6b3ad9c84946f",
+      "sha256": "aeb7a1487b77aec55e39de662def4d371f5c7c617f62d1f291d7f9932ffebdc9"
+    },
+    {
+      "file": "fabric_pattern_07_normal.jpg",
+      "asset": "fabric_pattern_07",
+      "slot": "normal",
+      "resolution": "1k",
+      "source": "https://polyhaven.com/a/fabric_pattern_07",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/fabric_pattern_07/fabric_pattern_07_nor_gl_1k.jpg",
+      "md5": "cdbbc2ebe5d75f6edd66ba090f3be49f",
+      "sha256": "f6955bbdead9f023f2357f6f8808ed49627d10882cd2a3cb6b5a5ace155abc45"
+    },
+    {
+      "file": "fabric_pattern_07_roughness.jpg",
+      "asset": "fabric_pattern_07",
+      "slot": "roughness",
+      "resolution": "1k",
+      "source": "https://polyhaven.com/a/fabric_pattern_07",
+      "license": "CC0-1.0",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/fabric_pattern_07/fabric_pattern_07_rough_1k.jpg",
+      "md5": "28f47eb9de3e4ebe1dc519f601335fc4",
+      "sha256": "3d90ac40b5c32a15649cc8525b7eeed133ea46b63a0e3eae5e34911d5c967e3a"
+    }
+  ]
+}

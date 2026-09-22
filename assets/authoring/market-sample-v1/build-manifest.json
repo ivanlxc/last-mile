@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "units": "metres",
+  "coordinateSystem": "glTF Y-up; matches marketField coordinates",
+  "heroBounds": {
+    "min": [
+      -6.9,
+      0,
+      3.5
+    ],
+    "max": [
+      -3.7,
+      7.84,
+      10.6
+    ]
+  },
+  "authoringObjectCount": 808,
+  "exportMeshCount": 27,
+  "triangles": 60892,
+  "glbBytes": 25943456,
+  "textures": "Poly Haven CC0; see texture-sources.json",
+  "collision": "Existing market colliders plus storefront floor props; cosmetic geometry is not server authority",
+  "characters": "Existing placeholder crew retained in web runtime; no rigged character asset in this export"
+}

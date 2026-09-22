@@ -308,3 +308,19 @@
     grid-template-columns: 1fr;
   }
 }
+.market-art-status {
+  position: absolute;
+  top: 9.5rem;
+  z-index: 2;
+  left: 1rem;
+  right: 1rem;
+  width: fit-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.55rem 0.8rem;
+  background: rgba(15, 30, 33, 0.88);
+  border: 1px solid rgba(194, 215, 211, 0.24);
+  border-radius: 6px;
+  color: #e1e9df;
+  font-size: 0.75rem;
+  pointer-events: none;
+}

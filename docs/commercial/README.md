@@ -1,6 +1,6 @@
 # LAST MILE：商业化方向与市集切片
 
-更新：2026-09-21。起点：`70d5864`；开发分支：`feature/market-first-person-slice`。
+更新：2026-09-22。起点：`70d5864`；开发分支：`feature/market-first-person-slice`。
 
 ## 这次交付的定位
 
@@ -17,6 +17,10 @@
 | [精细美术样板与设备目标](art-direction/README.md) | 写实概念图、样板区制作计划、M4 / M4 Pro 测试目标 |
 
 原 `engineering_v0.5/` 中的运行契约和内容仍被程序使用。本目录是增量设计，不能替换、删除或自动升级旧契约。涉及未来功能的章节明确标注 M2 或商业版。
+
+## 最新实现
+
+已将第一轮 Blender 店面与情报摊位接入 M1 浏览器场景；[模型、实机截图与限制](art-direction/implementation-v1.md)。Unity 原生制作方向不变，尚待安装空间与 Editor 环境。
 
 ## 阶段与完成门槛
 

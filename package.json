@@ -21,7 +21,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "playwright test",
-    "format": "prettier --write client/src server scripts tests *.ts"
+    "format": "prettier --write client/src server scripts tests *.ts",
+    "build:market-art": "node scripts/build-market-art.mjs"
   },
   "dependencies": {
     "@fastify/static": "^10.1.3",

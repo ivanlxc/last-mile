@@ -121,6 +121,14 @@ test("market field: walk, read, investigate, upload selected evidence, consult A
   instantGame,
 }, info) => {
   const errors: string[] = [];
+  page.on("console", (message) => {
+    if (
+      /Content Security Policy|Couldn't load texture|WebGL.*INVALID/i.test(
+        message.text(),
+      )
+    )
+      errors.push(message.text());
+  });
   page.on("pageerror", (error) => errors.push(error.message));
   const { projection } = await start(page, instantGame);
   await page.locator('[data-action-id="E1_MAIN"]').click();
@@ -132,24 +140,39 @@ test("market field: walk, read, investigate, upload selected evidence, consult A
   await page.getByTestId("toggle-field").click();
   const canvas = page.getByTestId("market-canvas");
   await expect(canvas).toBeVisible();
+  await expect(canvas).toHaveAttribute("data-art-state", "ready", {
+    timeout: 30000,
+  });
   await expect(canvas).toHaveAttribute("data-position", "0.00,11.00");
   await page.screenshot({ path: info.outputPath("market-courtyard-en.png") });
   // Exercise actual keyboard movement and proximity interaction, not only shortcut buttons.
   await canvas.focus();
   await page.keyboard.down("w");
   await expect
-    .poll(async () =>
-      Number((await canvas.getAttribute("data-position"))!.split(",")[1]),
+    .poll(
+      async () =>
+        Number((await canvas.getAttribute("data-position"))!.split(",")[1]),
+      { intervals: [50] },
     )
     .toBeLessThan(6.3);
   await page.keyboard.up("w");
   await page.keyboard.down("a");
   await expect
-    .poll(async () =>
-      Number((await canvas.getAttribute("data-position"))!.split(",")[0]),
+    .poll(
+      async () =>
+        Number((await canvas.getAttribute("data-position"))!.split(",")[0]),
+      { intervals: [50] },
     )
     .toBeLessThan(-2.3);
   await page.keyboard.up("a");
+  await page.keyboard.down("q");
+  await expect
+    .poll(async () => Number(await canvas.getAttribute("data-yaw")))
+    .toBeGreaterThan(0.85);
+  await page.keyboard.up("q");
+  await page.screenshot({
+    path: info.outputPath("market-storefront-ingame.png"),
+  });
   await expect(page.getByTestId("field-interact")).toContainText("Noah");
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -228,6 +251,66 @@ test("market field: walk, read, investigate, upload selected evidence, consult A
   await expect(page.locator('[data-action-id="E3_BRIDGE"]')).toBeVisible();
   expect((await projection()).sceneId).toBe("E3");
   expect(errors).toEqual([]);
+});
+
+test("market art network failure keeps the field and briefing usable", async ({
+  page,
+  instantGame,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.route("**/assets/market/market-sample-v1.glb", (route) =>
+    route.abort(),
+  );
+  const { projection } = await start(page, instantGame);
+  await page.locator('[data-action-id="E1_MAIN"]').click();
+  await page
+    .getByRole("button", { name: "Confirm action", exact: true })
+    .click();
+  await page.getByTestId("toggle-field").click();
+  await expect(page.getByTestId("market-canvas")).toHaveAttribute(
+    "data-art-state",
+    "fallback",
+  );
+  await expect(page.getByTestId("market-art-status")).toContainText(
+    "investigation controls remain available",
+  );
+  const before = await projection();
+  await page.getByTestId("station-noah").click();
+  await page.getByTestId("field-brief-roads").click();
+  await expect(
+    page.getByRole("dialog").locator("[data-report-id]"),
+  ).toHaveCount(1);
+  expect((await projection()).sceneUploads).toHaveLength(0);
+  expect((await projection()).resources).toEqual(before.resources);
+  expect(errors).toEqual([]);
+});
+
+test("an embedded texture failure falls back instead of reporting white meshes as ready", async ({
+  page,
+  instantGame,
+}) => {
+  await page.addInitScript(() => {
+    const original = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      if (String(input).startsWith("blob:"))
+        return Promise.reject(new Error("Injected image decode failure"));
+      return original(input, init);
+    };
+  });
+  await start(page, instantGame);
+  await page.locator('[data-action-id="E1_MAIN"]').click();
+  await page
+    .getByRole("button", { name: "Confirm action", exact: true })
+    .click();
+  await page.getByTestId("toggle-field").click();
+  await expect(page.getByTestId("market-canvas")).toHaveAttribute(
+    "data-art-state",
+    "fallback",
+    { timeout: 30000 },
+  );
+  await page.getByTestId("station-noah").click();
+  await expect(page.getByTestId("field-brief-roads")).toBeEnabled();
 });
 
 test("market field: Chinese UI keeps the scene playable without WebGL", async ({

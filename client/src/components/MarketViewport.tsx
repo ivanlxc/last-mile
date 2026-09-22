@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { loadMarketArt } from "../lib/marketArt";
 import {
   FIELD_BUILDINGS,
   FIELD_STATIONS,
@@ -32,6 +33,9 @@ export default function MarketViewport({
   const [nearby, setNearby] = useState<StationId | null>(null);
   const [locked, setLocked] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [artState, setArtState] = useState<"loading" | "ready" | "fallback">(
+    "loading",
+  );
   useEffect(() => {
     if (blocked) {
       control.current.clear();
@@ -44,6 +48,8 @@ export default function MarketViewport({
   }, [blocked]);
   useEffect(() => {
     const element = host.current!;
+    setFailed(false);
+    setArtState("loading");
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#bfced0");
     scene.fog = new THREE.Fog("#bfced0", 28, 72);
@@ -61,10 +67,12 @@ export default function MarketViewport({
     camera.rotation.order = "YXZ";
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.25;
+    renderer.toneMappingExposure = 1.05;
     const canvas = renderer.domElement;
     canvas.tabIndex = 0;
     canvas.setAttribute("aria-label", copy.title);
@@ -74,6 +82,10 @@ export default function MarketViewport({
     const materials = new Set<THREE.Material>();
     const textures = new Set<THREE.Texture>();
     const palette = new Map<string, THREE.MeshStandardMaterial>();
+    const sampleFallback = new THREE.Group();
+    scene.add(sampleFallback);
+    let placementRoot: THREE.Object3D = scene;
+    const stationLabels: THREE.Sprite[] = [];
     function material(color: string) {
       if (!palette.has(color)) {
         const m = new THREE.MeshStandardMaterial({ color, roughness: 0.88 });
@@ -90,7 +102,7 @@ export default function MarketViewport({
       h: number,
       d: number,
       color: string,
-      parent: THREE.Object3D = scene,
+      parent: THREE.Object3D = placementRoot,
     ) {
       const geometry = new THREE.BoxGeometry(w, h, d);
       geometries.add(geometry);
@@ -108,7 +120,7 @@ export default function MarketViewport({
       radius: number,
       height: number,
       color: string,
-      parent: THREE.Object3D = scene,
+      parent: THREE.Object3D = placementRoot,
     ) {
       const geometry = new THREE.CylinderGeometry(radius, radius, height, 10);
       geometries.add(geometry);
@@ -151,10 +163,11 @@ export default function MarketViewport({
       sprite.position.set(x, y, z);
       sprite.scale.set(width, width / 6, 1);
       scene.add(sprite);
+      stationLabels.push(sprite);
     }
-    scene.add(new THREE.HemisphereLight("#e0f4f5", "#725339", 2.5));
-    const sun = new THREE.DirectionalLight("#ffe0ae", 3.4);
-    sun.position.set(-14, 19, 9);
+    scene.add(new THREE.HemisphereLight("#e0efff", "#877257", 2.2));
+    const sun = new THREE.DirectionalLight("#ffe4bd", 3.1);
+    sun.position.set(12, 18, 2);
     sun.castShadow = true;
     Object.assign(sun.shadow.camera, {
       left: -24,
@@ -165,8 +178,10 @@ export default function MarketViewport({
       far: 70,
     });
     sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.normalBias = 0.04;
+    sun.shadow.normalBias = 0.025;
+    sun.shadow.bias = -0.00015;
     scene.add(sun);
+    placementRoot = sampleFallback;
     box(0, -0.24, 0, 100, 0.4, 100, "#a9977d");
     box(0, -0.02, 0, 12, 0.14, 33, "#c7b596");
     for (let z = -15; z < 16; z += 2.4) {
@@ -175,6 +190,7 @@ export default function MarketViewport({
     }
     // Closed courtyards deliberately keep the route, incident and rumor sources off screen.
     for (const [index, b] of FIELD_BUILDINGS.entries()) {
+      placementRoot = index === 2 ? sampleFallback : scene;
       box(b.x, b.height / 2, b.z, b.width, b.height, b.depth, b.color);
       box(
         b.x,
@@ -198,6 +214,7 @@ export default function MarketViewport({
         cylinder(b.x, b.height + 0.6, b.z, 0.8, 1, "#626f68");
       }
     }
+    placementRoot = scene;
     for (const z of [-15.5, 15.5]) {
       box(0, 0.5, z, 20, 1, 0.45, "#b69b75");
       for (let x = -8; x <= 8; x += 2.6)
@@ -210,6 +227,7 @@ export default function MarketViewport({
       [4.5, -2, "#ad7752"],
       [-4.5, -9, "#506664"],
     ] as const) {
+      placementRoot = z === 5 ? sampleFallback : scene;
       box(x, 0.75, z, 1.7, 0.18, 2.5, "#6b6250");
       for (const dx of [-0.75, 0.75])
         for (const dz of [-1.1, 1.1])
@@ -219,6 +237,7 @@ export default function MarketViewport({
       for (const dz of [-0.65, 0.65])
         box(x, 0.32, z + dz, 1.2, 0.6, 0.85, "#967759");
     }
+    placementRoot = scene;
     box(-4.5, 0.99, -9, 0.8, 0.3, 0.6, "#253d42");
     box(-4.2, 1.2, -9, 0.1, 0.55, 0.75, "#92b9ae");
     cylinder(-4.6, 1.6, -9.5, 0.015, 1.5, "#2c4046");
@@ -251,7 +270,7 @@ export default function MarketViewport({
     for (const x of [-0.8, 0.8])
       box(x, 1.1, -2.48, 0.4, 0.25, 0.05, "#f3dfb0", van);
     for (const station of FIELD_STATIONS)
-      sign(copy[station.id], station.x, 3.35, station.z, 3.2);
+      sign(copy[station.id], station.x, 2.25, station.z, 2.2);
     // Decorative distant skyline and cable, no raycast or hidden-state input.
     for (let i = 0; i < 13; i++)
       box(
@@ -276,6 +295,22 @@ export default function MarketViewport({
       previous = performance.now(),
       dragging = false,
       disposed = false;
+    // Authored art replaces only this sample's placeholder meshes. Interaction
+    // points/collision remain public data and do not come from the GLB.
+    const art = loadMarketArt(
+      renderer,
+      (root) => {
+        scene.add(root);
+        sampleFallback.visible = false;
+        canvas.dataset.artState = "ready";
+        setArtState("ready");
+      },
+      () => {
+        canvas.dataset.artState = "fallback";
+        setArtState("fallback");
+      },
+    );
+    canvas.dataset.artState = "loading";
     let previousNearby: StationId | null = null;
     const pause = () => {
       control.current.clear();
@@ -413,11 +448,22 @@ export default function MarketViewport({
       }
       // Cosmetic pose is observable for accessibility/debugging, never used as gameplay authority.
       canvas.dataset.position = `${p.x.toFixed(2)},${p.z.toFixed(2)}`;
+      canvas.dataset.yaw = p.yaw.toFixed(3);
+      for (const label of stationLabels) {
+        const distance = Math.hypot(
+          label.position.x - p.x,
+          label.position.z - p.z,
+        );
+        // At conversation distance the HTML interaction prompt identifies the
+        // role; suppress the perspective-scaled billboard before it fills view.
+        label.visible = distance >= 3 && distance < 5;
+      }
       renderer.render(scene, camera);
     }
     frame = requestAnimationFrame(draw);
     return () => {
       disposed = true;
+      art.dispose();
       cancelAnimationFrame(frame);
       pause();
       resize.disconnect();
@@ -452,6 +498,15 @@ export default function MarketViewport({
       {!failed && !blocked && (
         <div className="market-reticle" aria-hidden="true">
           +
+        </div>
+      )}
+      {!failed && artState !== "ready" && (
+        <div
+          className="market-art-status"
+          role="status"
+          data-testid="market-art-status"
+        >
+          {artState === "loading" ? copy.artLoading : copy.artFallback}
         </div>
       )}
       {failed ? (
