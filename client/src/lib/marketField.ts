@@ -33,9 +33,24 @@ export const FIELD_COLLIDERS: readonly FieldBox[] = [
   { x: -3.2, z: 5, width: 0.48, depth: 0.48 },
   { x: 3.2, z: -2, width: 0.48, depth: 0.48 },
 ];
-export function fieldPositionAllowed(point: FieldPoint) {
+export type FieldLayout = {
+  spawn: FieldPose;
+  bounds: typeof FIELD_BOUNDS;
+  stations: ReadonlyArray<FieldPoint & { id: StationId }>;
+  colliders: readonly FieldBox[];
+};
+export const MARKET_LAYOUT: FieldLayout = {
+  spawn: FIELD_SPAWN,
+  bounds: FIELD_BOUNDS,
+  stations: FIELD_STATIONS,
+  colliders: FIELD_COLLIDERS,
+};
+export function fieldPositionAllowed(
+  point: FieldPoint,
+  layout: FieldLayout = MARKET_LAYOUT,
+) {
   const r = FIELD_RADIUS,
-    b = FIELD_BOUNDS;
+    b = layout.bounds;
   return (
     Number.isFinite(point.x) &&
     Number.isFinite(point.z) &&
@@ -43,7 +58,7 @@ export function fieldPositionAllowed(point: FieldPoint) {
     point.x <= b.maxX - r &&
     point.z >= b.minZ + r &&
     point.z <= b.maxZ - r &&
-    !FIELD_COLLIDERS.some(
+    !layout.colliders.some(
       (box) =>
         Math.abs(point.x - box.x) < box.width / 2 + r &&
         Math.abs(point.z - box.z) < box.depth / 2 + r,
@@ -56,6 +71,7 @@ export function moveInField(
   right: number,
   forward: number,
   seconds: number,
+  layout: FieldLayout = MARKET_LAYOUT,
 ): FieldPose {
   if (
     ![right, forward, seconds, pose.x, pose.z, pose.yaw, pose.pitch].every(
@@ -70,15 +86,18 @@ export function moveInField(
   const dz =
     (-Math.sin(pose.yaw) * right - Math.cos(pose.yaw) * forward) * distance;
   const next = { ...pose };
-  if (fieldPositionAllowed({ x: next.x + dx, z: next.z })) next.x += dx;
-  if (fieldPositionAllowed({ x: next.x, z: next.z + dz })) next.z += dz;
+  if (fieldPositionAllowed({ x: next.x + dx, z: next.z }, layout)) next.x += dx;
+  if (fieldPositionAllowed({ x: next.x, z: next.z + dz }, layout)) next.z += dz;
   return next;
 }
 /** Interaction requires proximity and looking toward a station, not through a wall. */
-export function nearbyStation(pose: FieldPose): StationId | null {
+export function nearbyStation(
+  pose: FieldPose,
+  layout: FieldLayout = MARKET_LAYOUT,
+): StationId | null {
   let closest: StationId | null = null,
     distance = 3;
-  for (const station of FIELD_STATIONS) {
+  for (const station of layout.stations) {
     const dx = station.x - pose.x,
       dz = station.z - pose.z,
       d = Math.hypot(dx, dz);
@@ -97,7 +116,7 @@ export function nearbyStation(pose: FieldPose): StationId | null {
       // Sight is a thin ray. The player's collision radius is only for walking;
       // applying it here incorrectly makes a crew member occlude themselves.
       if (
-        FIELD_COLLIDERS.some(
+        layout.colliders.some(
           (box) =>
             Math.abs(pose.x + dx * t - box.x) < box.width / 2 &&
             Math.abs(pose.z + dz * t - box.z) < box.depth / 2,

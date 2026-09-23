@@ -17,15 +17,16 @@ type Harness = {
 
 // The real built client and service use a clock that never advances. There is
 // deliberately no tick/advance helper: authored seconds cannot elapse here.
-const test = base.extend<{ instantGame: Harness }>({
-  instantGame: async ({}, use) => {
+const test = base.extend<{ instantGame: Harness; caseId: "A" | "B" }>({
+  caseId: ["A", { option: true }],
+  instantGame: async ({ caseId }, use) => {
     const advisorInputs: AdvisorInput[] = [];
     const agents = createAiService({ env: {} });
     const service = await createGameService({
       dbPath: ":memory:",
       recoverOnStartup: false,
       autoTick: false,
-      selectCase: () => "A",
+      selectCase: () => caseId,
       clock: {
         nowMs: () => Date.UTC(2026, 8, 19),
         monotonicMs: () => 0,
@@ -247,7 +248,10 @@ test("market field: walk, read, investigate, upload selected evidence, consult A
   await page
     .getByRole("button", { name: "Confirm action", exact: true })
     .click();
-  await expect(page.getByTestId("market-field")).toHaveCount(0);
+  await expect(page.getByTestId("market-field")).toHaveAttribute(
+    "data-scene-id",
+    "E3",
+  );
   await expect(page.locator('[data-action-id="E3_BRIDGE"]')).toBeVisible();
   expect((await projection()).sceneId).toBe("E3");
   expect(errors).toEqual([]);
@@ -514,4 +518,239 @@ test("a failed investigation keeps its confirmation and error visible, then retr
   expect(after.activeTasks).toEqual([]);
   expect(after.playerElapsedMs).toBe(0);
   expect(after.sceneUploads).toEqual([]);
+});
+
+for (const [caseId, locale] of [
+  ["A", "en-US"],
+  ["B", "zh-CN"],
+] as const) {
+  test.describe(`continuous field campaign ${caseId} / ${locale}`, () => {
+    test.use({ caseId });
+    test("checkpoint, market, bridge investigation and reception ending", async ({
+      page,
+      instantGame,
+    }, info) => {
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("console", (message) => {
+        if (
+          /Content Security Policy|Couldn't load texture/.test(message.text())
+        )
+          errors.push(message.text());
+      });
+      const { projection } = await start(page, instantGame, locale);
+      const chinese = locale === "zh-CN";
+      const route = async (id: string) => {
+        await page.locator(`[data-action-id="${id}"]`).click();
+        await page
+          .locator(".decision-inline .decision-submit .primary")
+          .click();
+      };
+      const ready = async (scene: string) => {
+        await expect(page.getByTestId("market-field")).toHaveAttribute(
+          "data-scene-id",
+          scene,
+        );
+        await expect(page.getByTestId("market-canvas")).toHaveAttribute(
+          "data-art-state",
+          "ready",
+          { timeout: 30000 },
+        );
+      };
+      const back = async () =>
+        page
+          .getByRole("button", {
+            name: chinese ? "返回现场" : "Back to the field",
+            exact: true,
+          })
+          .click();
+      await page.getByTestId("toggle-field").click();
+      await ready("E1");
+      await page.screenshot({ path: info.outputPath("gate.png") });
+      // Actual movement in the new layout uses the same collision/interaction loop.
+      const canvas = page.getByTestId("market-canvas");
+      await canvas.focus();
+      await page.keyboard.down("w");
+      await expect
+        .poll(
+          async () =>
+            Number((await canvas.getAttribute("data-position"))!.split(",")[1]),
+          { intervals: [50] },
+        )
+        .toBeLessThan(3.3);
+      await page.keyboard.up("w");
+      await page.keyboard.down("a");
+      await expect
+        .poll(
+          async () =>
+            Number((await canvas.getAttribute("data-position"))!.split(",")[0]),
+          { intervals: [50] },
+        )
+        .toBeLessThan(-2.3);
+      await page.keyboard.up("a");
+      await expect(page.getByTestId("field-interact")).toContainText("Noah");
+      await page.keyboard.press("Enter");
+      await page.getByTestId("field-brief-gate_status").click();
+      await expect(
+        page.getByRole("dialog").locator(".report-card.expanded"),
+      ).toBeVisible();
+      expect((await projection()).sceneUploads).toHaveLength(0);
+      await back();
+      await page.getByTestId("station-recon").click();
+      await page
+        .getByTestId("field-investigation-drone_observe")
+        .first()
+        .click();
+      await page
+        .getByRole("button", {
+          name: chinese ? "发起调查" : "Start investigation",
+          exact: true,
+        })
+        .click();
+      await expect(
+        page.getByRole("dialog").locator(".report-card.expanded"),
+      ).toBeVisible();
+      expect(
+        (await projection()).resources.find((r) => r.channel === "drone")
+          ?.remaining,
+      ).toBe(2);
+      await back();
+      await route(caseId === "A" ? "E1_MAIN" : "E1_BYPASS");
+      await ready("E2");
+      expect(
+        (await projection()).resources.find((r) => r.channel === "drone")
+          ?.remaining,
+      ).toBe(2);
+      expect(
+        (await projection()).reportQuotas.every((q) => q.remaining === 3),
+      ).toBe(true);
+      await route(caseId === "A" ? "E2_BYPASS" : "E2_MAIN");
+      await ready("E3");
+      await page.getByTestId("market-canvas").focus();
+      await page.keyboard.down("w");
+      await expect
+        .poll(
+          async () =>
+            Number(
+              (await page
+                .getByTestId("market-canvas")
+                .getAttribute("data-position"))!.split(",")[1],
+            ),
+          { intervals: [50] },
+        )
+        .toBeLessThan(-7.5);
+      await page.keyboard.up("w");
+      await page.keyboard.down("d");
+      await expect
+        .poll(
+          async () =>
+            Number(
+              (await page
+                .getByTestId("market-canvas")
+                .getAttribute("data-position"))!.split(",")[0],
+            ),
+          { intervals: [50] },
+        )
+        .toBeGreaterThan(3.2);
+      await page.keyboard.up("d");
+      await page.keyboard.down("q");
+      await expect
+        .poll(
+          async () =>
+            Number(
+              await page.getByTestId("market-canvas").getAttribute("data-yaw"),
+            ),
+          { intervals: [50] },
+        )
+        .toBeGreaterThan(0.35);
+      await page.keyboard.up("q");
+      await page.screenshot({ path: info.outputPath("bridge.png") });
+      await page.getByTestId("station-command").click();
+      await expect(page.getByTestId("field-handoff")).toBeVisible();
+      // Command station's scene dialog closes with the modal's close control.
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: chinese ? "关闭" : "Close", exact: true })
+        .click();
+      await page.getByTestId("station-noah").click();
+      await page.getByTestId("field-brief-bridge_status").click();
+      await expect(
+        page.getByRole("dialog").locator(".report-card.expanded"),
+      ).toBeVisible();
+      await back();
+      await page.getByTestId("station-samira").click();
+      await page.getByTestId("field-brief-ford_status").click();
+      await expect(
+        page.getByRole("dialog").locator(".report-card.expanded"),
+      ).toBeVisible();
+      await back();
+      const before = await projection();
+      expect(before.sceneUploads).toHaveLength(0);
+      await route("E3_BRIDGE");
+      if (caseId === "B") {
+        await ready("E3");
+        await expect(page.getByTestId("chapter-result")).toContainText(
+          "通行申请未获批准",
+        );
+        expect((await projection()).reportQuotas).toEqual(before.reportQuotas);
+        expect((await projection()).resources).toEqual(before.resources);
+        expect((await projection()).sceneId).toBe("E3");
+        await expect(
+          page.locator('[data-action-id="E3_BRIDGE"]'),
+        ).toBeDisabled();
+        await page.screenshot({ path: info.outputPath("bridge-refusal.png") });
+        await route("E3_FORD");
+      }
+      await expect(page.getByTestId("arrival-scene")).toBeVisible();
+      await expect(page.getByTestId("arrival-viewport")).toHaveAttribute(
+        "data-art-state",
+        "ready",
+        { timeout: 30000 },
+      );
+      await page.screenshot({ path: info.outputPath("reception.png") });
+      const ending = await projection();
+      expect(ending.lifecycle).toBe("sealed");
+      expect(ending.location.nodeId).toBe("N07");
+      expect(ending.pendingTasks.manifest).not.toBe("pending");
+      expect(ending.pendingTasks.inspection).not.toBe("pending");
+      expect(
+        ending.resources.find((r) => r.channel === "drone")?.remaining,
+      ).toBe(2);
+      expect(ending.playerElapsedMs).toBe(0);
+      await expect(page.locator(".evaluation-section")).toBeVisible();
+      expect(errors).toEqual([]);
+    });
+  });
+}
+
+test("arrival with outstanding paperwork remains distinct, including when ending art fails", async ({
+  page,
+  instantGame,
+}) => {
+  await page.route("**/assets/fields/reception-v1.glb", (route) =>
+    route.abort(),
+  );
+  const { projection } = await start(page, instantGame);
+  for (const action of ["E1_BYPASS", "E2_MAIN", "E3_BRIDGE"]) {
+    await page.locator(`[data-action-id="${action}"]`).click();
+    await page.locator(".decision-inline .decision-submit .primary").click();
+  }
+  await expect(page.getByTestId("arrival-scene")).toContainText(
+    "waiting for the handover",
+  );
+  await expect(page.getByTestId("arrival-viewport")).toHaveAttribute(
+    "data-art-state",
+    "fallback",
+  );
+  await expect(page.getByTestId("handoff-receipt")).toContainText("Pending");
+  expect((await projection()).pendingTasks).toEqual({
+    manifest: "pending",
+    inspection: "pending",
+  });
+  await expect(page.locator(".evaluation-section")).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId("arrival-scene")).toContainText(
+    "waiting for the handover",
+  );
+  expect((await projection()).lifecycle).toBe("sealed");
 });

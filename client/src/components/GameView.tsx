@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import type { Game } from "../lib/useGame";
 import type { P } from "../lib/api";
+import { chapterReceipt } from "../lib/chapterPresentation";
+import "./campaign-fields.css";
+import { fieldCopy } from "../lib/campaignField";
 import { timer } from "../lib/narrative";
 import { Brand } from "./Landing";
 import { TacticalMap } from "./TacticalMap";
@@ -56,7 +59,9 @@ export function GameView({
     [showScene, setShowScene] = useState(false),
     [context, setContext] = useState(false);
   const [missionOpen, setMissionOpen] = useState(false);
-  const [onFoot, setOnFoot] = useState(false);
+  const [onFoot, setOnFoot] = useState(
+    () => new URLSearchParams(window.location.search).get("field") === "1",
+  );
   const missionMenu = useRef<HTMLDetailsElement>(null);
   const [drawer, setDrawer] = useState<"intel" | "advisor" | null>(null);
   const [completedOperation, setCompletedOperation] =
@@ -154,12 +159,13 @@ export function GameView({
   useEffect(() => {
     if (s.sceneId !== previousScene.current) {
       setDecision(null);
-      setOnFoot(false);
       previousScene.current = s.sceneId;
     }
   }, [s.sceneId]);
   const choices = s.actionOptions.filter((a) => a.kind === "route");
   const waiting = s.activeOperation?.operationKind === "wait";
+  const receipt =
+    completedOperation && chapterReceipt(completedOperation, chinese);
   return (
     <main className="command-center map-first-command">
       <header className="command-header">
@@ -289,7 +295,7 @@ export function GameView({
       </header>
       <div className="map-command-toolbar">
         <div className="map-panel-tools">
-          {s.sceneId === "E2" && s.phase === "scene" && (
+          {s.sceneId && s.phase === "scene" && (
             <button
               data-testid="toggle-field"
               className={onFoot ? "active" : ""}
@@ -305,9 +311,7 @@ export function GameView({
                 ? chinese
                   ? "战术地图"
                   : "Tactical map"
-                : chinese
-                  ? "进入市集现场"
-                  : "Enter market on foot"}
+                : fieldCopy(s.sceneId, chinese).enter}
             </button>
           )}
           <button
@@ -399,11 +403,13 @@ export function GameView({
       {completedOperation && (
         <div className="action-completion" role="status">
           <Radio size={15} />
-          <span>
+          <span className="chapter-result" data-testid="chapter-result">
+            {receipt && <strong>{receipt.title}</strong>}
             {completedOperation.operationKind === "wait"
               ? t("ui.timeAdvanced")
               : completedOperation.publicProgressLabel ||
                 t("ui.actionCompleted")}
+            {receipt && <small>{receipt.next}</small>}
           </span>
           <button
             className="icon-button"
@@ -436,15 +442,16 @@ export function GameView({
           <IntelPanel game={game} active={drawer === "intel"} />
         </aside>
         <div className="map-stage-main">
-          {onFoot && s.sceneId === "E2" ? (
+          {onFoot && s.sceneId ? (
             <Suspense
               fallback={
                 <div className="empty-state">
-                  {chinese ? "正在准备市集…" : "Preparing the courtyard…"}
+                  {fieldCopy(s.sceneId, chinese).loading}
                 </div>
               }
             >
               <MarketField
+                key={`${s.sessionId}:${s.runEpoch}:${s.sceneId}`}
                 game={game}
                 blocked={
                   !!drawer ||

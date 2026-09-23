@@ -39,6 +39,7 @@ export function loadMarketArt(
   renderer: THREE.WebGLRenderer,
   onReady: (root: THREE.Group) => void,
   onFailure: () => void,
+  url: string = MARKET_ART_URL,
 ) {
   const controller = new AbortController();
   let disposed = false;
@@ -47,7 +48,7 @@ export function loadMarketArt(
   const timeout = setTimeout(() => controller.abort(), 60_000);
   void (async () => {
     try {
-      const response = await fetch(MARKET_ART_URL, {
+      const response = await fetch(url, {
         signal: controller.signal,
       });
       if (!response.ok) throw new Error("Market art unavailable");
@@ -60,7 +61,7 @@ export function loadMarketArt(
       };
       const gltf = await new GLTFLoader(manager).parseAsync(
         data,
-        "/assets/market/",
+        url.slice(0, url.lastIndexOf("/") + 1),
       );
       if (disposed) {
         release(gltf.scene);

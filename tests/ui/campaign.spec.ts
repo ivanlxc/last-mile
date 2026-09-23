@@ -31,6 +31,7 @@ const test = base.extend<{
       dbPath: ":memory:",
       recoverOnStartup: false,
       autoTick: false,
+      actionTiming: "realtime", // Legacy clock-driven coverage; instant has its own suite.
       selectCase: () => "A",
       clock: {
         nowMs: () => Date.UTC(2026, 8, 16, 12) + elapsed,
@@ -199,7 +200,7 @@ test("production UI: authored A campaign, confirmed investigation, source disclo
     .click();
   await page.getByLabel("我已考虑这个渠道的观察限制", { exact: true }).check();
   await page
-    .getByLabel("我已比较这次调查与行进的时间成本", { exact: true })
+    .getByLabel("我已比较这次调查与行进的剧情时间成本", { exact: true })
     .check();
   const taskResponse = page.waitForResponse(
     (r) => r.url().endsWith("/tasks") && r.request().method() === "POST",
@@ -391,8 +392,8 @@ for (const locale of ["en-US", "zh-CN"] as const) {
     const beforeReading = await projection();
     expect(beforeReading.missionDeadlineMs).toBeNull();
     await openMission(page);
-    await expect(page.locator(".mission-clock small")).toHaveText(
-      locale === "zh-CN" ? "累计用时 · 不限时" : "Elapsed · no limit",
+    await expect(page.locator(".mission-clock small").first()).toHaveText(
+      locale === "zh-CN" ? "实际游玩 · 不限时" : "Play time · no limit",
     );
     const displayedSeconds = async () => {
       const value = await page.locator(".mission-clock strong").innerText();
@@ -449,7 +450,7 @@ for (const locale of ["en-US", "zh-CN"] as const) {
     await closeMission(page);
     await page.locator(".wait-button").click();
     await expect(page.locator(".decision-cost")).toContainText(
-      locale === "zh-CN" ? "任务用时" : "Mission time",
+      locale === "zh-CN" ? "实际游玩时间" : "Play time",
     );
     await expect(page.locator(".decision-cost")).not.toContainText(
       /窗口|window/i,

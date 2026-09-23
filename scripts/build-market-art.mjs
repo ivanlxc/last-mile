@@ -17,9 +17,11 @@ const result = spawnSync(
     "--python-exit-code",
     "1",
     "--python",
-    "scripts/art/create-market-sample.py",
+    process.argv.includes("--campaign")
+      ? "scripts/art/create-campaign-fields.py"
+      : "scripts/art/create-market-sample.py",
     "--",
-    ...process.argv.slice(2),
+    ...process.argv.slice(2).filter((arg) => arg !== "--campaign"),
   ],
   { stdio: "inherit" },
 );

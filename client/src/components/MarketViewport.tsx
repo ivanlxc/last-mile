@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import type { SceneId } from "../../../docs/engineering_v0.5/contracts/public.types";
+import { fieldCopy, fieldLayout } from "../lib/campaignField";
 import { loadMarketArt } from "../lib/marketArt";
 import {
   FIELD_BUILDINGS,
-  FIELD_STATIONS,
-  FIELD_SPAWN,
   moveInField,
   nearbyStation,
-  marketCopy,
   type StationId,
   type FieldPose,
 } from "../lib/marketField";
 
 type Props = {
+  sceneId?: SceneId;
   chinese: boolean;
   blocked: boolean;
   onInteract: (station: StationId) => void;
@@ -20,15 +20,17 @@ type Props = {
 
 /** A neutral staging area: it receives no session, reports, AI output or case. */
 export default function MarketViewport({
+  sceneId = "E2",
   chinese,
   blocked,
   onInteract,
 }: Props) {
-  const copy = marketCopy(chinese);
+  const copy = fieldCopy(sceneId, chinese);
+  const layout = fieldLayout(sceneId);
   const host = useRef<HTMLDivElement>(null);
   const latest = useRef({ blocked, onInteract });
   latest.current = { blocked, onInteract };
-  const pose = useRef<FieldPose>({ ...FIELD_SPAWN });
+  const pose = useRef<FieldPose>({ ...layout.spawn });
   const control = useRef(new Set<string>());
   const [nearby, setNearby] = useState<StationId | null>(null);
   const [locked, setLocked] = useState(false);
@@ -48,6 +50,7 @@ export default function MarketViewport({
   }, [blocked]);
   useEffect(() => {
     const element = host.current!;
+    pose.current = { ...layout.spawn };
     setFailed(false);
     setArtState("loading");
     const scene = new THREE.Scene();
@@ -65,6 +68,8 @@ export default function MarketViewport({
     }
     const camera = new THREE.PerspectiveCamera(66, 1, 0.1, 90);
     camera.rotation.order = "YXZ";
+    camera.position.set(layout.spawn.x, 1.68, layout.spawn.z);
+    camera.rotation.set(layout.spawn.pitch, layout.spawn.yaw, 0, "YXZ");
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -165,6 +170,15 @@ export default function MarketViewport({
       scene.add(sprite);
       stationLabels.push(sprite);
     }
+    // Stylized crew silhouettes, not enemy indicators or authoritative NPC dialogue.
+    function crew(x: number, z: number, coat: string) {
+      cylinder(x, 0.98, z, 0.22, 0.65, coat);
+      box(x - 0.12, 0.35, z, 0.17, 0.7, 0.21, "#333f40");
+      box(x + 0.12, 0.35, z, 0.17, 0.7, 0.21, "#333f40");
+      cylinder(x, 1.5, z, 0.15, 0.32, "#997355");
+      cylinder(x, 1.68, z, 0.18, 0.07, "#536869");
+      box(x, 1.06, z + 0.23, 0.34, 0.4, 0.05, "#d6b871");
+    }
     scene.add(new THREE.HemisphereLight("#e0efff", "#877257", 2.2));
     const sun = new THREE.DirectionalLight("#ffe4bd", 3.1);
     sun.position.set(12, 18, 2);
@@ -181,116 +195,127 @@ export default function MarketViewport({
     sun.shadow.normalBias = 0.025;
     sun.shadow.bias = -0.00015;
     scene.add(sun);
-    placementRoot = sampleFallback;
-    box(0, -0.24, 0, 100, 0.4, 100, "#a9977d");
-    box(0, -0.02, 0, 12, 0.14, 33, "#c7b596");
-    for (let z = -15; z < 16; z += 2.4) {
-      box(-5.8, 0.08, z, 0.3, 0.2, 2.25, "#e6cfab");
-      box(5.8, 0.08, z, 0.3, 0.2, 2.25, "#e6cfab");
-    }
-    // Closed courtyards deliberately keep the route, incident and rumor sources off screen.
-    for (const [index, b] of FIELD_BUILDINGS.entries()) {
-      placementRoot = index === 2 ? sampleFallback : scene;
-      box(b.x, b.height / 2, b.z, b.width, b.height, b.depth, b.color);
-      box(
-        b.x,
-        b.height + 0.13,
-        b.z,
-        b.width + 0.3,
-        0.26,
-        b.depth + 0.3,
-        "#e3c59a",
-      );
-      box(b.x, 0.25, b.z, b.width + 0.15, 0.5, b.depth + 0.15, "#887965");
-      if (index < 5) {
-        const inner =
-          b.x < 0 ? b.x + b.width / 2 + 0.03 : b.x - b.width / 2 - 0.03;
-        for (let z = b.z - b.depth / 2 + 1; z < b.z + b.depth / 2; z += 2.2) {
-          box(inner, 1.2, z, 0.1, 2.1, 1.15, "#466569");
-          box(inner, 3.7, z, 0.14, 1.2, 0.85, "#35494a");
-          box(inner, 3.05, z, 0.35, 0.14, 1, "#d8bd95");
-          if (b.height > 6) box(inner, 5.6, z, 0.12, 1, 0.85, "#435d5e");
+    if (sceneId === "E2") {
+      placementRoot = sampleFallback;
+      box(0, -0.24, 0, 100, 0.4, 100, "#a9977d");
+      box(0, -0.02, 0, 12, 0.14, 33, "#c7b596");
+      for (let z = -15; z < 16; z += 2.4) {
+        box(-5.8, 0.08, z, 0.3, 0.2, 2.25, "#e6cfab");
+        box(5.8, 0.08, z, 0.3, 0.2, 2.25, "#e6cfab");
+      }
+      // Closed courtyards deliberately keep the route, incident and rumor sources off screen.
+      for (const [index, b] of FIELD_BUILDINGS.entries()) {
+        placementRoot = index === 2 ? sampleFallback : scene;
+        box(b.x, b.height / 2, b.z, b.width, b.height, b.depth, b.color);
+        box(
+          b.x,
+          b.height + 0.13,
+          b.z,
+          b.width + 0.3,
+          0.26,
+          b.depth + 0.3,
+          "#e3c59a",
+        );
+        box(b.x, 0.25, b.z, b.width + 0.15, 0.5, b.depth + 0.15, "#887965");
+        if (index < 5) {
+          const inner =
+            b.x < 0 ? b.x + b.width / 2 + 0.03 : b.x - b.width / 2 - 0.03;
+          for (let z = b.z - b.depth / 2 + 1; z < b.z + b.depth / 2; z += 2.2) {
+            box(inner, 1.2, z, 0.1, 2.1, 1.15, "#466569");
+            box(inner, 3.7, z, 0.14, 1.2, 0.85, "#35494a");
+            box(inner, 3.05, z, 0.35, 0.14, 1, "#d8bd95");
+            if (b.height > 6) box(inner, 5.6, z, 0.12, 1, 0.85, "#435d5e");
+          }
+          cylinder(b.x, b.height + 0.6, b.z, 0.8, 1, "#626f68");
         }
-        cylinder(b.x, b.height + 0.6, b.z, 0.8, 1, "#626f68");
       }
-    }
-    placementRoot = scene;
-    for (const z of [-15.5, 15.5]) {
-      box(0, 0.5, z, 20, 1, 0.45, "#b69b75");
-      for (let x = -8; x <= 8; x += 2.6)
-        box(x, 0.65, z, 0.7, 0.2, 0.5, "#d6c2a0");
-    }
-    for (const x of [-10.5, 10.5]) box(x, 0.55, 0, 0.4, 1.1, 30, "#ae9476");
-    // Awnings and stalls, deliberately free of evidence-bearing text or props.
-    for (const [x, z, color] of [
-      [-4.5, 5, "#476f72"],
-      [4.5, -2, "#ad7752"],
-      [-4.5, -9, "#506664"],
-    ] as const) {
-      placementRoot = z === 5 ? sampleFallback : scene;
-      box(x, 0.75, z, 1.7, 0.18, 2.5, "#6b6250");
-      for (const dx of [-0.75, 0.75])
-        for (const dz of [-1.1, 1.1])
-          cylinder(x + dx, 1.4, z + dz, 0.035, 2.8, "#465250");
-      const awning = box(x, 2.8, z, 2.6, 0.09, 3, color);
-      awning.rotation.z = x < 0 ? -0.12 : 0.12;
-      for (const dz of [-0.65, 0.65])
-        box(x, 0.32, z + dz, 1.2, 0.6, 0.85, "#967759");
-    }
-    placementRoot = scene;
-    box(-4.5, 0.99, -9, 0.8, 0.3, 0.6, "#253d42");
-    box(-4.2, 1.2, -9, 0.1, 0.55, 0.75, "#92b9ae");
-    cylinder(-4.6, 1.6, -9.5, 0.015, 1.5, "#2c4046");
-    // Stylized crew silhouettes, not enemy indicators or authoritative NPC dialogue.
-    function crew(x: number, z: number, coat: string) {
-      cylinder(x, 0.98, z, 0.22, 0.65, coat);
-      box(x - 0.12, 0.35, z, 0.17, 0.7, 0.21, "#333f40");
-      box(x + 0.12, 0.35, z, 0.17, 0.7, 0.21, "#333f40");
-      cylinder(x, 1.5, z, 0.15, 0.32, "#997355");
-      cylinder(x, 1.68, z, 0.18, 0.07, "#536869");
-      box(x, 1.06, z + 0.23, 0.34, 0.4, 0.05, "#d6b871");
-    }
-    crew(-3.2, 5, "#4d7777");
-    crew(3.2, -2, "#8c7862");
-    const van = new THREE.Group();
-    scene.add(van);
-    van.position.set(6.1, 0, 10);
-    box(0, 0.95, 0, 2.4, 1.4, 4.9, "#d5d5ba", van);
-    box(0, 1.95, -0.4, 2.3, 1.1, 3.6, "#e2deca", van);
-    box(0, 2.03, -2.22, 1.9, 0.62, 0.05, "#344d57", van);
-    for (const x of [-1.21, 1.21]) {
-      box(x, 1.94, -1.25, 0.04, 0.67, 1.35, "#344d57", van);
-      box(x, 1.3, 0.45, 0.05, 0.25, 2.5, "#54797b", van);
-      for (const z of [-1.6, 1.6]) {
-        const wheel = cylinder(x, 0.48, z, 0.45, 0.25, "#303a3b", van);
-        wheel.rotation.z = Math.PI / 2;
+      placementRoot = scene;
+      for (const z of [-15.5, 15.5]) {
+        box(0, 0.5, z, 20, 1, 0.45, "#b69b75");
+        for (let x = -8; x <= 8; x += 2.6)
+          box(x, 0.65, z, 0.7, 0.2, 0.5, "#d6c2a0");
       }
+      for (const x of [-10.5, 10.5]) box(x, 0.55, 0, 0.4, 1.1, 30, "#ae9476");
+      // Awnings and stalls, deliberately free of evidence-bearing text or props.
+      for (const [x, z, color] of [
+        [-4.5, 5, "#476f72"],
+        [4.5, -2, "#ad7752"],
+        [-4.5, -9, "#506664"],
+      ] as const) {
+        placementRoot = z === 5 ? sampleFallback : scene;
+        box(x, 0.75, z, 1.7, 0.18, 2.5, "#6b6250");
+        for (const dx of [-0.75, 0.75])
+          for (const dz of [-1.1, 1.1])
+            cylinder(x + dx, 1.4, z + dz, 0.035, 2.8, "#465250");
+        const awning = box(x, 2.8, z, 2.6, 0.09, 3, color);
+        awning.rotation.z = x < 0 ? -0.12 : 0.12;
+        for (const dz of [-0.65, 0.65])
+          box(x, 0.32, z + dz, 1.2, 0.6, 0.85, "#967759");
+      }
+      placementRoot = scene;
+      box(-4.5, 0.99, -9, 0.8, 0.3, 0.6, "#253d42");
+      box(-4.2, 1.2, -9, 0.1, 0.55, 0.75, "#92b9ae");
+      cylinder(-4.6, 1.6, -9.5, 0.015, 1.5, "#2c4046");
+      crew(-3.2, 5, "#4d7777");
+      crew(3.2, -2, "#8c7862");
+      const van = new THREE.Group();
+      scene.add(van);
+      van.position.set(6.1, 0, 10);
+      box(0, 0.95, 0, 2.4, 1.4, 4.9, "#d5d5ba", van);
+      box(0, 1.95, -0.4, 2.3, 1.1, 3.6, "#e2deca", van);
+      box(0, 2.03, -2.22, 1.9, 0.62, 0.05, "#344d57", van);
+      for (const x of [-1.21, 1.21]) {
+        box(x, 1.94, -1.25, 0.04, 0.67, 1.35, "#344d57", van);
+        box(x, 1.3, 0.45, 0.05, 0.25, 2.5, "#54797b", van);
+        for (const z of [-1.6, 1.6]) {
+          const wheel = cylinder(x, 0.48, z, 0.45, 0.25, "#303a3b", van);
+          wheel.rotation.z = Math.PI / 2;
+        }
+      }
+      box(0, 0.55, -2.52, 2.5, 0.25, 0.15, "#526263", van);
+      for (const x of [-0.8, 0.8])
+        box(x, 1.1, -2.48, 0.4, 0.25, 0.05, "#f3dfb0", van);
+    } else {
+      placementRoot = sampleFallback;
+      box(0, -0.12, 0, 30, 0.2, 35, "#a3947b");
+      for (const station of layout.stations) {
+        if (station.id === "noah" || station.id === "samira") continue;
+        box(station.x, 0.8, station.z, 1.4, 0.1, 2, "#5f685c");
+      }
+      placementRoot = scene;
+      for (const station of layout.stations)
+        if (station.id === "noah" || station.id === "samira")
+          crew(
+            station.x,
+            station.z,
+            station.id === "noah" ? "#4d7777" : "#8c7862",
+          );
     }
-    box(0, 0.55, -2.52, 2.5, 0.25, 0.15, "#526263", van);
-    for (const x of [-0.8, 0.8])
-      box(x, 1.1, -2.48, 0.4, 0.25, 0.05, "#f3dfb0", van);
-    for (const station of FIELD_STATIONS)
+    for (const station of layout.stations)
       sign(copy[station.id], station.x, 2.25, station.z, 2.2);
     // Decorative distant skyline and cable, no raycast or hidden-state input.
-    for (let i = 0; i < 13; i++)
-      box(
-        -35 + i * 6,
-        3 + (i % 3),
-        -35 - (i % 2) * 4,
-        5,
-        6 + (i % 3) * 2,
-        8,
-        "#9da49a",
-      );
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-7, 6.5, -4),
-      new THREE.Vector3(0, 5.4, -4),
-      new THREE.Vector3(7, 6.5, -4),
-    ]);
-    geometries.add(lineGeometry);
-    const lineMaterial = new THREE.LineBasicMaterial({ color: "#526363" });
-    materials.add(lineMaterial);
-    scene.add(new THREE.Line(lineGeometry, lineMaterial));
+    if (sceneId === "E2")
+      for (let i = 0; i < 13; i++)
+        box(
+          -35 + i * 6,
+          3 + (i % 3),
+          -35 - (i % 2) * 4,
+          5,
+          6 + (i % 3) * 2,
+          8,
+          "#9da49a",
+        );
+    if (sceneId === "E2") {
+      const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-7, 6.5, -4),
+        new THREE.Vector3(0, 5.4, -4),
+        new THREE.Vector3(7, 6.5, -4),
+      ]);
+      geometries.add(lineGeometry);
+      const lineMaterial = new THREE.LineBasicMaterial({ color: "#526363" });
+      materials.add(lineMaterial);
+      scene.add(new THREE.Line(lineGeometry, lineMaterial));
+    }
     let frame = 0,
       previous = performance.now(),
       dragging = false,
@@ -309,6 +334,9 @@ export default function MarketViewport({
         canvas.dataset.artState = "fallback";
         setArtState("fallback");
       },
+      sceneId === "E2"
+        ? undefined
+        : `/assets/fields/${sceneId === "E1" ? "gate" : "bridge"}-v1.glb`,
     );
     canvas.dataset.artState = "loading";
     let previousNearby: StationId | null = null;
@@ -356,7 +384,7 @@ export default function MarketViewport({
       dragging = false;
     };
     const interact = () => {
-      const station = nearbyStation(pose.current);
+      const station = nearbyStation(pose.current, layout);
       if (!latest.current.blocked && station) {
         pause();
         document.exitPointerLock?.();
@@ -407,6 +435,9 @@ export default function MarketViewport({
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      // Resizing clears the drawing buffer. Paint immediately so an action
+      // receipt or dialog changing the layout does not reveal a blank frame.
+      renderer.render(scene, camera);
     });
     resize.observe(element);
     canvas.addEventListener("pointerdown", down);
@@ -434,6 +465,7 @@ export default function MarketViewport({
           Number(has("KeyD", "ArrowRight")) - Number(has("KeyA", "ArrowLeft")),
           Number(has("KeyW", "ArrowUp")) - Number(has("KeyS", "ArrowDown")),
           dt,
+          layout,
         );
         pose.current.yaw +=
           (Number(keys.has("KeyQ")) - Number(keys.has("KeyE"))) * dt * 1.45;
@@ -441,7 +473,7 @@ export default function MarketViewport({
       const p = pose.current;
       camera.position.set(p.x, 1.68, p.z);
       camera.rotation.set(p.pitch, p.yaw, 0, "YXZ");
-      const station = nearbyStation(p);
+      const station = nearbyStation(p, layout);
       if (station !== previousNearby) {
         previousNearby = station;
         setNearby(station);
@@ -487,13 +519,14 @@ export default function MarketViewport({
       renderer.forceContextLoss();
       canvas.remove();
     };
-  }, [chinese]);
+  }, [chinese, sceneId]);
   return (
     <>
       <div
         className="market-viewport"
         ref={host}
         data-testid="market-viewport"
+        data-scene-id={sceneId}
       />
       {!failed && !blocked && (
         <div className="market-reticle" aria-hidden="true">

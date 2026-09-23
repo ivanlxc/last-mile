@@ -3,7 +3,8 @@ import { ArrowLeft, Radio, ScanLine, Sparkles, MapPin } from "lucide-react";
 import type { Game } from "../lib/useGame";
 import type { P } from "../lib/api";
 import { useI18n } from "../lib/i18n";
-import { FIELD_STATIONS, marketCopy, type StationId } from "../lib/marketField";
+import { fieldCopy, fieldLayout, FIELD_TOPICS } from "../lib/campaignField";
+import { type StationId } from "../lib/marketField";
 import { Modal } from "./Modal";
 import { InvestigationModal } from "./InvestigationModal";
 import { ReportCard } from "./IntelPanel";
@@ -21,10 +22,11 @@ export default function MarketField({
   onMap: () => void;
   onTablet: (panel: "intel" | "advisor") => void;
 }) {
-  const { locale, duration, channelLabels } = useI18n();
+  const { locale, duration, channelLabels, scenes } = useI18n();
   const chinese = locale === "zh-CN",
-    copy = marketCopy(chinese),
-    s = game.state!;
+    s = game.state!,
+    sceneId = s.sceneId!,
+    copy = fieldCopy(sceneId, chinese);
   const [station, setStation] = useState<StationId | null>(null);
   const [investigation, setInvestigation] = useState<P.TaskOption | null>(null);
   const [reportId, setReportId] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export default function MarketField({
       r.sceneId === s.sceneId &&
       (role ? r.sourceRole === role : r.reportId === reportId),
   );
-  async function requestBrief(topicId: "roads" | "cause") {
+  async function requestBrief(topicId: string) {
     if (!role || inFlight.current || locked) return;
     inFlight.current = true;
     setSubmitting(true);
@@ -88,12 +90,14 @@ export default function MarketField({
     <section
       className="market-field"
       data-testid="market-field"
+      data-scene-id={sceneId}
       aria-label={copy.title}
     >
       <Suspense
         fallback={<div className="market-fallback">{copy.loading}</div>}
       >
         <MarketViewport
+          sceneId={sceneId}
           chinese={chinese}
           blocked={locked || !!station || !!investigation}
           onInteract={open}
@@ -113,7 +117,7 @@ export default function MarketField({
           <MapPin size={13} />
           {copy.stations}
         </span>
-        {FIELD_STATIONS.map(({ id }, i) => (
+        {fieldLayout(sceneId).stations.map(({ id }, i) => (
           <button
             key={id}
             disabled={locked}
@@ -138,7 +142,7 @@ export default function MarketField({
               </div>
               <p className="muted">{copy.allowance}</p>
               <div className="field-brief-actions">
-                {(["roads", "cause"] as const).map((topic) => (
+                {FIELD_TOPICS[sceneId][role].map((topic) => (
                   <button
                     className="secondary"
                     key={topic}
@@ -151,7 +155,10 @@ export default function MarketField({
                     }
                     onClick={() => void requestBrief(topic)}
                   >
-                    {copy[topic]}
+                    {sceneId === "E2"
+                      ? copy[topic as "roads" | "cause"]
+                      : (scenes[sceneId].topics.find((t) => t.id === topic)
+                          ?.label ?? topic)}
                   </button>
                 ))}
               </div>
@@ -191,6 +198,45 @@ export default function MarketField({
                 </button>
               ))}
             </div>
+          )}
+          {station === "command" && sceneId === "E3" && (
+            <section className="field-handoff" data-testid="field-handoff">
+              <h3>
+                {chinese ? "接收站交接准备" : "Reception handover preparation"}
+              </h3>
+              <p>
+                {chinese
+                  ? "以下状态来自已执行的行动。阅读此清单不会办理手续或补充调查次数。"
+                  : "These records reflect committed actions. Reading this checklist does not complete paperwork or replenish investigations."}
+              </p>
+              <div className="handoff-receipt">
+                {(["manifest", "inspection"] as const).map((key) => (
+                  <span key={key}>
+                    {key === "manifest"
+                      ? chinese
+                        ? "乘员名单"
+                        : "Passenger manifest"
+                      : chinese
+                        ? "车辆检查"
+                        : "Vehicle inspection"}
+                    <b>
+                      {s.pendingTasks[key] === "pending"
+                        ? chinese
+                          ? "待办理"
+                          : "Pending"
+                        : s.pendingTasks[key] === "completed"
+                          ? chinese
+                            ? "已完成"
+                            : "Completed"
+                          : chinese
+                            ? "无需办理"
+                            : "Not required"}
+                    </b>
+                  </span>
+                ))}
+              </div>
+              <p>{s.medical.note}</p>
+            </section>
           )}
           {station === "command" ? (
             <div className="field-command-actions">

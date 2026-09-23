@@ -1,15 +1,19 @@
-# LLD / 市集现场原型 M1
+# LLD / 三关现场与尾声 M1
 
-日期：2026-09-21。这里描述可按代码执行的 M1；未实现的 Unity/现场观察扩展单列在末尾。本次没有新 HTTP endpoint、SQL migration 或 Agent prompt。所有业务数据继续采用现有类型和 Schema。
+日期：2026-09-22。这里描述可按代码执行的 M1；未实现的 Unity/现场观察扩展单列在末尾。本次没有新 HTTP endpoint、SQL migration 或 Agent prompt。所有业务数据继续采用现有类型和 Schema。
 
 ## 1. 组件和文件契约
 
 | 文件 | 职责 | 输入 | 输出 / 副作用 |
 | --- | --- | --- | --- |
 | `client/src/lib/marketField.ts` | 公共布局、碰撞、移动、交互检测、双语文案 | 摄像机 pose、移动方向、dt | 新 pose / `StationId`；无网络 |
-| `MarketViewport.tsx` | Three.js 几何、灯光、相机、输入和清理 | `chinese`, `blocked`, `onInteract` | 仅调用 `onInteract(StationId)` |
+| `MarketViewport.tsx` | Three.js 几何、灯光、相机、输入和清理 | `sceneId`, `chinese`, `blocked`, `onInteract` | 仅调用 `onInteract(StationId)` |
 | `MarketField.tsx` | 岗位/设备面板、任务触发、展示报告 | `game`, `blocked`, `onMap`, `onTablet` | 既有 `/tasks` 命令；现有证据组件 |
-| `GameView.tsx` | E2 地图/现场切换、顶层模态与动作 | `Game` | 仅在 E2 挂载现场；切场景时清除 onFoot |
+| `GameView.tsx` | 三关地图/现场切换、顶层模态与动作 | `Game` | E1/E2/E3 挂载现场；换关保留 onFoot，重建场景 |
+| `campaignField.ts` | 公开章节布局、文案、角色主题 | `SceneId`, `chinese` | `FieldLayout`、copy、主题 ID；无分支/事实 |
+| `marketArt.ts` | 公共 GLB 加载、释放、失败回退 | renderer、URL、成功/失败回调 | 同源资产请求；不请求业务数据 |
+| `chapterPresentation.ts` | 已完成路线反馈、接收站故事 | 公开 `OperationView` / `OutcomeView` | 双语呈现；不计算规则结果 |
+| `ArrivalScene.tsx` / `ArrivalViewport.tsx` | N07 结局层与静态三维接收站 | 结局投影 / 仅语言 | 只读，资源失败保留复盘 |
 | `IntelPanel.tsx` | 原情报 UI | `game`, `active` | 导出同一个 `ReportCard` 供现场复用 |
 | `market-field.css` | 现场 HUD、响应式布局 | CSS 类 | 无业务状态 |
 
@@ -22,6 +26,7 @@ type FieldPose = FieldPoint & { yaw: number; pitch: number };
 type FieldBox = FieldPoint & { width: number; depth: number };
 
 type MarketViewportProps = {
+  sceneId?: "E1" | "E2" | "E3"; // 缺省 E2；业务容器总是传当前章节
   chinese: boolean;
   blocked: boolean;
   onInteract(station: StationId): void;
@@ -34,7 +39,7 @@ type MarketViewportProps = {
 
 ### 2.1 生命周期
 
-`GameView.onFoot` 初始 false；E2/scene 的入口可切换 true。`s.sceneId` 变化时置 false，非 E2 不渲染现场。父组件继续保有会话，现场卸载不会创建新会话。
+`GameView.onFoot` 默认 false；本地预览 URL 的 `field=1` 仅改变初始展示。E1/E2/E3 的入口可切换 true。换关保留 onFoot，以 `sessionId:runEpoch:sceneId` 为 key 重建现场，使相机、调查弹窗和站点状态归零。主桥拒绝不换关，因此视角保持。父组件继续保有会话，现场卸载不会创建新会话。
 
 `MarketField` 状态：`station`, `investigation`, `reportId`, `submitting`。一次只展示站点模态或调查确认。调查结束后回到侦察站点并展开返回的 reportId。关闭模态不取消已经服务端接受的任务；其结果仍保留在情报档案。
 
@@ -46,7 +51,7 @@ type MarketViewportProps = {
 - 摄像机以 YXZ 顺序旋转，pitch 限制在 ±0.85 rad；眼高 1.68 m。
 - 每帧有效 dt 上限 0.05 秒；3.2 m/s。页面恢复时不会跳过整个街区。
 - 玩家圆形范围以半径 0.32 m 的 AABB 扩张近似；先测试 X，再测试 Z，实现沿墙滑动。
-- 可活动区域 x ∈ [-10,10]、z ∈ [-15,15]，再收缩玩家半径。
+- 可活动区域从 `FieldLayout.bounds` 获取，再收缩玩家半径：E2 x ∈ [-10,10]、z ∈ [-15,15]；E1/E3 x ∈ [-8,8]、z ∈ [-10,13]。
 - 步长上限 0.16 m，小于本布局最薄的可碰撞道具尺度。未来提高速度或引入薄门板时必须换 swept collision，不能无条件复用这个假设。
 
 ### 2.3 交互算法
@@ -71,7 +76,7 @@ type MarketViewportProps = {
 
 | UI 意图 | HTTP | Payload / 响应 |
 | --- | --- | --- |
-| Noah 简报 | `POST /tasks` | `taskKind: request_report`, `targetRole: analyst`, `topicId: roads/cause` |
+| Noah 简报 | `POST /tasks` | `taskKind: request_report`, `targetRole: analyst`, `topicId` 取下方章节矩阵 |
 | Samira 简报 | `POST /tasks` | 同上，`targetRole: liaison` |
 | 确认调查 | `POST /tasks` | `investigate_and_report`；见下方；`TaskAccepted` |
 | 上传一份报告 | `POST /uploads` | `items: [{reportId, expectedRevision}]`；`UploadView` |
@@ -116,7 +121,7 @@ type MarketViewportProps = {
 
 | 数据 | 既有表 | 本功能如何使用 |
 | --- | --- | --- |
-| 会话/场景 | `sessions`, `session_scenes` | E2 访问资格和权威版本 |
+| 会话/场景 | `sessions`, `session_scenes` | E1/E2/E3 访问资格和权威版本 |
 | 幂等命令 | `commands` | 同一请求重复发送不重复扣额 |
 | 额度 | `quota_accounts`, `quota_ledger` | 每岗位报告和全局渠道成本 |
 | 调查/报告 | `task_requests`, `investigations`, `evidence_instances`, `reports` | 站点触发的仍是同一报告体系 |
@@ -159,7 +164,34 @@ M1 不创建第三个 Agent，也不把玩家的屏幕截图或 3D 节点名发�
 
 渲染循环使用 ref 读取最新 blocked/回调，避免每次 SSE 更新都重新创建 Three.js 场景。DPR 上限 1.5；WebGL 仅在首次进入时异步导入，默认 2D 用户不为此初始化场景。
 
-## 7. M2 的接口工作项：尚未实现
+## 7. 三关与尾声的具体契约
+
+```ts
+type FieldLayout = {
+  spawn: FieldPose;
+  bounds: { minX: number; maxX: number; minZ: number; maxZ: number };
+  stations: ReadonlyArray<FieldPoint & { id: StationId }>;
+  colliders: readonly FieldBox[];
+};
+```
+
+实际类型以 `marketField.ts` 为准。移动与交互函数接受可选 layout，默认市集以兼容旧调用；站点坐标和碰撞只影响本地可达性。
+
+| 章节 | analyst / Noah 主题 | liaison / Samira 主题 | 环境资产 |
+| --- | --- | --- | --- |
+| E1 | roads, gate_status | manifest, gate_status | `/assets/fields/gate-v1.glb` |
+| E2 | roads, cause | roads, cause | `/assets/market/market-sample-v1.glb` |
+| E3 | roads, bridge_status | manifest, ford_status | `/assets/fields/bridge-v1.glb` |
+
+主题矩阵通过单元测试与两种剧本逐项核对。调查选项仍取公开 `taskOptions`，不由这个矩阵生成。E3 指挥站读取 `pendingTasks` 与 `medical.note`；读取不结算任务。
+
+`chapterReceipt` 忽略未完成动作与 wait。仅当完成的 `E3_BRIDGE` 回执仍在 N05，才显示通行未获批准。不能根据按钮被点击或前端已知 actionId 提前预测拒绝。
+
+`arrivalStory` 在 `finalLocation.nodeId !== N07` 返回 null。`terminationReason === awaiting_transfer` 或任一手续 pending 时使用待交接文案；不得只凭 `taskSuccess` 宣称手续完成。名单/查验状态为 `pending | completed | notRequired`，医疗状态沿用 `OutcomeView`。不写回 `handoffCompletedAtMissionMs`，不修改封存结局。
+
+`ArrivalViewport` 只接收语言；加载 `/assets/fields/reception-v1.glb`。资源完成、ResizeObserver 回调时绘制，不启动永久 RAF。卸载中止加载、释放 GPU 和 ImageBitmap。场景失败仅替换画面提示，不阻塞既有 Evaluator、时间线或导出。
+
+## 8. M2 的接口工作项：尚未实现
 
 下一阶段不得在前端放一张完整线索表就算“调查系统”。需要先完成以下契约及测试：
 

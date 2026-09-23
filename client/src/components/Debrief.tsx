@@ -1,3 +1,4 @@
+import { ArrivalScene } from "./ArrivalScene";
 import { useI18n, formatError } from "../lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -162,6 +163,7 @@ export function Debrief({ game }: { game: Game }) {
           {t("ui.backToTitle")} <ArrowUpRight size={15} />
         </button>
       </header>
+      {outcome && <ArrivalScene outcome={outcome} />}
       <section className="ending-banner">
         <div className="ending-copy">
           <div className="overline">

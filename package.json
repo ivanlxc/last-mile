@@ -22,7 +22,9 @@
     "test:watch": "vitest",
     "test:ui": "playwright test",
     "format": "prettier --write client/src server scripts tests *.ts",
-    "build:market-art": "node scripts/build-market-art.mjs"
+    "build:market-art": "node scripts/build-market-art.mjs",
+    "build:campaign-art": "node scripts/build-market-art.mjs --campaign",
+    "preview:campaign": "pnpm build && tsx scripts/preview-market.ts --campaign"
   },
   "dependencies": {
     "@fastify/static": "^10.1.3",

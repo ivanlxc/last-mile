@@ -10,15 +10,31 @@ import { createHttpApp } from "../server/http/app.js";
 import { loadHttpConfig } from "../server/http/config.js";
 import type * as P from "../docs/engineering_v0.5/contracts/public.types.js";
 
+const arg = (name: string, fallback: string) => {
+  const index = process.argv.indexOf(name);
+  return index < 0 ? fallback : (process.argv[index + 1] ?? fallback);
+};
+const campaign = process.argv.includes("--campaign");
+const previewCase = arg("--case", "A");
+const previewLocale = arg("--locale", "en-US");
+if (
+  !["A", "B"].includes(previewCase) ||
+  !["en-US", "zh-CN"].includes(previewLocale)
+)
+  throw new Error("Use --case A|B and --locale en-US|zh-CN.");
+const port = campaign ? 3113 : 3112;
 if (!existsSync("dist/client/index.html"))
   throw new Error("Run pnpm build first.");
-const config = loadHttpConfig({ LAST_MILE_ROOT: process.cwd(), PORT: "3112" });
+const config = loadHttpConfig({
+  LAST_MILE_ROOT: process.cwd(),
+  PORT: String(port),
+});
 const service = await createGameService({
   dbPath: ":memory:",
   recoverOnStartup: false,
   autoTick: true,
   agents: createAiService({ env: {} }),
-  selectCase: () => "A",
+  selectCase: () => previewCase as "A" | "B",
 });
 const app = await createHttpApp({ service, config, closeServiceOnClose: true });
 try {
@@ -28,7 +44,7 @@ try {
     {
       profileId: "SINGLE_PLAYER_REFERENCE",
       runPurpose: "design_preview",
-      locale: "en-US",
+      locale: previewLocale,
       contentVersionId: boot.profiles[0]!.contentVersionId,
     },
     { idempotencyKey: randomUUID() },
@@ -53,21 +69,22 @@ try {
     );
   };
   await command("startSession", { acknowledgeDesignPreview: true });
-  await command("commitAction", {
-    actionId: "E1_MAIN",
-    waitDurationMs: null,
-    reason: "Development preview: enter the market chapter.",
-    reasonAnnotation: null,
-    basedOnAdviceJobId: null,
-    referencedReportIds: [],
-    cancelPendingInvestigations: false,
-  });
-  await app.listen({ host: "127.0.0.1", port: 3112 });
+  if (!campaign)
+    await command("commitAction", {
+      actionId: "E1_MAIN",
+      waitDurationMs: null,
+      reason: "Development preview: enter the market chapter.",
+      reasonAnnotation: null,
+      basedOnAdviceJobId: null,
+      referencedReportIds: [],
+      cancelPendingInvestigations: false,
+    });
+  await app.listen({ host: "127.0.0.1", port });
   console.log(
-    `Market preview (offline AI, temporary session): http://127.0.0.1:3112/?session=${create.sessionId}`,
+    `${campaign ? "Campaign" : "Market"} preview (${previewCase}, ${previewLocale}, offline AI): http://127.0.0.1:${port}/?session=${create.sessionId}${campaign ? "&field=1" : ""}`,
   );
   console.log(
-    'Choose "Enter market on foot". Ctrl+C stops the preview and clears its temporary data.',
+    `${campaign ? "The campaign opens at the west gate." : 'Choose "Enter market on foot".'} Ctrl+C stops the preview and clears its temporary data.`,
   );
   for (const signal of ["SIGINT", "SIGTERM"] as const)
     process.once(signal, () => {

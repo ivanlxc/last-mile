@@ -36,6 +36,7 @@ const test = base.extend<{
       dbPath: ":memory:",
       recoverOnStartup: false,
       autoTick: false,
+      actionTiming: "realtime", // Preserve the clock-driven scenario under test.
       selectCase: () => "A",
       clock: {
         nowMs: () => Date.UTC(2026, 8, 16, 12) + elapsed,

@@ -1,0 +1,23 @@
+[
+  {
+    "level": "gate",
+    "authoringObjects": 250,
+    "meshes": 13,
+    "triangles": 21420,
+    "bytes": 4253784
+  },
+  {
+    "level": "bridge",
+    "authoringObjects": 278,
+    "meshes": 14,
+    "triangles": 23436,
+    "bytes": 4494284
+  },
+  {
+    "level": "reception",
+    "authoringObjects": 91,
+    "meshes": 10,
+    "triangles": 6936,
+    "bytes": 2248680
+  }
+]

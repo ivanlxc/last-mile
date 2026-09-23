@@ -1,6 +1,28 @@
-# M1 验收与试玩
+# M1 三关现场验收与试玩
 
-日期：2026-09-21；基线提交 `70d5864`；开发分支 `feature/market-first-person-slice`。本记录覆盖本次新增市集现场，不能作为 Unity 成品或商业发行验收。
+更新：2026-09-22；开发分支 `feature/market-first-person-slice`。本记录覆盖浏览器关卡原型，不能作为 Unity 成品或商业发行验收。
+
+## 2026-09-22 三关现场与尾声增量
+
+当前实现与截图见 [三关交付记录](06_CAMPAIGN_IMPLEMENTATION.md)。西门、市集、主桥可连续使用现场模式；N07 增加三维接收站尾声。确认到达与完成手续分别呈现。
+
+| 检查 | 最终结果 | 覆盖与限制 |
+| --- | --- | --- |
+| `pnpm build` | 通过 | TypeScript + Vite；构建后的真实前端用于浏览器测试 |
+| `pnpm test` | **453 通过、21 跳过** | 核心/HTTP/Agent/资源测试；PostgreSQL 专用测试未配置数据库 |
+| `pnpm exec vitest run tests/campaign-fields.test.ts` | **8 通过** | 最后一次重新导出模型后复核布局、主题、呈现与 GLB |
+| `pnpm exec playwright test tests/ui/instant-actions.spec.ts` | **9 通过** | 英文 A、中文 B 连续现场、桥梁拒绝改道、待交接、失败降级、AI 输入隔离 |
+| `pnpm exec playwright test tests/ui/campaign.spec.ts` | **3 通过** | 旧 realtime 会话全流程、英中长时间阅读、刷新、已封存复盘 |
+| `pnpm exec playwright test tests/ui/localization.spec.ts` | **2 通过** | 默认英文与切换、英文证据/顾问/终局评估/时间线/导出 |
+| 修改的 TS/TSX/CSS `prettier --check` | 通过 | 格式检查 |
+
+浏览器共 **14 个用例**完成通过；包括修正旧测试夹具后的分批重跑。最初扩展运行暴露旧测试依赖默认 realtime 和旧计时文案，现已显式指定旧场景的 realtime 模式并更新文案断言；生产默认 instant 没有改变。主桥行动反馈改变布局时会触发 canvas resize，本轮补上同步绘制并复核截图，避免清空绘制缓冲后短暂露出空白。
+
+单元测试新增三章所有站点可达、碰撞和交互、岗位主题与两套剧本对应、未完成动作不能预测结果、待交接分支、资源内嵌与大小核对。旧核心测试继续覆盖两种剧本的 16 种路线组合。
+
+当前完整预览：`pnpm preview:campaign`，终端输出 `127.0.0.1:3113` 的临时会话链接，从 E1 开始。此预览明确使用 offline AI，不读取 `.env` 或云端数据库。实际模型、Unity 原生构建、Mac 性能和商业美术质量没有在本轮验收。
+
+以下为以前各阶段的历史记录；当入口/转场描述冲突时，以本节和当前 PRD/LLD 为准。
 
 ## 2026-09-22 美术样板增量
 
