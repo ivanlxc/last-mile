@@ -20,7 +20,7 @@ namespace LastMile.Art
         private bool details = true;
         private float sampleStarted;
         private readonly List<float> frames = new List<float>(1800);
-        private string performanceText = "Warming up…";
+        private string performanceText = "";
         private Font hudFont;
         private GUIStyle titleStyle, smallStyle;
 
@@ -29,7 +29,8 @@ namespace LastMile.Art
             body = GetComponent<CharacterController>();
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
-            hudFont = Font.CreateDynamicFontFromOSFont(new[] { "PingFang SC", "Heiti SC", "Arial Unicode MS" }, 18);
+            hudFont = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
+            if (hudFont == null) throw new InvalidOperationException("Bundled HUD font is missing.");
             ResetView();
             sampleStarted = Time.realtimeSinceStartup;
         }
@@ -52,13 +53,30 @@ namespace LastMile.Art
             Cursor.visible = true;
         }
 
-        private void OnApplicationFocus(bool focus) { if (!focus) ReleaseMouse(); }
+        private void CaptureMouse()
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        private void OnApplicationFocus(bool focus)
+        {
+            if (!focus) ReleaseMouse();
+            // A paused/background frame is not part of a continuous foreground sample.
+            frames.Clear();
+            performanceText = "";
+            sampleStarted = Time.realtimeSinceStartup;
+        }
         private void OnDisable() { ReleaseMouse(); }
-        private void OnDestroy() { if (hudFont != null) Destroy(hudFont); }
 
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape)) ReleaseMouse();
+            if (Input.GetKeyDown(KeyCode.Return))
+            {
+                if (Cursor.lockState == CursorLockMode.Locked) ReleaseMouse();
+                else CaptureMouse();
+            }
             if (Input.GetKeyDown(KeyCode.L)) chinese = !chinese;
             if (Input.GetKeyDown(KeyCode.Tab)) details = !details;
             if (Input.GetKeyDown(KeyCode.Home)) ResetView();
@@ -70,8 +88,7 @@ namespace LastMile.Art
             }
             if (Input.GetMouseButtonDown(0) && Input.mousePosition.y < Screen.height - 115)
             {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
+                CaptureMouse();
             }
             if (Cursor.lockState == CursorLockMode.Locked)
             {
@@ -87,7 +104,7 @@ namespace LastMile.Art
                 body.Move((transform.right * input.x * speed + transform.forward * input.y * speed + Vector3.up * gravity) * Mathf.Min(Time.deltaTime, .05f));
             }
             if (transform.position.y < -8) ResetView();
-            if (Time.realtimeSinceStartup - sampleStarted > 5)
+            if (Application.isFocused && Time.realtimeSinceStartup - sampleStarted > 5)
             {
                 frames.Add(Time.unscaledDeltaTime * 1000);
                 if (frames.Count >= 600)
@@ -113,12 +130,12 @@ namespace LastMile.Art
             }
             GUI.Box(new Rect(20, 20, width - 40, details ? 125 : 65), GUIContent.none);
             GUI.Label(new Rect(38, 29, width - 90, 32), chinese ? "LAST MILE / 市集美术样板" : "LAST MILE / MARKET ART STUDY", titleStyle);
-            GUI.Label(new Rect(38, 66, width - 90, 25), performanceText, smallStyle);
+            GUI.Label(new Rect(38, 66, width - 90, 25), string.IsNullOrEmpty(performanceText) ? (chinese ? "预热中…" : "Warming up…") : performanceText, smallStyle);
             if (details)
             {
                 GUI.Label(new Rect(38, 91, width - 90, 45), chinese
-                    ? "点击画面进入 · WASD / 方向键移动 · Esc 释放鼠标 · Home 复位 · Tab 隐藏说明 · L 切换语言 · P 截图\n这是独立美术与移动样板，尚未连接剧情、调查或 AI。"
-                    : "Click scene to enter · WASD / arrows to walk · Esc release · Home reset · Tab details · L language · P screenshot\nStandalone art and movement study. Story, investigations and AI are not connected yet.", smallStyle);
+                    ? "点击画面或 Enter 进入 · WASD / 方向键移动 · Esc 释放鼠标 · Home 复位 · Tab 隐藏说明 · L 切换语言 · P 截图\n这是独立美术与移动样板，尚未连接剧情、调查或 AI。"
+                    : "Click / Enter to enter · WASD / arrows to walk · Esc release · Home reset · Tab details · L language · P screenshot\nStandalone art and movement study. Story, investigations and AI are not connected yet.", smallStyle);
             }
             if (Cursor.lockState == CursorLockMode.Locked)
                 GUI.Label(new Rect(width / 2 - 4, Screen.height / scale / 2 - 10, 20, 20), "+");

@@ -1,0 +1,291 @@
+fileFormatVersion: 2
+guid: 6cbcb8b1a6ce144f6b6508cb62f4cc55
+ModelImporter:
+  serializedVersion: 24300
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 01 / scanned aged lime plaster
+    second: {fileID: 2100000, guid: 05fe204e15f5848beaab2e824586efba, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 01 _ scanned aged lime plaster
+    second: {fileID: 2100000, guid: 05fe204e15f5848beaab2e824586efba, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 02 / worn stone paving
+    second: {fileID: 2100000, guid: 359ab1e6371624aaf9beb295d6eff55f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 02 _ worn stone paving
+    second: {fileID: 2100000, guid: 359ab1e6371624aaf9beb295d6eff55f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 03 / timber grain
+    second: {fileID: 2100000, guid: 4feb7b3ea31ab4ef6a6ce8387ef27d39, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 03 _ timber grain
+    second: {fileID: 2100000, guid: 4feb7b3ea31ab4ef6a6ce8387ef27d39, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 04 / woven canopy
+    second: {fileID: 2100000, guid: d0fccc505016f419e99c4453360321b3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 04 _ woven canopy
+    second: {fileID: 2100000, guid: d0fccc505016f419e99c4453360321b3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 05 / dressed limestone
+    second: {fileID: 2100000, guid: 154a0f0a0c9f442358c63f9b9446e770, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 05 _ dressed limestone
+    second: {fileID: 2100000, guid: 154a0f0a0c9f442358c63f9b9446e770, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 06 / oxidised teal paint
+    second: {fileID: 2100000, guid: 27ddfd59d2953498c9f0aad1e0c780eb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 06 _ oxidised teal paint
+    second: {fileID: 2100000, guid: 27ddfd59d2953498c9f0aad1e0c780eb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 07 / exposed wood edges
+    second: {fileID: 2100000, guid: 37faaec92d6cc42b09bd89cae22b6126, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 07 _ exposed wood edges
+    second: {fileID: 2100000, guid: 37faaec92d6cc42b09bd89cae22b6126, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 08 / dark iron
+    second: {fileID: 2100000, guid: a08b3873c482c4264953d9e8d4980cce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 08 _ dark iron
+    second: {fileID: 2100000, guid: a08b3873c482c4264953d9e8d4980cce, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 09 / worn brass
+    second: {fileID: 2100000, guid: 0b51d25b289d948e28eac4fc7f9895bf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 09 _ worn brass
+    second: {fileID: 2100000, guid: 0b51d25b289d948e28eac4fc7f9895bf, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 10 / dark glass
+    second: {fileID: 2100000, guid: 378795ef9ff814cb6974dcaec7dec862, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 10 _ dark glass
+    second: {fileID: 2100000, guid: 378795ef9ff814cb6974dcaec7dec862, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 11 / unglazed terracotta
+    second: {fileID: 2100000, guid: ce61e2f5a83c041a195d2ed3be8c6be0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 11 _ unglazed terracotta
+    second: {fileID: 2100000, guid: ce61e2f5a83c041a195d2ed3be8c6be0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 12 / olive foliage
+    second: {fileID: 2100000, guid: 1fb20dbf7198b40338d54981c6aa4ae0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 12 _ olive foliage
+    second: {fileID: 2100000, guid: 1fb20dbf7198b40338d54981c6aa4ae0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 13 / leaf tips
+    second: {fileID: 2100000, guid: fc1b36237b62649efab24788e08d8f2d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 13 _ leaf tips
+    second: {fileID: 2100000, guid: fc1b36237b62649efab24788e08d8f2d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 14 / bougainvillea
+    second: {fileID: 2100000, guid: c9aa0b07c9bee425c84873e0d240f242, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 14 _ bougainvillea
+    second: {fileID: 2100000, guid: c9aa0b07c9bee425c84873e0d240f242, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 15 / field equipment
+    second: {fileID: 2100000, guid: 07a3c55d52e8240aa943d36ae07b85aa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 15 _ field equipment
+    second: {fileID: 2100000, guid: 07a3c55d52e8240aa943d36ae07b85aa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 16 / rubber and fabric
+    second: {fileID: 2100000, guid: e2378bf81754640e68d452e763e97b24, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 16 _ rubber and fabric
+    second: {fileID: 2100000, guid: e2378bf81754640e68d452e763e97b24, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 18 / canvas trim
+    second: {fileID: 2100000, guid: be2954890a3294b849de978b4b4cd9f6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 18 _ canvas trim
+    second: {fileID: 2100000, guid: be2954890a3294b849de978b4b4cd9f6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 19 / soil
+    second: {fileID: 2100000, guid: c5880857015a74509bd8f86a63d1d143, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: 19 _ soil
+    second: {fileID: 2100000, guid: c5880857015a74509bd8f86a63d1d143, type: 2}
+  materials:
+    materialImportMode: 1
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+    searchTexturesGlobally: 0
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 1
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 0
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -31,8 +31,10 @@ The executable can be overridden with `UNITY_EDITOR_PATH`. No script loads `.env
 
 ## Controls
 
-Click the scene to capture the pointer. WASD/arrows move, mouse looks, Esc releases the pointer, Home resets, Tab toggles help, L switches English/Chinese. P saves a screenshot to Unity's application persistent-data directory (the player log prints its path). The HUD shows rolling frame time after a warm-up; this is an inspection aid, not a performance certification.
+Click the scene or press Enter to capture the pointer. WASD/arrows move, mouse looks, Esc releases the pointer, Home resets, Tab toggles help, L switches English/Chinese. P saves a screenshot to Unity's application persistent-data directory (the player log prints its path). The HUD shows rolling frame time after a warm-up and resets when focus changes; this is an inspection aid, not a performance certification. The bundled Noto Sans CJK font and its OFL license ship with the app.
 
 ## Acceptance
 
-The sample must pass actual Editor compilation, native build and on-device visual inspection before it is considered validated. Check material mapping, one-metre scale, collision, pointer release, both HUD languages, and frame time at a recorded resolution. Performance goals are 1080p/30 FPS on M4 and 1080p/60 FPS on M4 Pro; neither is guaranteed by this scaffold.
+Editor compilation, material/scale checks, ARM64 build, keyboard walkthrough, pointer release and both HUD languages passed on M4 on 2026-09-27. **Last Mile Art → Check Floor and Wall Collision** runs the real controller for 600 steps against the street and facade. It checks representative collision, not every prop edge. Detailed evidence and remaining QA limits are in [the verification record](../../docs/commercial/art-direction/native-study.md).
+
+Performance goals remain 1080p/30 FPS on M4 and 1080p/60 FPS on M4 Pro. Neither has passed the sustained route test yet. This scene remains an art study, not the complete native game.

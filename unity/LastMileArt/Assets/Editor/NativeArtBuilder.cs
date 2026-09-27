@@ -126,6 +126,9 @@ namespace LastMile.Art.Editor
         {
             Directory.CreateDirectory(Generated); Directory.CreateDirectory("Assets/Scenes");
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            var fontImporter = AssetImporter.GetAtPath("Assets/Resources/Fonts/NotoSansCJKsc-Regular.otf") as TrueTypeFontImporter;
+            if (fontImporter == null) throw new InvalidOperationException("Bundled Noto Sans CJK font is missing.");
+            if (!fontImporter.includeFontData) { fontImporter.includeFontData = true; fontImporter.SaveAndReimport(); }
             Materials();
             var renderer = AssetDatabase.LoadAssetAtPath<UniversalRendererData>(Generated + "/Renderer.asset");
             if (renderer == null)
@@ -149,7 +152,7 @@ namespace LastMile.Art.Editor
             PlayerSettings.defaultScreenWidth = 1280; PlayerSettings.defaultScreenHeight = 720;
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Standalone, ScriptingImplementation.Mono2x);
-            PlayerSettings.SetArchitecture(UnityEditor.Build.NamedBuildTarget.Standalone, 1); // macOS ARM64
+            UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.ARM64;
             if (!File.Exists(ScenePath)) CreateScene();
             else EditorSceneManager.OpenScene(ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -218,6 +221,41 @@ namespace LastMile.Art.Editor
             });
             if (report.summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Native build failed: " + report.summary.result);
             Debug.Log("LAST_MILE_ART_BUILD_OK: " + report.summary.totalSize + " bytes");
+        }
+
+        [MenuItem("Last Mile Art/Check Floor and Wall Collision")]
+        public static void ValidateCollision()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+            var observer = UnityEngine.Object.FindFirstObjectByType<ArtWalkthrough>();
+            var body = observer.GetComponent<CharacterController>();
+            var original = observer.transform.position;
+            try
+            {
+                // Move the real controller across the street toward a solid part of the facade.
+                body.enabled = false;
+                observer.transform.position = new Vector3(0, .16f, observer.lookAt.z);
+                body.enabled = true;
+                Physics.SyncTransforms();
+                var groundOrigin = observer.transform.position + Vector3.forward * .6f + Vector3.up;
+                if (!Physics.Raycast(groundOrigin, Vector3.down, out var ground, 3))
+                    throw new InvalidOperationException("Street floor collider is missing.");
+                bool blocked = false;
+                for (int i = 0; i < 600; i++)
+                {
+                    var flags = body.Move(new Vector3(-2.6f, -5, 0) / 60f);
+                    blocked |= (flags & CollisionFlags.Sides) != 0;
+                }
+                var stopped = observer.transform.position;
+                if (!blocked || stopped.x >= -1 || stopped.x < -6.8f || stopped.y < -.2f || stopped.y > .6f)
+                    throw new InvalidOperationException("Controller crossed the facade or lost floor support: " + stopped);
+                Debug.Log("LAST_MILE_ART_COLLISION_OK: 600 real controller steps; stopped=" + stopped + "; floor=" + ground.collider.name);
+            }
+            finally
+            {
+                body.enabled = false; observer.transform.position = original; body.enabled = true;
+                // This check deliberately does not save the temporary controller position.
+            }
         }
     }
 }
