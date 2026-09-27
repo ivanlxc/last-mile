@@ -29,6 +29,10 @@ unity/**/*.csproj
 unity/**/*.sln
 unity/**/.vs/
 unity/.build-output/
+# Reproducible native art staging; editable sources remain under assets/authoring.
+unity/LastMileArt/Assets/Art/**
+!unity/LastMileArt/Assets/Art/**/
+!unity/LastMileArt/Assets/Art/**/*.meta
 client/public/unity/
 client/public/gestures/
 coverage/

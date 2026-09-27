@@ -148,6 +148,10 @@ pnpm build:unity
 
 The original and refined authoring projects are in `assets/authoring/last-mile-v2/` and `assets/authoring/last-mile-unity/`. See [Unity setup](unity/README.md) and [Unity integration validation](docs/implementation/Unity接入本地试用.md).
 
+### Native market art study
+
+The independent [macOS URP art study](unity/LastMileArt/README.md) evaluates the authored market at walking scale. It has a separate project, material conversion and native build commands. It does not yet connect to gameplay or AI services. Run `pnpm prepare:native-art`, then `pnpm open:native-art`; `pnpm build:native-art` creates a local macOS development app. This uses the Editor-only installation, without Web or mobile modules.
+
 ### Unity on Render
 
 Unity source, Blender files, FBX models, and textures are tracked in Git. Compiled browser files under `client/public/unity/` are ignored. A normal source deployment alone therefore does not include Unity.
