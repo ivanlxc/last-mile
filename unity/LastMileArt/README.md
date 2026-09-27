@@ -1,6 +1,6 @@
-# LAST MILE — Native market art study
+# LAST MILE — Native market field slice
 
-An independent Unity **6000.3.22f1 / URP 17.3.0** project for evaluating the authored market at human scale on Apple Silicon. This stage contains a local walkthrough; gameplay, AI requests, saved sessions and backend identity are not yet connected.
+An independent Unity **6000.3.22f1 / URP 17.3.0** project for evaluating the authored market at human scale on Apple Silicon. The market now connects to the existing local game API: briefings, investigations, evidence uploads, advisor questions and route decisions. This is an E2 development slice with disposable state, not the complete native campaign. See [the gameplay design and verification record](../../docs/commercial/art-direction/native-gameplay-v1.md).
 
 ## Minimal setup
 
@@ -18,7 +18,7 @@ pnpm build:native-art
 
 `--prepare-only` stages the assets without requiring Unity. `prepare:native-art` imports them, converts materials, creates the render pipeline and saves the initial scene. `open:native-art` opens the Editor; on first use choose **Last Mile Art → Prepare Sample**, then press Play. `build:native-art` creates `Builds/LastMileArt.app`, a local development build. It is not a signed/notarized release for public distribution.
 
-The executable can be overridden with `UNITY_EDITOR_PATH`. No script loads `.env`, API keys or hidden game scenarios.
+The executable can be overridden with `UNITY_EDITOR_PATH`. Art preparation and build scripts do not load secrets or hidden scenarios. The optional live-model preview reads server configuration only inside Node.
 
 ## Asset pipeline
 
@@ -31,10 +31,15 @@ The executable can be overridden with `UNITY_EDITOR_PATH`. No script loads `.env
 
 ## Controls
 
-Click the scene or press Enter to capture the pointer. WASD/arrows move, mouse looks, Esc releases the pointer, Home resets, Tab toggles help, L switches English/Chinese. P saves a screenshot to Unity's application persistent-data directory (the player log prints its path). The HUD shows rolling frame time after a warm-up and resets when focus changes; this is an inspection aid, not a performance certification. The bundled Noto Sans CJK font and its OFL license ship with the app.
+Start a disposable game from the repository with `pnpm play:native`. Use `--locale zh-CN` for a Chinese session, `--case B` for the second server-side test variant. Optional `--live-ai` uses the configured server model and incurs provider charges; the default is explicitly labelled offline.
+
+Enter/click captures the pointer, WASD/arrows move, mouse looks, Q/R turns, E opens a nearby station. F1–F6 open briefings/recon/intel/AI/routes. Tab toggles the tablet, Esc releases/closes, Home resets the walking view. ↑/↓ and Enter operate tablet buttons. F12 captures a screenshot; P also works outside the tablet. F9 toggles frame-time observations. Language is fixed by the active session; English is the default.
+
+The launcher pre-completes E1 and starts at E2. Route completion can continue in the browser using the same session while the native app and launcher stay open. Quitting the app stops the temporary server. The build contains no API key, scenario truth or saved identity. Reopening the app directly provides art inspection or a connection form.
+
 
 ## Acceptance
 
 Editor compilation, material/scale checks, ARM64 build, keyboard walkthrough, pointer release and both HUD languages passed on M4 on 2026-09-27. **Last Mile Art → Check Floor and Wall Collision** runs the real controller for 600 steps against the street and facade. It checks representative collision, not every prop edge. Detailed evidence and remaining QA limits are in [the verification record](../../docs/commercial/art-direction/native-study.md).
 
-Performance goals remain 1080p/30 FPS on M4 and 1080p/60 FPS on M4 Pro. Neither has passed the sustained route test yet. This scene remains an art study, not the complete native game.
+Performance goals remain 1080p/30 FPS on M4 and 1080p/60 FPS on M4 Pro. Neither has passed the sustained route test yet. The complete native campaign, persistent saves, cloud login and distribution signing remain future milestones.

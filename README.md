@@ -150,7 +150,7 @@ The original and refined authoring projects are in `assets/authoring/last-mile-v
 
 ### Native market art study
 
-The independent [macOS URP art study](unity/LastMileArt/README.md) evaluates the authored market at walking scale. It has a separate project, material conversion and native build commands. It does not yet connect to gameplay or AI services. Run `pnpm prepare:native-art`, then `pnpm open:native-art`; `pnpm build:native-art` creates a local macOS development app. This uses the Editor-only installation, without Web or mobile modules.
+The independent [macOS URP art study](unity/LastMileArt/README.md) evaluates the authored market at walking scale. It has a separate project, material conversion and native build commands. It now connects the E2 market to the local game API: briefings, investigations, evidence uploads, advisor questions and route decisions. After building, `pnpm play:native` starts a disposable offline playtest; `--live-ai` opts into the configured server model. See the [native gameplay record](docs/commercial/art-direction/native-gameplay-v1.md) for controls, Chinese sessions and remaining scope. Run `pnpm prepare:native-art`, then `pnpm open:native-art`; `pnpm build:native-art` creates a local macOS development app. This uses the Editor-only installation, without Web or mobile modules.
 
 ### Unity on Render
 

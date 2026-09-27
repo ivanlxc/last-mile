@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LastMile.Art
 {
-    // Local art inspection only. No scenario, player save, model key or network access.
+    // Movement and neutral rendering only. FieldConsole owns the public API presentation.
     [RequireComponent(typeof(CharacterController))]
     public sealed class ArtWalkthrough : MonoBehaviour
     {
@@ -14,21 +14,23 @@ namespace LastMile.Art
         public Vector3 lookAt;
         public float speed = 2.6f;
         private CharacterController body;
+        private LastMile.Field.FieldConsole console;
         private float pitch;
         private float gravity;
-        private bool chinese;
-        private bool details = true;
+                private bool details = true;
         private float sampleStarted;
         private readonly List<float> frames = new List<float>(1800);
         private string performanceText = "";
         private Font hudFont;
-        private GUIStyle titleStyle, smallStyle;
+        private GUIStyle smallStyle;
 
         private void Awake()
         {
             body = GetComponent<CharacterController>();
+            console = gameObject.AddComponent<LastMile.Field.FieldConsole>();
             QualitySettings.vSyncCount = 1;
             Application.targetFrameRate = 60;
+            Application.runInBackground = true;
             hudFont = Resources.Load<Font>("Fonts/NotoSansCJKsc-Regular");
             if (hudFont == null) throw new InvalidOperationException("Bundled HUD font is missing.");
             ResetView();
@@ -62,6 +64,8 @@ namespace LastMile.Art
         private void OnApplicationFocus(bool focus)
         {
             if (!focus) ReleaseMouse();
+            QualitySettings.vSyncCount = focus ? 1 : 0;
+            Application.targetFrameRate = focus ? 60 : 10;
             // A paused/background frame is not part of a continuous foreground sample.
             frames.Clear();
             performanceText = "";
@@ -72,27 +76,27 @@ namespace LastMile.Art
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Escape)) ReleaseMouse();
-            if (Input.GetKeyDown(KeyCode.Return))
+            if (Input.GetKeyDown(KeyCode.Return) && !console.IsOpen)
             {
                 if (Cursor.lockState == CursorLockMode.Locked) ReleaseMouse();
                 else CaptureMouse();
             }
-            if (Input.GetKeyDown(KeyCode.L)) chinese = !chinese;
-            if (Input.GetKeyDown(KeyCode.Tab)) details = !details;
-            if (Input.GetKeyDown(KeyCode.Home)) ResetView();
-            if (Input.GetKeyDown(KeyCode.P))
+            if (Input.GetKeyDown(KeyCode.F9)) details = !details;
+            if (Input.GetKeyDown(KeyCode.Home) && !console.IsOpen) ResetView();
+            if (Input.GetKeyDown(KeyCode.F12) || (Input.GetKeyDown(KeyCode.P) && !console.IsOpen))
             {
-                string path = Path.Combine(Application.persistentDataPath, "Market-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + ".png");
+                string path = Path.Combine(Application.persistentDataPath, "Market-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff") + ".png");
                 ScreenCapture.CaptureScreenshot(path);
                 Debug.Log("LAST_MILE_ART_CAPTURE: " + path);
             }
-            if (Input.GetMouseButtonDown(0) && Input.mousePosition.y < Screen.height - 115)
+            if (Input.GetMouseButtonDown(0) && !console.IsOpen && Input.mousePosition.y < Screen.height - 115)
             {
                 CaptureMouse();
             }
-            if (Cursor.lockState == CursorLockMode.Locked)
+            if (Cursor.lockState == CursorLockMode.Locked && !console.IsOpen)
             {
-                transform.Rotate(0, Input.GetAxisRaw("Mouse X") * 1.7f, 0);
+                float turn = (Input.GetKey(KeyCode.R) ? 1 : 0) - (Input.GetKey(KeyCode.Q) ? 1 : 0);
+                transform.Rotate(0, Input.GetAxisRaw("Mouse X") * 1.7f + turn * 65 * Mathf.Min(Time.deltaTime, .05f), 0);
                 pitch = Mathf.Clamp(pitch - Input.GetAxisRaw("Mouse Y") * 1.7f, -65, 65);
                 eye.transform.localRotation = Quaternion.Euler(pitch, 0, 0);
                 float horizontal = (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) ? 1 : 0) -
@@ -120,25 +124,14 @@ namespace LastMile.Art
 
         private void OnGUI()
         {
-            float scale = Mathf.Max(1, Screen.height / 900f);
-            GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1));
-            float width = Screen.width / scale;
-            if (titleStyle == null)
-            {
-                titleStyle = new GUIStyle(GUI.skin.label) { font = hudFont, fontSize = 22, fontStyle = FontStyle.Bold };
-                smallStyle = new GUIStyle(GUI.skin.label) { font = hudFont, fontSize = 13, wordWrap = true };
-            }
-            GUI.Box(new Rect(20, 20, width - 40, details ? 125 : 65), GUIContent.none);
-            GUI.Label(new Rect(38, 29, width - 90, 32), chinese ? "LAST MILE / 市集美术样板" : "LAST MILE / MARKET ART STUDY", titleStyle);
-            GUI.Label(new Rect(38, 66, width - 90, 25), string.IsNullOrEmpty(performanceText) ? (chinese ? "预热中…" : "Warming up…") : performanceText, smallStyle);
-            if (details)
-            {
-                GUI.Label(new Rect(38, 91, width - 90, 45), chinese
-                    ? "点击画面或 Enter 进入 · WASD / 方向键移动 · Esc 释放鼠标 · Home 复位 · Tab 隐藏说明 · L 切换语言 · P 截图\n这是独立美术与移动样板，尚未连接剧情、调查或 AI。"
-                    : "Click / Enter to enter · WASD / arrows to walk · Esc release · Home reset · Tab details · L language · P screenshot\nStandalone art and movement study. Story, investigations and AI are not connected yet.", smallStyle);
-            }
+            if (console == null || console.IsOpen) return;
             if (Cursor.lockState == CursorLockMode.Locked)
-                GUI.Label(new Rect(width / 2 - 4, Screen.height / scale / 2 - 10, 20, 20), "+");
+                GUI.Label(new Rect(Screen.width / 2 - 4, Screen.height / 2 - 10, 20, 20), "+");
+            if (details && !string.IsNullOrEmpty(performanceText))
+            {
+                if (smallStyle == null) smallStyle = new GUIStyle(GUI.skin.label) { font = hudFont, fontSize = 11 };
+                GUI.Label(new Rect(24, 115, 420, 24), performanceText, smallStyle);
+            }
         }
     }
 }

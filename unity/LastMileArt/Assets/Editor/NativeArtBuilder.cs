@@ -155,6 +155,7 @@ namespace LastMile.Art.Editor
             UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.ARM64;
             if (!File.Exists(ScenePath)) CreateScene();
             else EditorSceneManager.OpenScene(ScenePath);
+            FieldStationBuilder.Ensure();
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             EditorUtility.SetDirty(pipeline); AssetDatabase.SaveAssets();
             Debug.Log("LAST_MILE_ART_READY: " + ScenePath);
@@ -214,6 +215,7 @@ namespace LastMile.Art.Editor
         public static void BuildMac()
         {
             Prepare();
+            ValidateCollision();
             Directory.CreateDirectory("Builds");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
                 scenes = new[] { ScenePath }, locationPathName = "Builds/LastMileArt.app",
