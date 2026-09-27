@@ -1,6 +1,8 @@
 # LAST MILE Unity Web 地图
 
-这是真实 Unity C# 工程和 Web 构建入口。本机已安装 Unity Hub、Unity 6000.3.22f1（Apple Silicon）及 Web Build Support，并完成许可证激活。**真实 Unity Web player 已编译成功并在 Chrome 中运行通过**。网页仍保留原有地图与构建缺失时的提示。
+这是真实 Unity C# 地图工程和 Web 构建入口。**当前环境复核（2026-09-26）：`node scripts/build-unity.mjs --check` 未找到 Unity Editor，本机可用磁盘约 8.8 GiB。** 下方 2026-09-18 的编译和运行记录是历史验收记录，不能据此推断当前仍安装着 Editor 或已能构建新的步行场景。网页保留原有地图与构建缺失时的提示。
+
+当前三关步行场景与接收站尾声运行在浏览器 Three.js 中，见 [三关实现记录](../docs/commercial/06_CAMPAIGN_IMPLEMENTATION.md)。这里的 Unity 工程仍承担战略地图，尚未迁入新的步行关卡，也未配置 URP。下一阶段原生精细样板的准备工作见 [美术方案](../docs/commercial/art-direction/README.md#2026-09-26-下一阶段接入顺序)。
 
 2026-09-18 本机验证：Editor `-version` 返回 `6000.3.22f1`；`pnpm build:unity` 完成 C#、IL2CPP 和 WebAssembly 构建并发布 manifest；开发和生产网页均可加载真实 Unity 场景，生产 CSP 保持限制。真实热点选择、跨页面同一画布、任务时钟、地图展开/收起、网页键盘输入和切换 2D 已通过浏览器测试。首次运行发现并修正了 Unity 所需的 canvas ID。
 
